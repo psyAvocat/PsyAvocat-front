@@ -1,0 +1,21 @@
+# Tasks for Zoonic Backend Modernization
+
+- [ ] **Phase 1: Configuration & Infrastructure**
+    - [ ] Update `application.properties` with new limits and tool settings
+    - [ ] Implement `AsyncConfig.java` for thread pool management
+- [ ] **Phase 2: Models & DTOs**
+    - [ ] Create `MediaInfo` record
+    - [ ] Create `DownloadStatus` enum
+    - [ ] Create `DownloadJob` class
+    - [ ] Create `MediaAnalysisResponse` record
+- [ ] **Phase 3: Core Services**
+    - [ ] Implement `MediaEligibilityService`
+    - [ ] Implement `MediaAnalysisService` (yt-dlp JSON parsing)
+    - [ ] Implement `DownloadJobService` (async management)
+- [ ] **Phase 4: Refactoring & Controllers**
+    - [ ] Update `MediaExtractionService` for progress tracking
+    - [ ] Update `DownloadService`
+    - [ ] Implement `MediaController`
+    - [ ] Update `DownloadController`
+- [ ] **Phase 5: Verification**
+    - [ ] Build and verify all endpoints
