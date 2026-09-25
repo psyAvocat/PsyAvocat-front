@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../theme/design_system.dart';
 import 'app_button.dart';
 
-/// Vue d'erreur avec message et bouton de réessai.
+/// Vue d'erreur avec message et bouton de réessai harmonisée avec le Design System.
 class AppErrorView extends StatelessWidget {
   final String message;
   final VoidCallback? onRetry;
@@ -16,29 +17,39 @@ class AppErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: AppSpacing.screenPadding,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 56,
-              color: Theme.of(context).colorScheme.error,
+            Container(
+              width: 64,
+              height: 64,
+              decoration: const BoxDecoration(
+                color: AppColors.dangerSurface,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                AppIcons.danger,
+                size: 32,
+                color: AppColors.danger,
+              ),
             ),
-            const SizedBox(height: 16),
+            AppSpacing.vGap20,
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: AppTypography.texteMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: 24),
+              AppSpacing.vGap24,
               SizedBox(
-                width: 160,
-                child: AppButton(
+                width: 170,
+                child: AppButton.outline(
                   text: 'Réessayer',
                   onPressed: onRetry,
-                  isOutlined: true,
+                  size: AppButtonSize.compact,
                 ),
               ),
             ],

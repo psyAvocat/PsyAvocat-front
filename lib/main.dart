@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/config/app_config.dart';
+import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -18,12 +19,10 @@ class PsyAvocatApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ;
-
-    return MaterialApp.router(
+    return MaterialApp(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.system,
+      theme: AppTheme.lightTheme,
     );
   }
 }
