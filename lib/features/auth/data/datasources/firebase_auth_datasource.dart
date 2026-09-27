@@ -61,6 +61,17 @@ class FirebaseAuthDatasource {
     await _firebaseAuth.signOut();
   }
 
+  /// Inscription (alias conforme aux spécifications)
+  Future<UserCredential> register(String email, String password) =>
+      signUpWithEmailAndPassword(email: email, password: password);
+
+  /// Connexion (alias conforme aux spécifications)
+  Future<UserCredential> login(String email, String password) =>
+      signInWithEmailAndPassword(email: email, password: password);
+
+  /// Déconnexion (alias conforme aux spécifications)
+  Future<void> logout() => signOut();
+
   String _mapFirebaseError(String code, String? defaultMessage) {
     switch (code) {
       case 'user-not-found':

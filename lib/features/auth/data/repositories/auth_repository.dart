@@ -33,4 +33,12 @@ class AuthRepository {
       );
 
   Future<void> signOut() => _datasource.signOut();
+
+  Future<UserCredential> register(String email, String password) =>
+      _datasource.register(email, password);
+
+  Future<UserCredential> login(String email, String password) =>
+      _datasource.login(email, password);
+
+  Future<void> logout() => _datasource.logout();
 }

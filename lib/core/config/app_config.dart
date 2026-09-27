@@ -30,4 +30,9 @@ class AppConfig {
   static const Duration connectTimeout = Duration(seconds: 15);
   static const Duration receiveTimeout = Duration(seconds: 15);
   static const Duration sendTimeout = Duration(seconds: 15);
+
+  /// Clé publique VAPID (Web Push Certificate) pour Firebase Cloud Messaging sur le Web.
+  /// Générée sur Firebase Console > Paramètres du projet > Cloud Messaging > Certificats Web Push.
+  static const String fcmWebVapidKey =
+      'BCpeMgUwUuUl4cj1B-OcqbubArUauW2UlpMX0qEzuearqM2j0hNZ0wora1IAsL-wqlwVQeSOgRaVOnYib3HPDd4';
 }
