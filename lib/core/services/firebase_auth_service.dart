@@ -56,6 +56,17 @@ class FirebaseAuthService {
     await _auth.signOut();
   }
 
+  /// Réinitialisation de mot de passe par email
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(mapFirebaseError(e.code, e.message));
+    } catch (e) {
+      throw AuthException('Impossible d\'envoyer l\'email de réinitialisation : ${e.toString()}');
+    }
+  }
+
   /// Traduction des codes d'erreur Firebase en messages conviviaux (pas de logs bruts à l'utilisateur)
   static String mapFirebaseError(String code, [String? defaultMessage]) {
     switch (code) {

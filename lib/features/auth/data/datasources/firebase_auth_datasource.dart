@@ -61,6 +61,17 @@ class FirebaseAuthDatasource {
     await _firebaseAuth.signOut();
   }
 
+  /// Réinitialisation de mot de passe
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapFirebaseError(e.code, e.message));
+    } catch (e) {
+      throw AuthException('Impossible d\'envoyer l\'email de réinitialisation : ${e.toString()}');
+    }
+  }
+
   /// Inscription (alias conforme aux spécifications)
   Future<UserCredential> register(String email, String password) =>
       signUpWithEmailAndPassword(email: email, password: password);

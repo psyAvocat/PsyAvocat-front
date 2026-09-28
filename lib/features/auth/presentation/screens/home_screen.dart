@@ -10,8 +10,10 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../controllers/auth_controller.dart';
 
+import '../../../../core/theme/universe_provider.dart';
+
 /// Écran d'accueil et tableau de bord après authentification.
-/// Permet de vérifier l'état Firebase Auth et tester FCM selon les règles de sécurité.
+/// Permet de vérifier l'état Firebase Auth, l'univers actif et tester FCM selon les règles de sécurité.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -83,13 +85,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final authState = ref.watch(authStateChangesProvider);
     final user = authState.asData?.value;
     final lastMessage = ref.watch(fcmForegroundMessageProvider).asData?.value;
+    final universe = ref.watch(currentUniverseProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tableau de bord PsyAvocat'),
-        backgroundColor: AppColors.lawyer,
+        title: Text(
+          universe.isPsychologist
+              ? 'PsyAvocat — Psychologie'
+              : universe.isLawyer
+                  ? 'PsyAvocat — Avocat'
+                  : 'Tableau de bord PsyAvocat',
+        ),
+        backgroundColor: universe.primaryColor,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.swap_horiz_rounded),
+            tooltip: 'Changer d\'univers',
+            onPressed: () => context.push('/selection-univers'),
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Se déconnecter',
