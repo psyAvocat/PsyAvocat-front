@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/services/app_preferences_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/psyavocat_logo.dart';
 
-/// Écran Onboarding 3 slides officiel de PsyAvocat.
-/// Reproduit fidèlement la maquette : carrousel fluide, dégradés et visuels dédiés.
+/// Écran Onboarding 3 slides — conforme à la maquette Figma PsyAvocat.
+/// Fond blanc propre, bouton violet plein (sans gradient parasite), logo centré slide 1.
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -35,8 +34,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   void _nextPage() {
     if (_currentPage < 2) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeInOutCubic,
       );
     } else {
       _completeOnboarding();
@@ -46,44 +45,42 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFD),
+      // Fond blanc pur — pas de dégradé sur le Scaffold
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
-            // Barre supérieure avec bouton "Ignorer" (sauf sur le dernier slide)
+            // ── Barre supérieure : bouton Ignorer aligné à droite ────────────
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  const SizedBox(width: 48), // Équilibrage visuel
                   if (_currentPage < 2)
                     TextButton(
                       onPressed: _completeOnboarding,
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF6B7280),
+                      ),
                       child: const Text(
                         'Ignorer',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
                         ),
                       ),
                     )
                   else
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 40),
                 ],
               ),
             ),
 
-            // Carrousel des 3 slides
+            // ── Carrousel des 3 slides ────────────────────────────────────────
             Expanded(
               child: PageView(
                 controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentPage = index;
-                  });
-                },
+                onPageChanged: (index) => setState(() => _currentPage = index),
                 children: [
                   _buildSlide1(),
                   _buildSlide2(),
@@ -92,38 +89,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
             ),
 
-            // Section inférieure : Bouton Suivant + Indicateur 3 points
+            // ── Zone inférieure : Bouton + Indicateurs ────────────────────────
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Le bouton d'action apparaît sur les slides 2 et 3 (sur slide 1, on swipe ou on clique sur Suivant)
-                  Container(
+                  // Bouton Suivant / Commencer — violet plein, sans gradient
+                  SizedBox(
                     width: double.infinity,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF5B21B6), Color(0xFF2563EB)],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF5B21B6).withValues(alpha: 0.35),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
+                    height: 56,
                     child: ElevatedButton(
                       onPressed: _nextPage,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
+                        backgroundColor: const Color(0xFF2D2B8F),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                       ),
                       child: Text(
@@ -132,35 +115,33 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
-                          letterSpacing: 0.3,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
-                  // Indicateur de pagination 3 points
+                  // Indicateurs de pagination
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(3, (index) {
                       final isActive = _currentPage == index;
                       return AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        margin: const EdgeInsets.symmetric(horizontal: 5),
-                        width: isActive ? 12 : 9,
-                        height: isActive ? 12 : 9,
+                        duration: const Duration(milliseconds: 280),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: isActive ? 24 : 8,
+                        height: 8,
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
                           color: isActive
-                              ? const Color(0xFF1B365D)
-                              : const Color(0xFFD6D9E0),
+                              ? const Color(0xFF2D2B8F)
+                              : const Color(0xFFD1D5DB),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       );
                     }),
                   ),
-
-                  const SizedBox(height: 12),
                 ],
               ),
             ),
@@ -170,7 +151,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  // Slide 1 : Présentation de marque
+  // ─── Slide 1 : Présentation de la marque ─────────────────────────────────
   Widget _buildSlide1() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -182,16 +163,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             fontSize: 34,
             showText: true,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           const Text(
             'Votre solution juridique\net psychologique',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF2C3240),
+              color: Color(0xFF1E2432),
               height: 1.4,
               fontFamily: 'Montserrat',
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Accédez aux meilleurs avocats et psychologues,\nen toute confidentialité.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Color(0xFF6B7280),
+              height: 1.5,
             ),
           ),
         ],
@@ -199,25 +190,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  // Slide 2 : Focus Avocat
+  // ─── Slide 2 : Focus Avocat ───────────────────────────────────────────────
   Widget _buildSlide2() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      padding: const EdgeInsets.symmetric(horizontal: 28.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           RichText(
             text: const TextSpan(
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 30,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF111827),
-                height: 1.25,
+                height: 1.2,
                 fontFamily: 'Montserrat',
               ),
               children: [
-                TextSpan(text: 'Trouvez un '),
+                TextSpan(text: 'Trouvez un\n'),
                 TextSpan(
                   text: 'avocat',
                   style: TextStyle(color: Color(0xFF4F46E5)),
@@ -226,33 +217,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           const Text(
             'Bénéficiez d\'un accompagnement juridique personnalisé, en toute confidentialité.',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w400,
               color: Color(0xFF4B5563),
-              height: 1.45,
+              height: 1.5,
             ),
           ),
           const Spacer(),
           Center(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.asset(
-                'assets/images/onboarding_lawyer.png',
-                height: 320,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 280,
-                  color: Colors.transparent,
-                  child: const Icon(
-                    Icons.gavel_rounded,
-                    size: 100,
-                    color: Color(0xFF4F46E5),
-                  ),
-                ),
+            child: Image.asset(
+              'assets/images/onboarding_lawyer.png',
+              height: 300,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.gavel_rounded,
+                size: 120,
+                color: Color(0xFF4F46E5),
               ),
             ),
           ),
@@ -262,21 +246,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  // Slide 3 : Focus Psychologue
+  // ─── Slide 3 : Focus Psychologue ─────────────────────────────────────────
   Widget _buildSlide3() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      padding: const EdgeInsets.symmetric(horizontal: 28.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           RichText(
             text: const TextSpan(
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 30,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF111827),
-                height: 1.25,
+                height: 1.2,
                 fontFamily: 'Montserrat',
               ),
               children: [
@@ -289,33 +273,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           const Text(
             'Bénéficiez d\'une écoute attentive et bienveillante pour surmonter vos difficultés au quotidien.',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w400,
               color: Color(0xFF4B5563),
-              height: 1.45,
+              height: 1.5,
             ),
           ),
           const Spacer(),
           Center(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.asset(
-                'assets/images/onboarding_psy.png',
-                height: 320,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 280,
-                  color: Colors.transparent,
-                  child: const Icon(
-                    Icons.psychology_rounded,
-                    size: 100,
-                    color: Color(0xFF7C3AED),
-                  ),
-                ),
+            child: Image.asset(
+              'assets/images/onboarding_psy.png',
+              height: 300,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.psychology_rounded,
+                size: 120,
+                color: Color(0xFF7C3AED),
               ),
             ),
           ),

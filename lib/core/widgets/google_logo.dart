@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 /// Widget vectoriel haute précision affichant le logo officiel "G" de Google en 4 couleurs.
+/// Reproduit fidèlement la forme du G avec l'arc ouvert sur la gauche et la barre horizontale bleue.
 class GoogleLogo extends StatelessWidget {
   final double size;
 
@@ -24,62 +25,61 @@ class _GoogleLogoPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final double w = size.width;
     final double h = size.height;
-    final center = Offset(w / 2, h / 2);
-    final radius = min(w, h) / 2;
-    final strokeWidth = radius * 0.42;
-    final arcRadius = radius - (strokeWidth / 2);
+    final Offset center = Offset(w / 2, h / 2);
+    final double radius = min(w, h) / 2;
 
-    final rect = Rect.fromCircle(center: center, radius: arcRadius);
+    // Épaisseur du trait proportionnelle à la taille
+    final double strokeW = radius * 0.38;
+    final double arcR = radius - strokeW / 2;
+    final Rect rect = Rect.fromCircle(center: center, radius: arcR);
 
-    final paintBlue = Paint()
-      ..color = const Color(0xFF4285F4)
+    // ─── Couleurs officielles Google ─────────────────────────────────────────
+    const Color blue   = Color(0xFF4285F4);
+    const Color green  = Color(0xFF34A853);
+    const Color yellow = Color(0xFFFBBC04);
+    const Color red    = Color(0xFFEA4335);
+
+    Paint makePaint(Color c) => Paint()
+      ..color = c
       ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
+      ..strokeWidth = strokeW
       ..strokeCap = StrokeCap.butt;
 
-    final paintGreen = Paint()
-      ..color = const Color(0xFF34A853)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.butt;
+    // ─── Arc Bleu : haut-droit (de -45° à +45°) ──────────────────────────────
+    // Départ à -pi/2 (haut) + décalage pour ouvrir le G à gauche
+    // Angles en radians, dans le sens horaire (flutter convention)
+    // Rouge  : 225° → 315°  (de bas-gauche vers le haut-gauche)
+    // Bleu   : 315° → 45°   (de haut-gauche vers haut-droit)
+    // Vert   :  45° → 135°  (de haut-droit vers bas-droit)
+    // Jaune  : 135° → 225°  (de bas-droit vers bas-gauche)
 
-    final paintYellow = Paint()
-      ..color = const Color(0xFFFBBC05)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.butt;
+    // Convertis en radians (0 = droite, sens horaire)
+    const double deg = pi / 180;
 
-    final paintRed = Paint()
-      ..color = const Color(0xFFEA4335)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.butt;
+    // Rouge : de 225° pendant 90°
+    canvas.drawArc(rect, 225 * deg, 90 * deg, false, makePaint(red));
+    // Bleu : de 315° pendant 90°
+    canvas.drawArc(rect, 315 * deg, 90 * deg, false, makePaint(blue));
+    // Vert : de 45° pendant 90°
+    canvas.drawArc(rect, 45 * deg, 90 * deg, false, makePaint(green));
+    // Jaune : de 135° pendant 90°
+    canvas.drawArc(rect, 135 * deg, 90 * deg, false, makePaint(yellow));
 
-    // Arcs pour le 'G'
-    // Bleu : de 315° à 45°
-    canvas.drawArc(rect, -pi / 4, pi / 2, false, paintBlue);
+    // ─── Barre horizontale bleue du G ────────────────────────────────────────
+    // Positionnée au centre vertical, de center.dx jusqu'au bord droit de l'arc
+    final double barTop    = center.dy - strokeW / 2;
+    final double barBottom = center.dy + strokeW / 2;
+    final double barLeft   = center.dx - strokeW * 0.12; // légère extension gauche
+    final double barRight  = center.dx + arcR + strokeW / 2;
 
-    // Vert : de 45° à 135°
-    canvas.drawArc(rect, pi / 4, pi / 2, false, paintGreen);
-
-    // Jaune : de 135° à 225°
-    canvas.drawArc(rect, 3 * pi / 4, pi / 2, false, paintYellow);
-
-    // Rouge : de 225° à 315°
-    canvas.drawArc(rect, 5 * pi / 4, pi / 2, false, paintRed);
-
-    // Barre horizontale bleue du G
-    final barPaint = Paint()
-      ..color = const Color(0xFF4285F4)
+    final Paint barPaint = Paint()
+      ..color = blue
       ..style = PaintingStyle.fill;
 
-    final barRect = Rect.fromLTRB(
-      center.dx - radius * 0.05,
-      center.dy - strokeWidth / 2,
-      center.dx + radius,
-      center.dy + strokeWidth / 2,
+    canvas.drawRect(
+      Rect.fromLTRB(barLeft, barTop, barRight, barBottom),
+      barPaint,
     );
-    canvas.drawRect(barRect, barPaint);
   }
 
   @override
