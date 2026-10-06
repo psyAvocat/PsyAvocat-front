@@ -180,7 +180,7 @@ class ProfileScreen extends ConsumerWidget {
                     label: 'Mes dossiers juridiques',
                     subtitle: '$dossiersCount dossier(s) en suivi',
                     color: const Color(0xFFD97706),
-                    onTap: () => context.go('/dossiers'),
+                    onTap: () => context.push('/dossiers'),
                   ),
                   _NavItem(
                     icon: Icons.chat_bubble_outline_rounded,

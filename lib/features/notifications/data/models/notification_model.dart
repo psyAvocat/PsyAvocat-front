@@ -56,7 +56,7 @@ class NotificationModel {
       } else if (t == 'MESSAGE' || t == 'CONVERSATION') {
         route = '/messagerie';
       } else if (t == 'CONTENU' || t == 'ARTICLE') {
-        route = '/contenus';
+        route = '/articles';
       }
     }
 

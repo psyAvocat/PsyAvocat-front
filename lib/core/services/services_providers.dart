@@ -9,8 +9,9 @@ final firebaseAuthServiceProvider = Provider<FirebaseAuthService>((ref) {
 });
 
 /// Provider pour le service Firebase Cloud Messaging
-final firebaseMessagingServiceProvider =
-    Provider<FirebaseMessagingService>((ref) {
+final firebaseMessagingServiceProvider = Provider<FirebaseMessagingService>((
+  ref,
+) {
   return FirebaseMessagingService();
 });
 

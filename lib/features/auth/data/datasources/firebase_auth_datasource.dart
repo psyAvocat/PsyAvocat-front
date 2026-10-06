@@ -34,8 +34,10 @@ class FirebaseAuthDatasource {
       );
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapFirebaseError(e.code, e.message));
-    } catch (e) {
-      throw AuthException('Échec de connexion : ${e.toString()}');
+    } catch (_) {
+      throw const AuthException(
+        "Connexion impossible. Vérifiez votre connexion Internet et réessayez.",
+      );
     }
   }
 
@@ -51,8 +53,10 @@ class FirebaseAuthDatasource {
       );
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapFirebaseError(e.code, e.message));
-    } catch (e) {
-      throw AuthException('Échec d\'inscription : ${e.toString()}');
+    } catch (_) {
+      throw const AuthException(
+        "Inscription impossible. Vérifiez votre connexion Internet et réessayez.",
+      );
     }
   }
 
@@ -67,9 +71,9 @@ class FirebaseAuthDatasource {
       await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapFirebaseError(e.code, e.message));
-    } catch (e) {
-      throw AuthException(
-        'Impossible d\'envoyer l\'email de réinitialisation : ${e.toString()}',
+    } catch (_) {
+      throw const AuthException(
+        "Impossible d'envoyer l'email de réinitialisation. Réessayez plus tard.",
       );
     }
   }

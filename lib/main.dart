@@ -10,6 +10,7 @@ import 'core/services/firebase_messaging_service.dart';
 import 'core/config/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/universe_provider.dart';
+import 'core/widgets/widgets.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -28,6 +29,9 @@ void main() async {
 
   runApp(
     ProviderScope(
+      // Pas de nouvelle tentative automatique en cas d'erreur API : l'écran
+      // affiche immédiatement l'erreur et l'utilisateur choisit de « Réessayer ».
+      retry: (retryCount, error) => null,
       overrides: [
         sharedPreferencesProvider.overrideWithValue(sharedPreferences),
       ],
@@ -47,6 +51,7 @@ class PsyAvocatApp extends ConsumerWidget {
     return MaterialApp.router(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: AppNotification.messengerKey,
       theme: AppTheme.buildTheme(universe),
       routerConfig: router,
     );

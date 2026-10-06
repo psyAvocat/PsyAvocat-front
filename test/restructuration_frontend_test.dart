@@ -13,6 +13,9 @@ import 'package:psyavocat_front/features/profile/data/repositories/profil_reposi
 import 'package:psyavocat_front/features/rendez_vous/data/models/rendez_vous_model.dart';
 import 'package:psyavocat_front/features/rendez_vous/data/repositories/rendez_vous_repository.dart';
 import 'package:psyavocat_front/features/rendez_vous/presentation/controllers/rendez_vous_controller.dart';
+import 'package:psyavocat_front/features/auth/data/repositories/session_repository.dart';
+import 'package:psyavocat_front/features/orientation/data/repositories/orientation_repository.dart';
+import 'mocks/orientation_test_doubles.dart';
 import 'mocks/test_mocks.dart';
 
 class TestUniverseNotifier extends UniverseNotifier {
@@ -89,6 +92,8 @@ void main() {
             professionnelsRepositoryProvider.overrideWithValue(MockProfessionnelsRepository()),
             rendezVousRepositoryProvider.overrideWithValue(MockRendezVousRepository()),
             profilRepositoryProvider.overrideWithValue(MockProfilRepository()),
+            sessionRepositoryProvider.overrideWithValue(FakeSessionRepository()),
+            orientationRepositoryProvider.overrideWithValue(FakeOrientationRepository()),
           ],
           child: const MaterialApp(
             home: HomeScreen(),
@@ -120,6 +125,8 @@ void main() {
             professionnelsRepositoryProvider.overrideWithValue(MockProfessionnelsRepository()),
             notificationsRepositoryProvider.overrideWithValue(MockNotificationsRepository([])),
             profilRepositoryProvider.overrideWithValue(MockProfilRepository()),
+            sessionRepositoryProvider.overrideWithValue(FakeSessionRepository()),
+            orientationRepositoryProvider.overrideWithValue(FakeOrientationRepository()),
           ],
           child: const MaterialApp(
             home: HomeScreen(),
@@ -129,8 +136,10 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('Vous n\'avez pas encore de rendez-vous'), findsOneWidget);
-      expect(find.text('Trouver un professionnel'), findsWidgets);
+      expect(find.text('Aucun rendez-vous à venir.'), findsOneWidget);
+      expect(find.text('Trouver un avocat'), findsOneWidget);
+      // Prénom réel issu de GET /me.
+      expect(find.text('Bonjour Awa'), findsOneWidget);
     });
 
     testWidgets('NotificationsScreen displays empty state when notifications list is empty', (tester) async {

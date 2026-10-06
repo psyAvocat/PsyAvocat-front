@@ -11,9 +11,11 @@ class AppRadii {
   static const double v4 = 4.0;
   static const double v8 = 8.0;
   static const double v12 = 12.0;
+  static const double v14 = 14.0;
   static const double v16 = 16.0;
   static const double v20 = 20.0;
   static const double v24 = 24.0;
+  static const double v32 = 32.0;
   static const double vFull = 999.0;
 
   // ===========================================================================
@@ -28,6 +30,9 @@ class AppRadii {
   /// 12 px : Arrondi standard (champs de saisie, boutons secondaires)
   static const BorderRadius r12 = BorderRadius.all(Radius.circular(v12));
 
+  /// 14 px : Champs de formulaire (maquettes connexion / inscription)
+  static const BorderRadius r14 = BorderRadius.all(Radius.circular(v14));
+
   /// 16 px : Arrondi moderne (boutons principaux, cartes, conteneurs)
   static const BorderRadius r16 = BorderRadius.all(Radius.circular(v16));
 
@@ -36,6 +41,9 @@ class AppRadii {
 
   /// 24 px : Très grand arrondi (feuilles de fond, bottom sheets)
   static const BorderRadius r24 = BorderRadius.all(Radius.circular(v24));
+
+  /// 32 px : Grandes cartes d'univers (choix de catégorie)
+  static const BorderRadius r32 = BorderRadius.all(Radius.circular(v32));
 
   /// Pill / Full : Arrondi circulaire complet (badges, puces, boutons ronds)
   static const BorderRadius pill = BorderRadius.all(Radius.circular(vFull));

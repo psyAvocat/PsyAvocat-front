@@ -32,7 +32,8 @@ class AppProgressBar extends StatelessWidget {
         : AppTheme.universeOf(context);
 
     final effectiveColor = color ?? universeColors.primary;
-    final effectiveBgColor = backgroundColor ?? effectiveColor.withValues(alpha: 0.12);
+    final effectiveBgColor =
+        backgroundColor ?? effectiveColor.withValues(alpha: 0.12);
     final effectiveRadius = borderRadius ?? AppRadii.pill;
 
     final progressWidget = ClipRRect(

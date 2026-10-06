@@ -21,22 +21,21 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Étape 3 — ProfessionnelsRepository Unit Tests', () {
-    test('getProfessionnels returns seeded lawyers and psychologists', () async {
+    test('searchProfessionnels returns lawyers and psychologists', () async {
       final repo = MockProfessionnelsRepository();
-      final all = await repo.getProfessionnels();
+      final all = await repo.searchProfessionnels();
       expect(all.length, greaterThanOrEqualTo(3));
-      expect(all.any((p) => p.nom.contains('Sangaré')), isTrue);
-      expect(all.any((p) => p.nom.contains('Dubois')), isTrue);
-      expect(all.any((p) => p.nom.contains('Lambert')), isTrue);
+      expect(all.any((p) => p.fullName.contains('Sangaré')), isTrue);
+      expect(all.any((p) => p.fullName.contains('Lambert')), isTrue);
     });
 
-    test('getProfessionnels with isAvocat filters accurately', () async {
+    test('searchProfessionnels filters by type', () async {
       final repo = MockProfessionnelsRepository();
-      final avocats = await repo.getProfessionnels(isAvocat: true);
-      final psys = await repo.getProfessionnels(isAvocat: false);
+      final avocats = await repo.searchProfessionnels(type: 'AVOCAT');
+      final psys = await repo.searchProfessionnels(type: 'PSYCHOLOGUE');
 
-      expect(avocats.every((p) => p.isAvocat), isTrue);
-      expect(psys.every((p) => !p.isAvocat), isTrue);
+      expect(avocats.map((p) => p.fullName), everyElement(contains('Maître')));
+      expect(psys.map((p) => p.fullName), everyElement(contains('Dr.')));
     });
 
     test('getProfessionnelById returns full detail with tarifications and dispo', () async {

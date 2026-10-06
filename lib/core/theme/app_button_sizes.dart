@@ -17,6 +17,12 @@ class AppButtonSizes {
   /// Hauteur large : 58 px (actions hero / call-to-action majeurs)
   static const double heightLarge = 58.0;
 
+  /// Hauteur des boutons pilule des formulaires : 51 px (Figma connexion / inscription)
+  static const double heightPill = 51.0;
+
+  /// Hauteur des boutons pilule plein écran : 78 px (Figma onboarding / questionnaire)
+  static const double heightHero = 78.0;
+
   // ===========================================================================
   // TAILLES MINIMALES ET PADDINGS
   // ===========================================================================

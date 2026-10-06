@@ -1,15 +1,18 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/network/network_providers.dart';
+import '../../../../core/errors/user_message.dart';
 import '../../../../core/services/app_preferences_service.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/universe_provider.dart';
-import '../../../../core/widgets/psyavocat_logo.dart';
+import '../../../../core/theme/design_system.dart';
+import '../../../../core/widgets/widgets.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
-/// Écran de démarrage (Splash Screen) officiel de PsyAvocat.
-/// Affiche le logo de marque, restaure l'état de session et oriente vers le bon écran.
+/// Écran de démarrage — maquette Figma « première page ».
+///
+/// Pendant que le logo apparaît en fondu, on restaure la session
+/// (Firebase → `GET /me`), puis on ouvre la bonne page via GoRouter.
+/// Aucune attente artificielle : on attend seulement la fin de l'animation
+/// ET la réponse du backend.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -19,109 +22,111 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _animController;
-  late final Animation<double> _fadeAnimation;
-  late final Animation<double> _scaleAnimation;
+  late final AnimationController _animation = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
+
+  late final Animation<double> _scale = Tween<double>(
+    begin: 0.9,
+    end: 1,
+  ).animate(CurvedAnimation(parent: _animation, curve: Curves.easeOutBack));
+
+  /// Message affiché si la session n'a pas pu être restaurée (API injoignable…).
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-
-    _fadeAnimation = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeIn,
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.92, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animController,
-        curve: Curves.easeOutBack,
-      ),
-    );
-
-    _animController.forward();
-    _initializeAppAndNavigate();
+    _start();
   }
 
   @override
   void dispose() {
-    _animController.dispose();
+    _animation.dispose();
     super.dispose();
   }
 
-  Future<void> _initializeAppAndNavigate() async {
-    // Laisser le temps à l'animation de se jouer et à Firebase de restaurer la session
-    await Future.delayed(const Duration(milliseconds: 2000));
+  Future<void> _start() async {
+    setState(() => _errorMessage = null);
+
+    final results = await Future.wait<Object?>([
+      _animation.forward(),
+      _resolveNextRoute(),
+    ]);
     if (!mounted) return;
 
-    final authRepo = ref.read(authRepositoryProvider);
-    final prefs = ref.read(appPreferencesServiceProvider);
-    final user = authRepo.currentUser;
+    final route = results[1] as String?;
+    if (route != null) context.go(route);
+  }
 
-    if (user != null) {
-      // Utilisateur authentifié : restaurer l'univers ou aller au choix d'univers
-      final universe = prefs.getSelectedUniverse();
-      if (universe != null && !universe.isNeutral) {
-        ref.read(currentUniverseProvider.notifier).setUniverse(universe);
-        context.go('/home');
-      } else {
-        context.go('/selection-univers');
+  /// Route à ouvrir, ou `null` si la restauration de session a échoué.
+  Future<String?> _resolveNextRoute() async {
+    final authController = ref.read(authControllerProvider.notifier);
+    final route = await authController.restoreSession();
+    if (route != null) return route;
+
+    final authState = ref.read(authControllerProvider);
+    if (authState.hasError) {
+      if (mounted) {
+        setState(() => _errorMessage = userMessageFor(authState.error!));
       }
-    } else {
-      // Utilisateur non connecté : vérifier si l'onboarding a déjà été vu
-      final hasSeen = prefs.hasSeenOnboarding();
-      if (hasSeen) {
-        context.go('/login');
-      } else {
-        context.go('/onboarding');
-      }
+      return null;
     }
+
+    // Personne n'est connecté.
+    final hasSeenOnboarding = ref
+        .read(appPreferencesServiceProvider)
+        .hasSeenOnboarding();
+    return hasSeenOnboarding ? '/login' : '/onboarding';
   }
 
   @override
   Widget build(BuildContext context) {
+    final logoSize = (MediaQuery.sizeOf(context).width * 0.55).clamp(
+      140.0,
+      240.0,
+    );
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
         child: Center(
-          child: AnimatedBuilder(
-            animation: _animController,
-            builder: (context, child) {
-              return Opacity(
-                opacity: _fadeAnimation.value,
-                child: Transform.scale(
-                  scale: _scaleAnimation.value,
-                  child: child,
-                ),
-              );
-            },
+          child: SingleChildScrollView(
+            padding: AppSpacing.screenPadding,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const PsyAvocatLogo(
-                  size: 150,
-                  fontSize: 32,
-                  showText: true,
+                FadeTransition(
+                  opacity: _animation,
+                  child: ScaleTransition(
+                    scale: _scale,
+                    child: PsyAvocatLogo(size: logoSize, fontSize: 40),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                AppSpacing.vGap24,
+                FadeTransition(
+                  opacity: _animation,
                   child: Text(
                     'Votre solution juridique\net psychologique',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                      height: 1.4,
-                      fontFamily: 'Montserrat',
-                    ),
+                    style: AppTypography.petitTitre,
                   ),
                 ),
+                if (_errorMessage != null) ...[
+                  AppSpacing.vGap32,
+                  Text(
+                    _errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.texteSecondaire,
+                  ),
+                  AppSpacing.vGap16,
+                  FilledButton.icon(
+                    onPressed: _start,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Réessayer'),
+                  ),
+                ],
               ],
             ),
           ),

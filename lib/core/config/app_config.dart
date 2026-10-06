@@ -7,24 +7,21 @@ class AppConfig {
   /// Nom de l'application
   static const String appName = 'PsyAvocat';
 
-  /// URL de base de l'API Spring Boot
+  /// URL du serveur Spring Boot (sans le préfixe /api).
   /// Sur émulateur Android : 10.0.2.2 pointe vers la machine hôte.
-  /// Sur Web / Desktop : localhost.
-  static String get apiBaseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:8080/api';
+  /// Sur Web / Desktop / iOS : localhost.
+  static String get serverBaseUrl {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:8080';
     }
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-        return 'http://10.0.2.2:8080/api';
-      case TargetPlatform.iOS:
-      case TargetPlatform.macOS:
-      case TargetPlatform.windows:
-      case TargetPlatform.linux:
-      default:
-        return 'http://localhost:8080/api';
-    }
+    return 'http://localhost:8080';
   }
+
+  /// URL de base de l'API REST métier (/api/...).
+  static String get apiBaseUrl => '$serverBaseUrl/api';
+
+  /// Endpoint de session : exposé à la racine du serveur (GET /me), pas sous /api.
+  static String get meUrl => '$serverBaseUrl/me';
 
   /// Délais d'expiration des requêtes HTTP
   static const Duration connectTimeout = Duration(seconds: 15);

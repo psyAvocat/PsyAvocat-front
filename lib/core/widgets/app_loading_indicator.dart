@@ -7,11 +7,7 @@ class AppLoadingIndicator extends StatelessWidget {
   final String? message;
   final AppUniverse? universe;
 
-  const AppLoadingIndicator({
-    super.key,
-    this.message,
-    this.universe,
-  });
+  const AppLoadingIndicator({super.key, this.message, this.universe});
 
   @override
   Widget build(BuildContext context) {
@@ -19,11 +15,7 @@ class AppLoadingIndicator extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AppCircularProgress(
-            size: 32,
-            strokeWidth: 3,
-            universe: universe,
-          ),
+          AppCircularProgress(size: 32, strokeWidth: 3, universe: universe),
           if (message != null) ...[
             AppSpacing.vGap16,
             Text(

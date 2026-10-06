@@ -6,7 +6,7 @@ import 'package:psyavocat_front/core/theme/app_colors.dart';
 import 'package:psyavocat_front/core/theme/app_universe.dart';
 import 'package:psyavocat_front/core/widgets/google_logo.dart';
 import 'package:psyavocat_front/core/widgets/psyavocat_logo.dart';
-import 'package:psyavocat_front/features/auth/presentation/screens/login_screen.dart';
+import 'package:psyavocat_front/core/widgets/top_arch_clipper.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

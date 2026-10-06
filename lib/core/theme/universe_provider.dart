@@ -32,5 +32,6 @@ class UniverseNotifier extends Notifier<AppUniverse> {
 }
 
 /// Provider global de l'univers actif
-final currentUniverseProvider =
-    NotifierProvider<UniverseNotifier, AppUniverse>(UniverseNotifier.new);
+final currentUniverseProvider = NotifierProvider<UniverseNotifier, AppUniverse>(
+  UniverseNotifier.new,
+);

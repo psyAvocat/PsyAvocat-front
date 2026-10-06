@@ -44,7 +44,9 @@ class AppPreferencesService {
 
 /// Provider pour initialiser et accéder à SharedPreferences
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError('sharedPreferencesProvider doit être initialisé dans main.dart via overrideWithValue');
+  throw UnimplementedError(
+    'sharedPreferencesProvider doit être initialisé dans main.dart via overrideWithValue',
+  );
 });
 
 final appPreferencesServiceProvider = Provider<AppPreferencesService>((ref) {

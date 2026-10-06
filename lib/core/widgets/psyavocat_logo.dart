@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../theme/design_system.dart';
 
 /// Widget officiel du logo de marque PsyAvocat.
 /// Supporte l'affichage avec ou sans texte, et la variante blanche pour fonds colorés.
@@ -19,27 +20,25 @@ class PsyAvocatLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logoWidget = Image.asset(
-      'assets/logos/logo_psyavocat.png',
+    final logoWidget = SvgPicture.asset(
+      isWhite
+          ? 'assets/logos/logo_psyavocat_white.svg'
+          : 'assets/logos/logo_psyavocat.svg',
       width: size,
       height: size,
       fit: BoxFit.contain,
-      color: isWhite ? Colors.white : null,
-      errorBuilder: (context, error, stackTrace) {
-        // Fallback icône élégante si l'asset met du temps à se charger
-        return Icon(
-          Icons.balance_rounded,
-          size: size,
-          color: isWhite ? Colors.white : AppColors.psychologist,
-        );
-      },
     );
 
     if (!showText) {
       return logoWidget;
     }
 
-    final double effectiveFontSize = fontSize ?? (size * 0.28).clamp(18.0, 34.0);
+    final double effectiveFontSize =
+        fontSize ?? (size * 0.28).clamp(18.0, 34.0);
+    final textStyle = AppTypography.grandTitre.copyWith(
+      fontSize: effectiveFontSize,
+      fontWeight: FontWeight.w800,
+    );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -47,19 +46,14 @@ class PsyAvocatLogo extends StatelessWidget {
       children: [
         logoWidget,
         const SizedBox(height: 8),
-        RichText(
-          text: TextSpan(
-            style: TextStyle(
-              fontSize: effectiveFontSize,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
-              fontFamily: 'Montserrat',
-            ),
+        Text.rich(
+          TextSpan(
+            style: textStyle,
             children: [
               TextSpan(
                 text: 'Psy',
                 style: TextStyle(
-                  color: isWhite ? Colors.white : AppColors.psychologist,
+                  color: isWhite ? Colors.white : AppColors.logoPsy,
                 ),
               ),
               TextSpan(

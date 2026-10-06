@@ -20,7 +20,7 @@ class FirebaseMessagingService {
   final FirebaseMessaging _messaging;
 
   FirebaseMessagingService({FirebaseMessaging? messaging})
-      : _messaging = messaging ?? FirebaseMessaging.instance;
+    : _messaging = messaging ?? FirebaseMessaging.instance;
 
   /// Demande explicite de permission pour les notifications.
   /// RÈGLE : Ne jamais appeler automatiquement au démarrage sans action utilisateur.
@@ -35,9 +35,7 @@ class FirebaseMessagingService {
       sound: true,
     );
 
-    debugPrint(
-      'FCM Permission Status: ${settings.authorizationStatus}',
-    );
+    debugPrint('FCM Permission Status: ${settings.authorizationStatus}');
     return settings;
   }
 
@@ -75,12 +73,12 @@ class FirebaseMessagingService {
       }
 
       // 3. Récupération effective du token
-      final token = await _messaging.getToken(
-        vapidKey: webVapidKey,
-      );
+      final token = await _messaging.getToken(vapidKey: webVapidKey);
 
       if (token != null) {
-        debugPrint('FCM: Token généré avec succès (non affiché pour sécurité).');
+        debugPrint(
+          'FCM: Token généré avec succès (non affiché pour sécurité).',
+        );
       }
       return token;
     } catch (e) {

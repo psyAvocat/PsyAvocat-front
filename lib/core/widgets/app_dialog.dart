@@ -76,18 +76,18 @@ class AppDialog extends StatelessWidget {
         ? AppUniverseColors.fromUniverse(universe!)
         : AppTheme.universeOf(context);
 
-    final effectiveIconColor = iconColor ??
+    final effectiveIconColor =
+        iconColor ??
         (isDestructive ? AppColors.danger : universeColors.primary);
-    final effectiveIconBg = iconBackgroundColor ??
+    final effectiveIconBg =
+        iconBackgroundColor ??
         (isDestructive
             ? AppColors.dangerSurface
             : effectiveIconColor.withValues(alpha: 0.1));
 
     return Dialog(
       backgroundColor: AppColors.neutralSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: AppRadii.r20,
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: AppRadii.r20),
       elevation: 0,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Padding(
@@ -125,10 +125,7 @@ class AppDialog extends StatelessWidget {
               textAlign: TextAlign.center,
               style: AppTypography.texteSecondaire,
             ),
-            if (content != null) ...[
-              AppSpacing.vGap16,
-              content!,
-            ],
+            if (content != null) ...[AppSpacing.vGap16, content!],
             AppSpacing.vGap24,
             AppButton(
               text: primaryActionText,
@@ -140,7 +137,8 @@ class AppDialog extends StatelessWidget {
               AppSpacing.vGap12,
               AppButton.outline(
                 text: secondaryActionText!,
-                onPressed: onSecondaryAction ?? () => Navigator.of(context).pop(),
+                onPressed:
+                    onSecondaryAction ?? () => Navigator.of(context).pop(),
                 universe: universe,
               ),
             ],

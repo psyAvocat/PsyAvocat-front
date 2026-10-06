@@ -69,10 +69,10 @@ class AppSpacing {
     vertical: 14.0,
   );
 
-  /// Padding intérieur des champs de formulaire
+  /// Padding intérieur des champs de formulaire (hauteur ≈ 48 px comme sur Figma)
   static const EdgeInsets inputPadding = EdgeInsets.symmetric(
     horizontal: s16,
-    vertical: 14.0,
+    vertical: s12,
   );
 
   // Paddings 'All' prédéfinis

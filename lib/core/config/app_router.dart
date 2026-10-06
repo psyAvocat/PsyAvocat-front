@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,9 +11,9 @@ import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/onboarding/presentation/screens/splash_screen.dart';
 import '../../features/dossiers/presentation/screens/dossiers_screen.dart';
 import '../../features/navigation/presentation/main_navigation_shell.dart';
-import '../../features/orientation/presentation/screens/orientation_matching_screen.dart';
+import '../../features/orientation/presentation/screens/orientation_intro_screen.dart';
 import '../../features/orientation/presentation/screens/orientation_questionnaire_screen.dart';
-import '../../features/orientation/presentation/screens/orientation_recap_screen.dart';
+import '../../features/orientation/presentation/screens/orientation_result_screen.dart';
 import '../../features/professionnels/data/models/professional_detail_model.dart';
 import '../../features/professionnels/presentation/screens/professionnel_detail_screen.dart';
 import '../../features/professionnels/presentation/screens/professionnels_list_screen.dart';
@@ -28,95 +29,155 @@ import '../../features/suivi_psychologique/presentation/screens/suivi_psychologi
 import '../../features/paiements/presentation/screens/paiements_screen.dart';
 import '../network/network_providers.dart';
 import '../services/app_preferences_service.dart';
+import '../theme/app_universe.dart';
 
-/// Provider pour la configuration GoRouter de l'application PsyAvocat (Phase 2).
+/// Routes accessibles sans être connecté.
+const _publicRoutes = {
+  '/splash',
+  '/onboarding',
+  '/login',
+  '/register',
+  '/forgot-password',
+};
+
+/// Configuration GoRouter de l'application PsyAvocat.
+///
+/// Le routeur est créé UNE seule fois : il est simplement « rafraîchi »
+/// (redirect réévalué) quand l'état de connexion Firebase change.
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateChangesProvider);
+  final authRepository = ref.watch(authRepositoryProvider);
   final prefs = ref.watch(appPreferencesServiceProvider);
+  final authRefresh = _StreamRefreshNotifier(authRepository.authStateChanges);
+  ref.onDispose(authRefresh.dispose);
 
   return GoRouter(
     initialLocation: '/splash',
+    refreshListenable: authRefresh,
+    redirect: (BuildContext context, GoRouterState state) {
+      final location = state.matchedLocation;
+
+      // Le splash décide lui-même de la suite (session restaurée ou non).
+      if (location == '/splash') return null;
+
+      final isLoggedIn = authRepository.currentUser != null;
+      final isPublicRoute = _publicRoutes.contains(location);
+      final hasSeenOnboarding = prefs.hasSeenOnboarding();
+
+      // Utilisateur NON connecté :
+      if (!isLoggedIn) {
+        if (!isPublicRoute) {
+          // Règle 8 : Si déjà vu, JAMAIS d'onboarding, aller au login
+          return hasSeenOnboarding ? '/login' : '/onboarding';
+        }
+        // S'il tente d'accéder à l'onboarding alors qu'il l'a déjà vu
+        if (location == '/onboarding' && hasSeenOnboarding) {
+          return '/login';
+        }
+        return null;
+      }
+
+      // Utilisateur CONNECTÉ :
+      // 1. Ne peut plus retourner sur les routes publiques
+      if (location == '/login' ||
+          location == '/register' ||
+          location == '/onboarding') {
+        return '/home';
+      }
+
+      // 2. Cloisonnement strict des univers (Règles 7, 10 & 14) :
+      // L'avocat n'a jamais accès aux questionnaires d'orientation
+      final currentUniverse = prefs.getSelectedUniverse();
+      if (currentUniverse == AppUniverse.lawyer &&
+          location.startsWith('/orientation')) {
+        return '/home';
+      }
+
+      return null;
+    },
     routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (context, state) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: '/onboarding',
-        builder: (context, state) => const OnboardingScreen(),
-      ),
-      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(
-        path: '/register',
-        builder: (context, state) => const RegisterScreen(),
-      ),
+      GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
+      GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
+      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
+      GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(
         path: '/forgot-password',
-        builder: (context, state) => const ForgotPasswordScreen(),
+        builder: (_, _) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: '/selection-univers',
-        builder: (context, state) => const SelectionUniversScreen(),
+        builder: (_, _) => const SelectionUniversScreen(),
       ),
-      // Navigation principale avec Navbar flottante (Étape 1)
+
+      // Navigation principale : 5 onglets (voir AppNavigationBar).
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainNavigationShell(navigationShell: navigationShell);
         },
         branches: [
-          // Onglet 0 : Accueil
+          // 0. Accueil
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
+            ],
+          ),
+          // 1. Articles
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/home',
-                builder: (context, state) => const HomeScreen(),
+                path: '/articles',
+                builder: (_, _) => const ContenusScreen(),
               ),
             ],
           ),
-          // Onglet 1 : Professionnels
+          // 2. Avocats ou Psychologues (selon l'univers)
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/professionnels',
-                builder: (context, state) => const ProfessionnelsListScreen(),
+                builder: (_, _) => const ProfessionnelsListScreen(),
               ),
             ],
           ),
-          // Onglet 2 : Rendez-vous (Bouton central surélevé)
+          // 3. Rendez-vous
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/rendez-vous',
-                builder: (context, state) => const RendezVousScreen(),
+                builder: (_, _) => const RendezVousScreen(),
               ),
             ],
           ),
-          // Onglet 3 : Mes dossiers
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/dossiers',
-                builder: (context, state) => const DossiersScreen(),
-              ),
-            ],
-          ),
-          // Onglet 4 : Profil
+          // 4. Profil
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/profil',
-                builder: (context, state) => const ProfileScreen(),
+                builder: (_, _) => const ProfileScreen(),
               ),
             ],
           ),
         ],
       ),
 
-      // Messagerie & discussions
+      // Questionnaire d'orientation et résultat (Psychologue uniquement)
       GoRoute(
-        path: '/messagerie',
-        builder: (context, state) => const MessagerieScreen(),
+        path: '/orientation/intro',
+        builder: (_, _) => const OrientationIntroScreen(),
       ),
+      GoRoute(
+        path: '/orientation',
+        builder: (_, _) => const OrientationQuestionnaireScreen(),
+      ),
+      GoRoute(
+        path: '/orientation/resultat',
+        builder: (_, _) => const OrientationResultScreen(),
+      ),
+
+      // Dossiers juridiques
+      GoRoute(path: '/dossiers', builder: (_, _) => const DossiersScreen()),
+
+      // Messagerie & discussions
+      GoRoute(path: '/messagerie', builder: (_, _) => const MessagerieScreen()),
       GoRoute(
         path: '/messagerie/:id',
         builder: (context, state) {
@@ -130,21 +191,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Questionnaire d'Orientation & Matching (Étape 2)
-      GoRoute(
-        path: '/orientation',
-        builder: (context, state) => const OrientationQuestionnaireScreen(),
-      ),
-      GoRoute(
-        path: '/orientation/recap',
-        builder: (context, state) => const OrientationRecapScreen(),
-      ),
-      GoRoute(
-        path: '/orientation/matching',
-        builder: (context, state) => const OrientationMatchingScreen(),
-      ),
-
-      // Fiche détaillée du professionnel (Étape 4)
+      // Fiche détaillée du professionnel
       GoRoute(
         path: '/professionnels/:id',
         builder: (context, state) {
@@ -153,7 +200,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Choix du créneau horaire en direct (Étape 4)
+      // Choix du créneau horaire
       GoRoute(
         path: '/professionnels/:id/creneau',
         builder: (context, state) {
@@ -163,7 +210,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Confirmation du rendez-vous (Étape 5)
+      // Confirmation du rendez-vous
       GoRoute(
         path: '/rendez-vous/confirmation',
         builder: (context, state) {
@@ -175,14 +222,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Centre de notifications
       GoRoute(
         path: '/notifications',
-        builder: (context, state) => const NotificationsScreen(),
+        builder: (_, _) => const NotificationsScreen(),
       ),
 
-      // Bibliothèque de contenus & articles
-      GoRoute(
-        path: '/contenus',
-        builder: (context, state) => const ContenusScreen(),
-      ),
+      // Détail d'un article
       GoRoute(
         path: '/contenus/:id',
         builder: (context, state) {
@@ -194,56 +237,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Suivi & Bien-être psychologique
       GoRoute(
         path: '/suivi-psychologique',
-        builder: (context, state) => const SuiviPsychologiqueScreen(),
+        builder: (_, _) => const SuiviPsychologiqueScreen(),
       ),
 
       // Historique des paiements & Reçus
-      GoRoute(
-        path: '/paiements',
-        builder: (context, state) => const PaiementsScreen(),
-      ),
+      GoRoute(path: '/paiements', builder: (_, _) => const PaiementsScreen()),
     ],
-    redirect: (BuildContext context, GoRouterState state) {
-      final location = state.matchedLocation;
-
-      // Laisser le SplashScreen gérer sa transition fluide
-      if (location == '/splash') {
-        return null;
-      }
-
-      final isLoggedIn = authState.asData?.value != null;
-      final isAuthRoute =
-          location == '/login' ||
-          location == '/register' ||
-          location == '/forgot-password' ||
-          location == '/onboarding';
-
-      // 1. Utilisateur connecté tentant d'accéder aux écrans de connexion/inscription/onboarding
-      if (isLoggedIn && isAuthRoute) {
-        final universe = prefs.getSelectedUniverse();
-        if (universe != null && !universe.isNeutral) {
-          return '/home';
-        }
-        return '/selection-univers';
-      }
-
-      // 2. Utilisateur non connecté tentant d'accéder à des écrans protégés
-      final isProtectedRoute =
-          location.startsWith('/home') ||
-          location.startsWith('/professionnels') ||
-          location.startsWith('/rendez-vous') ||
-          location.startsWith('/dossiers') ||
-          location.startsWith('/profil') ||
-          location.startsWith('/messagerie') ||
-          location.startsWith('/orientation') ||
-          location == '/selection-univers';
-
-      if (!isLoggedIn && isProtectedRoute) {
-        final hasSeenOnboarding = prefs.hasSeenOnboarding();
-        return hasSeenOnboarding ? '/login' : '/onboarding';
-      }
-
-      return null;
-    },
   );
 });
+
+/// Notifie GoRouter à chaque événement d'un Stream (ici : connexion / déconnexion).
+class _StreamRefreshNotifier extends ChangeNotifier {
+  late final StreamSubscription<dynamic> _subscription;
+
+  _StreamRefreshNotifier(Stream<dynamic> stream) {
+    _subscription = stream.listen((_) => notifyListeners());
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}

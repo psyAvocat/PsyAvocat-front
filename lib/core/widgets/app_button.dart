@@ -2,19 +2,10 @@ import 'package:flutter/material.dart';
 import '../theme/design_system.dart';
 
 /// Variantes de style pour les boutons PsyAvocat.
-enum AppButtonVariant {
-  primary,
-  secondary,
-  outline,
-  ghost,
-}
+enum AppButtonVariant { primary, secondary, outline, ghost }
 
 /// Tailles de boutons PsyAvocat.
-enum AppButtonSize {
-  compact,
-  standard,
-  large,
-}
+enum AppButtonSize { compact, standard, large }
 
 /// Bouton principal et réutilisable de PsyAvocat.
 ///
@@ -76,9 +67,9 @@ class AppButton extends StatefulWidget {
     this.isFullWidth = true,
     this.universe,
     this.borderRadius,
-  })  : isOutlined = false,
-        variant = AppButtonVariant.secondary,
-        hasShadow = false;
+  }) : isOutlined = false,
+       variant = AppButtonVariant.secondary,
+       hasShadow = false;
 
   /// Constructeur de commodité pour bouton avec contour (Outlined)
   const AppButton.outline({
@@ -95,9 +86,9 @@ class AppButton extends StatefulWidget {
     this.isFullWidth = true,
     this.universe,
     this.borderRadius,
-  })  : isOutlined = true,
-        variant = AppButtonVariant.outline,
-        hasShadow = false;
+  }) : isOutlined = true,
+       variant = AppButtonVariant.outline,
+       hasShadow = false;
 
   /// Constructeur de commodité pour bouton textuel discret (Ghost)
   const AppButton.ghost({
@@ -114,9 +105,9 @@ class AppButton extends StatefulWidget {
     this.isFullWidth = false,
     this.universe,
     this.borderRadius,
-  })  : isOutlined = false,
-        variant = AppButtonVariant.ghost,
-        hasShadow = false;
+  }) : isOutlined = false,
+       variant = AppButtonVariant.ghost,
+       hasShadow = false;
 
   @override
   State<AppButton> createState() => _AppButtonState();
@@ -149,7 +140,9 @@ class _AppButtonState extends State<AppButton> {
   TextStyle _getTextStyle(Color effectiveTextColor) {
     switch (widget.size) {
       case AppButtonSize.compact:
-        return AppTypography.buttonTextSmall.copyWith(color: effectiveTextColor);
+        return AppTypography.buttonTextSmall.copyWith(
+          color: effectiveTextColor,
+        );
       case AppButtonSize.standard:
       case AppButtonSize.large:
         return AppTypography.buttonText.copyWith(color: effectiveTextColor);
@@ -162,7 +155,8 @@ class _AppButtonState extends State<AppButton> {
         ? AppUniverseColors.fromUniverse(widget.universe!)
         : AppTheme.universeOf(context);
 
-    final isEffectiveOutlined = widget.isOutlined || widget.variant == AppButtonVariant.outline;
+    final isEffectiveOutlined =
+        widget.isOutlined || widget.variant == AppButtonVariant.outline;
     final isSecondary = widget.variant == AppButtonVariant.secondary;
     final isGhost = widget.variant == AppButtonVariant.ghost;
 
@@ -178,7 +172,9 @@ class _AppButtonState extends State<AppButton> {
       if (isEffectiveOutlined || isGhost) {
         backgroundColor = Colors.transparent;
         effectiveTextColor = AppColors.buttonDisabledText;
-        border = isEffectiveOutlined ? Border.all(color: AppColors.border, width: 1.2) : null;
+        border = isEffectiveOutlined
+            ? Border.all(color: AppColors.border, width: 1.2)
+            : null;
       } else if (isSecondary) {
         backgroundColor = AppColors.neutralSurfaceSecondary;
         effectiveTextColor = AppColors.buttonDisabledText;
@@ -200,7 +196,10 @@ class _AppButtonState extends State<AppButton> {
             ? universeColors.surfaceSelected
             : universeColors.surface;
         effectiveTextColor = widget.textColor ?? primaryColor;
-        border = Border.all(color: universeColors.border.withValues(alpha: 0.5), width: 1);
+        border = Border.all(
+          color: universeColors.border.withValues(alpha: 0.5),
+          width: 1,
+        );
       } else if (isGhost) {
         backgroundColor = _isPressed
             ? primaryColor.withValues(alpha: 0.08)
@@ -220,7 +219,8 @@ class _AppButtonState extends State<AppButton> {
     final radius = widget.borderRadius ?? AppRadii.r16;
 
     // Ombre légère uniquement lorsque nécessaire
-    final List<BoxShadow> boxShadows = (!isDisabled && widget.hasShadow && !isEffectiveOutlined && !isGhost)
+    final List<BoxShadow> boxShadows =
+        (!isDisabled && widget.hasShadow && !isEffectiveOutlined && !isGhost)
         ? AppShadows.buttonUniverse(primaryColor)
         : AppShadows.none;
 
@@ -284,7 +284,8 @@ class _AppButtonState extends State<AppButton> {
       style: _getTextStyle(textColor),
     );
 
-    final iconWidget = widget.customIcon ??
+    final iconWidget =
+        widget.customIcon ??
         (widget.icon != null
             ? Icon(
                 widget.icon,
