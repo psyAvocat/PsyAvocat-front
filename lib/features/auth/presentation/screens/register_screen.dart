@@ -81,21 +81,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
 
     final phone = _phoneController.text.trim();
-    final route = await ref
+    final isSuccess = await ref
         .read(authControllerProvider.notifier)
-        .signUp(
+        .register(
           prenom: _prenomController.text.trim(),
           nom: _nomController.text.trim(),
           telephone: phone.isEmpty ? null : phone,
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
-    if (route != null && mounted) {
+    if (isSuccess && mounted) {
       AppNotification.showSuccess(
         context,
         'Inscription réussie ! Vous pouvez maintenant vous connecter.',
       );
-      context.go(route);
+      context.go('/login');
     }
   }
 

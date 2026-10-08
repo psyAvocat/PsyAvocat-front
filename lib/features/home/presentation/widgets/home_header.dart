@@ -14,7 +14,7 @@ class HomeHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final universe = ref.watch(currentUniverseProvider);
-    final unreadCount = ref.watch(unreadNotificationsCountProvider);
+    final unreadCount = ref.watch(unreadNotificationsBadgeProvider);
 
     // Le prénom vient du backend (GET /me) ; tant qu'il n'est pas connu : « Bonjour ».
     final prenom = ref.watch(currentUserProvider).value?.prenom?.trim() ?? '';

@@ -3,18 +3,16 @@ import '../../../orientation/data/models/questionnaire_model.dart';
 import '../../../orientation/presentation/controllers/orientation_controller.dart';
 import '../../../rendez_vous/data/models/rendez_vous_model.dart';
 import '../../../rendez_vous/presentation/controllers/rendez_vous_controller.dart';
-
-/// Statuts (déjà traduits par le repository) d'un rendez-vous encore à venir.
-const _upcomingStatuses = {'Confirmé', 'En attente'};
+import '../../../../shared/enums/appointment_status.dart';
 
 /// Prochain rendez-vous de l'utilisateur (`null` s'il n'en a aucun à venir).
 /// Dérivé de GET /api/rendez-vous : chargement et erreurs sont conservés.
-final nextAppointmentProvider = Provider<AsyncValue<RendezVousItem?>>((ref) {
+final nextAppointmentProvider = Provider<AsyncValue<RendezVous?>>((ref) {
   return ref
-      .watch(rendezVousListProvider)
+      .watch(rendezVousControllerProvider)
       .whenData(
         (list) => list
-            .where((rdv) => _upcomingStatuses.contains(rdv.status))
+            .where((rdv) => rdv.phaseAt(DateTime.now()) == AppointmentPhase.aVenir)
             .firstOrNull,
       );
 });

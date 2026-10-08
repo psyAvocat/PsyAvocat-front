@@ -26,7 +26,7 @@ class HomeScreen extends ConsumerWidget {
   Future<void> _refresh(WidgetRef ref) async {
     ref
       ..invalidate(currentUserProvider)
-      ..invalidate(rendezVousListProvider)
+      ..invalidate(rendezVousControllerProvider)
       ..invalidate(mesResultatsProvider)
       ..invalidate(notificationsListProvider)
       ..invalidate(professionnelsByUniverseProvider);

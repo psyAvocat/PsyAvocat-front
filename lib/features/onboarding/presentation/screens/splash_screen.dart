@@ -62,16 +62,24 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   /// Route à ouvrir, ou `null` si la restauration de session a échoué.
   Future<String?> _resolveNextRoute() async {
-    final authController = ref.read(authControllerProvider.notifier);
-    final route = await authController.restoreSession();
-    if (route != null) return route;
-
-    final authState = ref.read(authControllerProvider);
-    if (authState.hasError) {
-      if (mounted) {
-        setState(() => _errorMessage = userMessageFor(authState.error!));
+    final authRepository = ref.read(authRepositoryProvider);
+    if (authRepository.currentUser != null) {
+      // Attendre la résolution de la session
+      await ref.read(sessionControllerProvider.notifier).resolve();
+      final sessionState = ref.read(sessionControllerProvider);
+      
+      if (sessionState.status == SessionStatus.error) {
+        if (mounted) {
+          setState(() => _errorMessage = sessionState.message ?? 'Erreur de connexion');
+        }
+        return null;
       }
-      return null;
+      
+      if (sessionState.isAuthorized) {
+        final hasUniverse = ref.read(appPreferencesServiceProvider).getSelectedUniverse() != null;
+        return hasUniverse ? '/home' : '/selection-univers';
+      }
+      return '/login'; // Fallback if denied or profile incomplete handling not specified here
     }
 
     // Personne n'est connecté.

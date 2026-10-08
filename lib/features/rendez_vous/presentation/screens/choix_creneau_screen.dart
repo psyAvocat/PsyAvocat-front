@@ -40,7 +40,7 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
     final repo = ref.watch(professionnelsRepositoryProvider);
 
     return FutureBuilder<ProfessionalDetail?>(
-      future: repo.getProfessionnelById(widget.professionnelId),
+      future: repo.getProfessionnel(widget.professionnelId),
       builder: (context, snapshot) {
         final pro = snapshot.data;
         if (pro == null) {

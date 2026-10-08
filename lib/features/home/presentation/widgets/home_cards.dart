@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../orientation/data/models/questionnaire_model.dart';
 import '../../../orientation/presentation/controllers/orientation_controller.dart';
 import '../../../rendez_vous/data/models/rendez_vous_model.dart';
-import '../../../rendez_vous/presentation/controllers/rendez_vous_controller.dart';
+import '../../../rendez_vous/presentation/controllers/rendez_vous_controller.dart' hide nextAppointmentProvider;
 import '../controllers/home_providers.dart';
 
 /// Carte « Prochain rendez-vous » (GET /api/rendez-vous).
@@ -18,10 +19,10 @@ class NextAppointmentCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final universe = ref.watch(currentUniverseProvider);
 
-    return AppAsyncView<RendezVousItem?>(
+    return AppAsyncView<RendezVous?>(
       compact: true,
       value: ref.watch(nextAppointmentProvider),
-      onRetry: () => ref.invalidate(rendezVousListProvider),
+      onRetry: () => ref.invalidate(rendezVousControllerProvider),
       builder: (rdv) => rdv == null
           // État vide avec une action utile : trouver un professionnel.
           ? _NoAppointmentContent(
@@ -76,7 +77,7 @@ class _NoAppointmentContent extends StatelessWidget {
 }
 
 class _AppointmentContent extends StatelessWidget {
-  final RendezVousItem appointment;
+  final RendezVous appointment;
 
   const _AppointmentContent({required this.appointment});
 
@@ -102,13 +103,13 @@ class _AppointmentContent extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      appointment.day,
+                      appointment.dateHeure.day.toString(),
                       style: AppTypography.petitTitre.copyWith(
                         color: scheme.primary,
                       ),
                     ),
                     Text(
-                      appointment.month,
+                      DateFormat('MMM', 'fr_FR').format(appointment.dateHeure).toUpperCase(),
                       style: AppTypography.miniTexte.copyWith(
                         color: scheme.primary,
                       ),
@@ -122,18 +123,18 @@ class _AppointmentContent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      appointment.proName,
+                      appointment.professionnelDisplayName,
                       style: AppTypography.texteSemiBold,
                     ),
                     AppSpacing.vGap4,
                     Text(
-                      appointment.time,
+                      DateFormat('HH:mm').format(appointment.dateHeure),
                       style: AppTypography.texteSecondaire,
                     ),
-                    Text(appointment.mode, style: AppTypography.miniTexte),
+                    Text(appointment.mode ?? 'Visio', style: AppTypography.miniTexte),
                     AppSpacing.vGap4,
                     Text(
-                      appointment.status,
+                      appointment.statut.label,
                       style: AppTypography.badgeTexte.copyWith(
                         color: scheme.primary,
                       ),

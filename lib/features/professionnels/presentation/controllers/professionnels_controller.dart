@@ -33,6 +33,11 @@ final professionnelsProvider = FutureProvider.autoDispose
   }
 });
 
+/// Provider simplifié pour récupérer tous les professionnels de l'univers courant sans filtre.
+final professionnelsByUniverseProvider = FutureProvider.autoDispose<List<ProfessionnelSummary>>((ref) {
+  return ref.watch(professionnelsProvider((q: null, specialiteId: null, tri: ProfessionnelSort.pertinence)).future);
+});
+
 /// Spécialités de l'univers courant (puces de filtre).
 final specialitesProvider = FutureProvider.autoDispose<List<Specialite>>((ref) {
   final type = ref.watch(currentUniverseProvider).apiProfessionalType;

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../shared/enums/appointment_status.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../data/models/rendez_vous_model.dart';
 import '../controllers/rendez_vous_controller.dart';
@@ -34,7 +37,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
     final universe = ref.watch(currentUniverseProvider);
     final primaryColor = universe.primaryColor;
 
-    final rdvAsync = ref.watch(rendezVousListProvider);
+    final rdvAsync = ref.watch(rendezVousControllerProvider);
 
     // Gestion état chargement / erreur
     if (rdvAsync.isLoading) {
@@ -55,7 +58,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
               const Text('Impossible de charger vos rendez-vous'),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => ref.read(rendezVousListProvider.notifier).refresh(),
+                onPressed: () => ref.read(rendezVousControllerProvider.notifier).reload(),
                 child: const Text('Réessayer'),
               ),
             ],
@@ -65,9 +68,9 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
     }
 
     final rdvList = rdvAsync.value ?? [];
-    final aVenir = rdvList.where((r) => r.status == 'Confirmé' || r.status == 'En attente').toList();
-    final passes = rdvList.where((r) => r.status == 'Passé').toList();
-    final annules = rdvList.where((r) => r.status == 'Annulé').toList();
+    final aVenir = rdvList.where((r) => r.statut == AppointmentStatus.confirme || r.statut == AppointmentStatus.enAttente).toList();
+    final passes = rdvList.where((r) => r.statut == AppointmentStatus.passe).toList();
+    final annules = rdvList.where((r) => r.statut == AppointmentStatus.annule).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFC),
@@ -156,15 +159,15 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
     );
   }
 
-  Widget _buildAppointmentsList({required List<RendezVousItem> items}) {
+  Widget _buildAppointmentsList({required List<RendezVous> items}) {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
       itemCount: items.length,
       separatorBuilder: (context, index) => const SizedBox(height: 14),
       itemBuilder: (context, index) {
         final item = items[index];
-        final isConfirme = item.status == 'Confirmé';
-        final isAnnule = item.status == 'Annulé';
+        final isConfirme = item.statut == AppointmentStatus.confirme;
+        final isAnnule = item.statut == AppointmentStatus.annule;
 
         final statusColor = isConfirme
             ? const Color(0xFF16A34A)
@@ -176,6 +179,11 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
             : isAnnule
                 ? const Color(0xFFFEE2E2)
                 : const Color(0xFFFEF3C7);
+        
+        final dayStr = DateFormat('d', 'fr_FR').format(item.dateHeure);
+        final monthStr = DateFormat('MMM', 'fr_FR').format(item.dateHeure);
+        final yearStr = DateFormat('yyyy', 'fr_FR').format(item.dateHeure);
+        final timeStr = DateFormat('HH:mm', 'fr_FR').format(item.dateHeure) + ' - ' + DateFormat('HH:mm', 'fr_FR').format(item.fin);
 
         return InkWell(
           onTap: () {
@@ -210,7 +218,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                   child: Column(
                     children: [
                       Text(
-                        item.day,
+                        dayStr,
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
@@ -218,7 +226,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                         ),
                       ),
                       Text(
-                        item.month,
+                        monthStr,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -226,7 +234,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                         ),
                       ),
                       Text(
-                        item.year,
+                        yearStr,
                         style: const TextStyle(
                           fontSize: 10,
                           color: Color(0xFF6B7280),
@@ -244,7 +252,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        item.time,
+                        timeStr,
                         style: const TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
@@ -256,7 +264,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                         children: [
                           Flexible(
                             child: Text(
-                              item.proName,
+                              item.professionnelDisplayName,
                               style: const TextStyle(
                                 fontSize: 15.5,
                                 fontWeight: FontWeight.w700,
@@ -272,7 +280,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              item.proRole,
+                              item.typeProfessionnel,
                               style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -284,7 +292,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        item.specialty,
+                        item.professionnelSpecialite ?? '',
                         style: const TextStyle(
                           fontSize: 13,
                           color: Color(0xFF4B5563),
@@ -297,7 +305,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              item.mode,
+                              item.mode ?? 'Non spécifié',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFF6B7280),
@@ -314,7 +322,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          item.status,
+                          item.statut.label,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -339,7 +347,12 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
     );
   }
 
-  void _showAppointmentDetailsSheet(BuildContext context, RendezVousItem item) {
+  void _showAppointmentDetailsSheet(BuildContext context, RendezVous item) {
+    final dayStr = DateFormat('d', 'fr_FR').format(item.dateHeure);
+    final monthStr = DateFormat('MMM', 'fr_FR').format(item.dateHeure);
+    final yearStr = DateFormat('yyyy', 'fr_FR').format(item.dateHeure);
+    final timeStr = '${DateFormat('HH:mm', 'fr_FR').format(item.dateHeure)} - ${DateFormat('HH:mm', 'fr_FR').format(item.fin)}';
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -368,7 +381,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    item.proName,
+                    item.professionnelDisplayName,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -378,17 +391,17 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: item.status == 'Confirmé'
+                      color: item.statut == AppointmentStatus.confirme
                           ? const Color(0xFFDCFCE7)
                           : const Color(0xFFFEE2E2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      item.status,
+                      item.statut.label,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: item.status == 'Confirmé'
+                        color: item.statut == AppointmentStatus.confirme
                             ? const Color(0xFF16A34A)
                             : const Color(0xFFEF4444),
                       ),
@@ -398,7 +411,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
               ),
               const SizedBox(height: 6),
               Text(
-                '${item.proRole} • ${item.specialty}',
+                '${item.typeProfessionnel} • ${item.professionnelSpecialite ?? ''}',
                 style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563)),
               ),
               const Divider(height: 24),
@@ -406,7 +419,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                 children: [
                   const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF6B7280)),
                   const SizedBox(width: 8),
-                  Text('${item.day} ${item.month} ${item.year} à ${item.time}'),
+                  Text('$dayStr $monthStr $yearStr à $timeStr'),
                 ],
               ),
               const SizedBox(height: 8),
@@ -414,7 +427,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                 children: [
                   const Icon(Icons.location_on_outlined, size: 16, color: Color(0xFF6B7280)),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(item.mode)),
+                  Expanded(child: Text(item.mode ?? 'Non spécifié')),
                 ],
               ),
               const SizedBox(height: 8),
@@ -422,17 +435,17 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
                 children: [
                   const Icon(Icons.payments_outlined, size: 16, color: Color(0xFF6B7280)),
                   const SizedBox(width: 8),
-                  Text('Honoraires : ${item.formattedMontantTotal} (Acompte 20% réglé : ${item.formattedAcompte})'),
+                  Text('Honoraires : ${item.montantTotal ?? 0} FCFA (Acompte réglé : ${item.montantAcompte ?? 0} FCFA)'),
                 ],
               ),
-              if (item.status == 'Confirmé') ...[
+              if (item.canBeChangedAt(DateTime.now())) ...[
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
                   height: 48,
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      ref.read(rendezVousListProvider.notifier).cancelRendezVous(item.id);
+                      ref.read(rendezVousControllerProvider.notifier).annuler(item.id);
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -460,3 +473,4 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
     );
   }
 }
+
