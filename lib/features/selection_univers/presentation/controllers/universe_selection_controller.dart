@@ -35,13 +35,13 @@ class UniverseSelectionController extends Notifier<AsyncValue<void>> {
     final profilRepository = ref.read(profilRepositoryProvider);
 
     if (universe.isPsychologist) {
-      await profilRepository.createPatientProfile(
+      await profilRepository.createClientProfile(
         nom: identity.nom,
         prenom: identity.prenom,
         telephone: identity.telephone,
       );
     } else {
-      await profilRepository.createJusticiableProfile(
+      await profilRepository.createClientProfile(
         nom: identity.nom,
         prenom: identity.prenom,
         telephone: identity.telephone,

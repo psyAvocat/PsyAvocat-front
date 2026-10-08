@@ -5,6 +5,7 @@ import '../../../../core/network/network_providers.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../../../core/theme/app_universe.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../auth/presentation/controllers/session_controller.dart';
 import '../../data/models/profil_model.dart';
 import '../controllers/profil_controller.dart';
 import '../../../rendez_vous/presentation/controllers/rendez_vous_controller.dart';
@@ -22,7 +23,7 @@ class ProfileScreen extends ConsumerWidget {
     final authState = ref.watch(authStateChangesProvider);
     final user = authState.asData?.value;
     final profilAsync = ref.watch(currentProfilProvider);
-    final rdvAsync = ref.watch(rendezVousListProvider);
+    final rdvAsync = ref.watch(rendezVousControllerProvider);
     final dossiersAsync = ref.watch(dossiersListProvider);
 
     final rdvCount = rdvAsync.value?.length ?? 0;
@@ -140,7 +141,7 @@ class ProfileScreen extends ConsumerWidget {
                           _InfoRow(
                             Icons.location_on_outlined,
                             'Ville',
-                            profil.ville!,
+                            ''!,
                           ),
                         _InfoRow(
                           Icons.badge_outlined,
@@ -301,7 +302,7 @@ class ProfileScreen extends ConsumerWidget {
     );
 
     if (shouldLogout == true && context.mounted) {
-      await ref.read(authControllerProvider.notifier).signOut();
+      await ref.read(sessionControllerProvider.notifier).signOut();
       if (context.mounted) {
         context.go('/login');
       }
@@ -828,9 +829,7 @@ class _EditProfilSheetState extends ConsumerState<_EditProfilSheet> {
           telephone: _telephoneController.text.trim().isNotEmpty
               ? _telephoneController.text.trim()
               : null,
-          ville: _villeController.text.trim().isNotEmpty
-              ? _villeController.text.trim()
-              : null,
+
         );
 
     if (mounted) {

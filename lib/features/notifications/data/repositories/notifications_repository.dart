@@ -3,58 +3,42 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/network/network_providers.dart';
 import '../models/notification_model.dart';
 
-/// Contrat du repository de notifications
 abstract class NotificationsRepository {
-  Future<List<NotificationModel>> getNotifications();
+  Future<List<NotificationItem>> getNotifications();
+
+  /// Nombre de notifications non lues (le backend renvoie un nombre brut).
+  Future<int> getUnreadCount();
+
   Future<void> markAsRead(String id);
+
   Future<void> markAllAsRead();
-  Future<void> deleteNotification(String id);
 }
 
-/// Implémentation API connectée au backend Spring Boot (GET /api/notifications)
 class ApiNotificationsRepository implements NotificationsRepository {
   final ApiClient _client;
 
   ApiNotificationsRepository(this._client);
 
   @override
-  Future<List<NotificationModel>> getNotifications() async {
-    try {
-      final response = await _client.get('/notifications');
-      final list = response.data as List<dynamic>? ?? [];
-      return list
-          .map((item) => NotificationModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
-      // Si l'endpoint n'est pas encore implémenté ou renvoie 404, renvoie une liste vide
-      return [];
-    }
+  Future<List<NotificationItem>> getNotifications() async {
+    final response = await _client.get('/notifications');
+    final list = response.data as List<dynamic>? ?? [];
+    return list.map((e) => NotificationItem.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   @override
-  Future<void> markAsRead(String id) async {
-    try {
-      await _client.put('/notifications/$id/read');
-    } catch (_) {}
+  Future<int> getUnreadCount() async {
+    final response = await _client.get('/notifications/unread-count');
+    return (response.data as num?)?.toInt() ?? 0;
   }
 
   @override
-  Future<void> markAllAsRead() async {
-    try {
-      await _client.put('/notifications/read-all');
-    } catch (_) {}
-  }
+  Future<void> markAsRead(String id) => _client.patch('/notifications/$id/lu');
 
   @override
-  Future<void> deleteNotification(String id) async {
-    try {
-      await _client.delete('/notifications/$id');
-    } catch (_) {}
-  }
+  Future<void> markAllAsRead() => _client.patch('/notifications/lu-tout');
 }
 
-/// Provider officiel pour l'accès aux notifications réelles
 final notificationsRepositoryProvider = Provider<NotificationsRepository>((ref) {
-  final client = ref.watch(apiClientProvider);
-  return ApiNotificationsRepository(client);
+  return ApiNotificationsRepository(ref.watch(apiClientProvider));
 });

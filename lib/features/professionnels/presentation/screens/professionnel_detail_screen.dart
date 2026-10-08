@@ -47,7 +47,7 @@ class _ProfessionnelDetailScreenState
     final repo = ref.watch(professionnelsRepositoryProvider);
 
     return FutureBuilder<ProfessionalDetail?>(
-      future: repo.getProfessionnelById(widget.professionnelId),
+      future: repo.getProfessionnel(widget.professionnelId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(

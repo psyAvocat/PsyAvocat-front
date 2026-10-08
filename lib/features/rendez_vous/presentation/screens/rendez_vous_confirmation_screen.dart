@@ -37,27 +37,22 @@ class _RendezVousConfirmationScreenState extends ConsumerState<RendezVousConfirm
 
     final pro = widget.bookingData['pro'] as ProfessionalDetail?;
     final jour = widget.bookingData['jour'] as DisponibiliteJour?;
-    final creneau = widget.bookingData['creneau'] as String? ?? '10:00';
     final mode = widget.bookingData['mode'] as String? ?? 'En ligne (visioconférence)';
     final tarif = widget.bookingData['tarif'] as ProfessionalTarif?;
 
     if (pro != null && jour != null) {
       final total = tarif?.montantFcfa ?? 150000;
       final dispoId = widget.bookingData['disponibiliteId'] as String?;
-      ref.read(rendezVousListProvider.notifier).addRendezVous(
-            proId: pro.id,
-            proName: pro.nom,
-            proRole: pro.isAvocat ? 'Avocat' : 'Psychologue',
-            specialty: pro.specialitePrincipale,
-            day: jour.labelNumero,
-            month: '${jour.labelMois}.',
-            year: '2025',
-            time: '$creneau - ${creneau == "18:30" ? "19:15" : "${int.parse(creneau.split(':')[0]) + 1}:${creneau.split(':')[1]}"}',
-            mode: mode,
-            montantTotal: total,
-            motif: tarif?.titre,
-            disponibiliteId: dispoId,
-          );
+      if (dispoId != null) {
+        ref.read(rendezVousControllerProvider.notifier).reserver(
+              typeProfessionnel: pro.isAvocat ? 'AVOCAT' : 'PSYCHOLOGUE',
+              professionnelId: pro.id,
+              disponibiliteId: dispoId,
+              mode: mode,
+              montantTotal: total.toDouble(),
+              motif: tarif?.titre,
+            );
+      }
     }
   }
 

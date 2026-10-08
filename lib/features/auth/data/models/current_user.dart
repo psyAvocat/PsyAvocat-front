@@ -10,6 +10,9 @@ class CurrentUser {
   final List<String> roles;
   final bool hasMetierProfile;
 
+  /// Compte désactivé par l'administration → accès refusé.
+  final bool actif;
+
   const CurrentUser({
     required this.userId,
     required this.email,
@@ -17,6 +20,7 @@ class CurrentUser {
     required this.prenom,
     required this.roles,
     required this.hasMetierProfile,
+    this.actif = true,
   });
 
   factory CurrentUser.fromJson(Map<String, dynamic> json) {
@@ -29,15 +33,21 @@ class CurrentUser {
           .map((r) => r.toString())
           .toList(),
       hasMetierProfile: json['hasMetierProfile'] as bool? ?? false,
+      // Champ absent (backend antérieur) : compte considéré actif.
+      actif: json['actif'] as bool? ?? true,
     );
   }
 
-  /// Patient (psychologie) ou justiciable (droit) : utilisateur de l'app mobile.
+  /// Client de l'app mobile : profil unifié, patient ou justiciable.
   bool get isClient =>
-      roles.contains('ROLE_PATIENT') || roles.contains('ROLE_JUSTICIABLE');
+      roles.contains('ROLE_CLIENT') ||
+      roles.contains('ROLE_PATIENT') ||
+      roles.contains('ROLE_JUSTICIABLE');
 
   /// Avocat, psychologue ou administrateur : ils utilisent l'espace web.
   bool get isProfessionalOrAdmin =>
       roles.contains('ROLE_PROFESSIONNEL') ||
+      roles.contains('ROLE_AVOCAT') ||
+      roles.contains('ROLE_PSYCHOLOGUE') ||
       roles.contains('ROLE_ADMINISTRATEUR');
 }

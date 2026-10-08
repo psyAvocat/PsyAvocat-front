@@ -19,7 +19,16 @@ class ProfessionnelsListScreen extends ConsumerWidget {
     final professionnels = ref.watch(professionnelsByUniverseProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(universe.professionalsLabel)),
+      appBar: AppBar(
+        title: Text(universe.professionalsLabel),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: 'Rechercher',
+            onPressed: () => context.push('/professionnels/recherche'),
+          ),
+        ],
+      ),
       body: AppAsyncView<List<ProfessionnelSummary>>(
         value: professionnels,
         isEmpty: (list) => list.isEmpty,

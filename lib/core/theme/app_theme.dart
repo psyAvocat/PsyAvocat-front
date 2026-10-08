@@ -36,8 +36,11 @@ class AppUniverseColors extends ThemeExtension<AppUniverseColors> {
     required this.accent,
   });
 
-  factory AppUniverseColors.fromUniverse(AppUniverse universe) {
-    final scheme = AppTheme.colorSchemeFor(universe);
+  factory AppUniverseColors.fromUniverse(
+    AppUniverse universe, {
+    Brightness brightness = Brightness.light,
+  }) {
+    final scheme = AppTheme.colorSchemeFor(universe, brightness: brightness);
     return AppUniverseColors(
       universe: universe,
       primary: scheme.primary,
@@ -120,15 +123,20 @@ class AppTheme {
   /// Thème dédié à l'univers Avocat (#0C2659)
   static ThemeData get lawyerTheme => buildTheme(AppUniverse.lawyer);
 
-  /// Rétrocompatibilité : thème sombre
-  static ThemeData get darkTheme => lightTheme;
+  /// Thème sombre (univers neutre).
+  static ThemeData get darkTheme =>
+      buildTheme(AppUniverse.neutral, brightness: Brightness.dark);
 
   // ===========================================================================
   // COLOR SCHEME — source unique des couleurs d'univers
   // ===========================================================================
 
-  /// Palette Material 3 de chaque univers.
-  static ColorScheme colorSchemeFor(AppUniverse universe) {
+  /// Palette Material 3 de chaque univers, en clair ou en sombre.
+  static ColorScheme colorSchemeFor(
+    AppUniverse universe, {
+    Brightness brightness = Brightness.light,
+  }) {
+    if (brightness == Brightness.dark) return _darkSchemeFor(universe);
     switch (universe) {
       case AppUniverse.psychologist:
         return _baseScheme.copyWith(
@@ -163,6 +171,64 @@ class AppTheme {
     }
   }
 
+  /// Variantes sombres : couleurs d'univers éclaircies pour rester lisibles
+  /// sur fond sombre (contraste AA), surfaces neutres sombres communes.
+  static ColorScheme _darkSchemeFor(AppUniverse universe) {
+    switch (universe) {
+      case AppUniverse.psychologist:
+        return _darkBaseScheme.copyWith(
+          primary: const Color(0xFFCDB2F7),
+          onPrimary: AppColors.psychologistDark,
+          primaryContainer: AppColors.psychologist,
+          onPrimaryContainer: AppColors.psychologistSurfaceSelected,
+          secondary: AppColors.psychologistAccent,
+          secondaryContainer: const Color(0xFF2B1F45),
+          onSecondaryContainer: AppColors.psychologistSurfaceSelected,
+          tertiary: AppColors.psychologistAccent,
+        );
+      case AppUniverse.lawyer:
+        return _darkBaseScheme.copyWith(
+          primary: const Color(0xFFA9C2F5),
+          onPrimary: AppColors.lawyerDark,
+          primaryContainer: AppColors.lawyerLight,
+          onPrimaryContainer: AppColors.lawyerSurfaceSelected,
+          secondary: AppColors.lawyerAccent,
+          secondaryContainer: const Color(0xFF1A2742),
+          onSecondaryContainer: AppColors.lawyerSurfaceSelected,
+          tertiary: AppColors.lawyerAccent,
+        );
+      case AppUniverse.neutral:
+        return _darkBaseScheme.copyWith(
+          primary: const Color(0xFFC9B0F5),
+          onPrimary: AppColors.psychologistDark,
+          primaryContainer: AppColors.brandPurple,
+          onPrimaryContainer: AppColors.psychologistSurfaceSelected,
+          secondary: AppColors.lawyerAccent,
+          secondaryContainer: const Color(0xFF241F38),
+          onSecondaryContainer: AppColors.psychologistSurfaceSelected,
+          tertiary: AppColors.psychologistAccent,
+        );
+    }
+  }
+
+  static const ColorScheme _darkBaseScheme = ColorScheme.dark(
+    onSecondary: AppColors.darkBackground,
+    onTertiary: AppColors.darkBackground,
+    surface: AppColors.darkSurface,
+    onSurface: AppColors.darkTextPrimary,
+    onSurfaceVariant: AppColors.darkTextSecondary,
+    surfaceContainerLowest: AppColors.darkBackground,
+    surfaceContainerLow: AppColors.darkBackground,
+    surfaceContainer: AppColors.darkSurface,
+    surfaceContainerHigh: AppColors.darkSurfaceSecondary,
+    outline: Color(0xFF5B6B88),
+    outlineVariant: AppColors.darkBorder,
+    error: Color(0xFFFF8A8C),
+    onError: AppColors.darkBackground,
+    errorContainer: Color(0xFF5C1214),
+    onErrorContainer: Color(0xFFFFDADB),
+  );
+
   /// Couleurs communes à tous les univers (surfaces, textes, erreurs).
   static const ColorScheme _baseScheme = ColorScheme.light(
     onPrimary: AppColors.textOnColor,
@@ -187,22 +253,28 @@ class AppTheme {
   // THEMEDATA
   // ===========================================================================
 
-  /// Générateur de thème en fonction de l'univers sélectionné
-  static ThemeData buildTheme(AppUniverse universe) {
-    final scheme = colorSchemeFor(universe);
+  /// Générateur de thème : univers (couleurs) × luminosité (clair / sombre).
+  static ThemeData buildTheme(
+    AppUniverse universe, {
+    Brightness brightness = Brightness.light,
+  }) {
+    final scheme = colorSchemeFor(universe, brightness: brightness);
     final textTheme = AppTypography.createTextTheme(scheme.onSurface);
 
-    const inputBorder = OutlineInputBorder(
+    final inputBorder = OutlineInputBorder(
       borderRadius: AppRadii.r14,
-      borderSide: BorderSide(color: AppColors.formBorder),
+      borderSide: BorderSide(color: scheme.outlineVariant),
     );
 
     return ThemeData(
       useMaterial3: true,
+      brightness: brightness,
       colorScheme: scheme,
       primaryColor: scheme.primary,
       scaffoldBackgroundColor: scheme.surfaceContainerLow,
-      extensions: [AppUniverseColors.fromUniverse(universe)],
+      extensions: [
+        AppUniverseColors.fromUniverse(universe, brightness: brightness),
+      ],
       textTheme: textTheme,
 
       appBarTheme: AppBarTheme(
@@ -223,8 +295,8 @@ class AppTheme {
           padding: AppButtonSizes.paddingDefault,
           shape: const StadiumBorder(),
           textStyle: AppTypography.buttonText,
-          disabledBackgroundColor: AppColors.buttonDisabledBackground,
-          disabledForegroundColor: AppColors.buttonDisabledText,
+          disabledBackgroundColor: scheme.onSurface.withValues(alpha: 0.12),
+          disabledForegroundColor: scheme.onSurface.withValues(alpha: 0.38),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -261,7 +333,7 @@ class AppTheme {
         filled: true,
         fillColor: scheme.surface,
         contentPadding: AppSpacing.inputPadding,
-        hintStyle: AppTypography.texte.copyWith(color: AppColors.formHint),
+        hintStyle: AppTypography.texte.copyWith(color: scheme.onSurfaceVariant),
         labelStyle: AppTypography.labelInput,
         errorStyle: AppTypography.miniTexte.copyWith(color: scheme.error),
         errorMaxLines: 2,
@@ -284,9 +356,9 @@ class AppTheme {
         color: scheme.surface,
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: AppRadii.r20,
-          side: BorderSide(color: AppColors.formBorder),
+          side: BorderSide(color: scheme.outlineVariant),
         ),
       ),
 
@@ -324,7 +396,7 @@ class AppTheme {
 
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: scheme.primary,
-        linearTrackColor: AppColors.progressTrack,
+        linearTrackColor: scheme.surfaceContainerHigh,
         circularTrackColor: scheme.primary.withValues(alpha: 0.15),
         linearMinHeight: 8,
         borderRadius: AppRadii.pill,
@@ -339,16 +411,29 @@ class AppTheme {
         backgroundColor: scheme.surface,
         elevation: 0,
         shape: const RoundedRectangleBorder(borderRadius: AppRadii.r20),
-        titleTextStyle: AppTypography.petitTitre,
-        contentTextStyle: AppTypography.texteSecondaire,
+        titleTextStyle: AppTypography.petitTitre.copyWith(color: scheme.onSurface),
+        contentTextStyle: AppTypography.texteSecondaire.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
       ),
 
       snackBarTheme: const SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
       ),
 
-      dividerTheme: const DividerThemeData(
-        color: AppColors.divider,
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: scheme.surface,
+        showDragHandle: true,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.topSheet),
+      ),
+
+      listTileTheme: ListTileThemeData(
+        iconColor: scheme.onSurfaceVariant,
+        textColor: scheme.onSurface,
+      ),
+
+      dividerTheme: DividerThemeData(
+        color: scheme.outlineVariant,
         thickness: 1,
         space: 1,
       ),

@@ -33,16 +33,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final route = await ref
+    final isSuccess = await ref
         .read(authControllerProvider.notifier)
         .signIn(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
 
-    if (route != null && mounted) {
+    if (isSuccess && mounted) {
       AppNotification.showSuccess(context, 'Connexion réussie !');
-      context.go(route);
+      // GoRouter automatically redirects to /home based on authStateChanges
     }
   }
 

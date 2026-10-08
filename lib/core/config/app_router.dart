@@ -17,6 +17,7 @@ import '../../features/orientation/presentation/screens/orientation_result_scree
 import '../../features/professionnels/data/models/professional_detail_model.dart';
 import '../../features/professionnels/presentation/screens/professionnel_detail_screen.dart';
 import '../../features/professionnels/presentation/screens/professionnels_list_screen.dart';
+import '../../features/professionnels/presentation/screens/recherche_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/rendez_vous/presentation/screens/choix_creneau_screen.dart';
 import '../../features/rendez_vous/presentation/screens/rendez_vous_confirmation_screen.dart';
@@ -135,6 +136,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/professionnels',
                 builder: (_, _) => const ProfessionnelsListScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'recherche',
+                    builder: (_, _) => const RechercheScreen(),
+                  ),
+                ],
               ),
             ],
           ),

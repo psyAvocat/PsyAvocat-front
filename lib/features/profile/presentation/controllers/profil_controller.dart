@@ -25,10 +25,9 @@ class ProfilNotifier extends AsyncNotifier<ProfilModel?> {
   }) async {
     try {
       final updated = await ref.read(profilRepositoryProvider).updateProfile(
-            nom: nom,
-            prenom: prenom,
-            telephone: telephone,
-            ville: ville,
+            nom: nom ?? '',
+            prenom: prenom ?? '',
+            telephone: telephone ?? '',
           );
       state = AsyncData(updated);
       return true;
@@ -45,11 +44,10 @@ class ProfilNotifier extends AsyncNotifier<ProfilModel?> {
     String? ville,
   }) async {
     try {
-      final created = await ref.read(profilRepositoryProvider).createPatientProfile(
+      final created = await ref.read(profilRepositoryProvider).createClientProfile(
             nom: nom,
             prenom: prenom,
-            telephone: telephone,
-            ville: ville,
+            telephone: telephone ?? '',
           );
       state = AsyncData(created);
       return true;
@@ -66,11 +64,10 @@ class ProfilNotifier extends AsyncNotifier<ProfilModel?> {
     String? ville,
   }) async {
     try {
-      final created = await ref.read(profilRepositoryProvider).createJusticiableProfile(
+      final created = await ref.read(profilRepositoryProvider).createClientProfile(
             nom: nom,
             prenom: prenom,
-            telephone: telephone,
-            ville: ville,
+            telephone: telephone ?? '',
           );
       state = AsyncData(created);
       return true;

@@ -104,10 +104,43 @@ class FirebaseAuthDatasource {
         return 'Le mot de passe choisi est trop faible.';
       case 'user-disabled':
         return 'Ce compte utilisateur a été désactivé.';
+      case 'too-many-requests':
+        return 'Trop de tentatives. Patientez quelques minutes avant de réessayer.';
+      case 'network-request-failed':
+        return 'Connexion Internet indisponible. Vérifiez votre réseau.';
+      case 'requires-recent-login':
+        return 'Par sécurité, reconnectez-vous puis réessayez.';
       case 'operation-not-allowed':
-        return 'L\'authentification par email/mot de passe n\'est pas activée sur Firebase Console.';
+        return "Ce mode de connexion n'est pas disponible pour le moment.";
       default:
-        return defaultMessage ?? 'Une erreur d\'authentification est survenue.';
+        // Jamais le message technique de Firebase.
+        return "Une erreur d'authentification est survenue. Veuillez réessayer.";
+    }
+  }
+
+  /// Supprime le compte Firebase connecté (annulation d'une inscription inachevée).
+  Future<void> deleteCurrentUser() async {
+    await _firebaseAuth.currentUser?.delete();
+  }
+
+  /// Changement de mot de passe : ré-authentification puis mise à jour.
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null || user.email == null) {
+      throw const AuthException('Session expirée. Veuillez vous reconnecter.');
+    }
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapFirebaseError(e.code, e.message));
     }
   }
 }
