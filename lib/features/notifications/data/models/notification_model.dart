@@ -1,85 +1,70 @@
-/// Modèle pour une notification dans PsyAvocat
-class NotificationModel {
-  final String id;
-  final String titre;
-  final String message;
-  final DateTime date;
-  final String type; // RDV | DOSSIER | MESSAGE | SYSTEME
-  final bool isRead;
-  final String? targetRoute;
+import '../../../../core/theme/app_universe.dart';
 
-  const NotificationModel({
+/// Notification métier persistée (Spring Boot `/api/notifications`).
+class NotificationItem {
+  final String id;
+  final String type;
+  final String titre;
+  final String contenu;
+  final DateTime? dateEnvoi;
+  final bool lu;
+  final DateTime? dateLecture;
+
+  /// AVOCAT, PSYCHOLOGUE ou null (transverse).
+  final String? univers;
+
+  /// RENDEZ_VOUS, CONVERSATION, ARTICLE, CONSEIL... : cible du lien profond.
+  final String? ressourceType;
+  final String? ressourceId;
+
+  const NotificationItem({
     required this.id,
-    required this.titre,
-    required this.message,
-    required this.date,
     required this.type,
-    this.isRead = false,
-    this.targetRoute,
+    required this.titre,
+    required this.contenu,
+    required this.lu,
+    this.dateEnvoi,
+    this.dateLecture,
+    this.univers,
+    this.ressourceType,
+    this.ressourceId,
   });
 
-  NotificationModel copyWith({
-    String? id,
-    String? titre,
-    String? message,
-    DateTime? date,
-    String? type,
-    bool? isRead,
-    String? targetRoute,
-  }) {
-    return NotificationModel(
-      id: id ?? this.id,
-      titre: titre ?? this.titre,
-      message: message ?? this.message,
-      date: date ?? this.date,
-      type: type ?? this.type,
-      isRead: isRead ?? this.isRead,
-      targetRoute: targetRoute ?? this.targetRoute,
-    );
-  }
-
-  factory NotificationModel.fromJson(Map<String, dynamic> json) {
-    final rawMessage = json['message'] as String? ?? json['contenu'] as String? ?? '';
-    final rawTitre = json['titre'] as String? ?? (json['type'] != null ? 'Notification ${json['type']}' : 'Notification');
-    final rawDate = json['date'] as String? ?? json['dateEnvoi'] as String?;
-    final parsedDate = rawDate != null ? (DateTime.tryParse(rawDate) ?? DateTime.now()) : DateTime.now();
-    final readStatus = json['isRead'] as bool? ?? json['lu'] as bool? ?? false;
-
-    // Détermination de la route cible selon les données API ou le type
-    String? route = json['targetRoute'] as String?;
-    if (route == null || route.isEmpty) {
-      final t = (json['type'] as String? ?? '').toUpperCase();
-      if (t == 'RDV' || t == 'RENDEZ_VOUS') {
-        route = '/rendez-vous';
-      } else if (t == 'DOSSIER') {
-        route = '/dossiers';
-      } else if (t == 'MESSAGE' || t == 'CONVERSATION') {
-        route = '/messagerie';
-      } else if (t == 'CONTENU' || t == 'ARTICLE') {
-        route = '/articles';
-      }
-    }
-
-    return NotificationModel(
+  factory NotificationItem.fromJson(Map<String, dynamic> json) {
+    return NotificationItem(
       id: json['id']?.toString() ?? '',
-      titre: rawTitre,
-      message: rawMessage,
-      date: parsedDate,
-      type: json['type'] as String? ?? 'SYSTEME',
-      isRead: readStatus,
-      targetRoute: route,
+      type: json['type'] as String? ?? '',
+      // Notifications anciennes sans titre : libellé générique, jamais inventé.
+      titre: (json['titre'] as String?)?.trim().isNotEmpty == true
+          ? json['titre'] as String
+          : 'PsyAvocat',
+      contenu: json['contenu'] as String? ?? '',
+      dateEnvoi: DateTime.tryParse(json['dateEnvoi'] as String? ?? ''),
+      lu: json['lu'] as bool? ?? false,
+      dateLecture: DateTime.tryParse(json['dateLecture'] as String? ?? ''),
+      univers: json['univers'] as String?,
+      ressourceType: json['ressourceType'] as String?,
+      ressourceId: json['ressourceId'] as String?,
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'titre': titre,
-      'message': message,
-      'date': date.toIso8601String(),
-      'type': type,
-      'isRead': isRead,
-      if (targetRoute != null) 'targetRoute': targetRoute,
-    };
+  /// Univers de la ressource ciblée, ou null si la notification est transverse.
+  AppUniverse? get universe {
+    if (univers == 'AVOCAT') return AppUniverse.lawyer;
+    if (univers == 'PSYCHOLOGUE') return AppUniverse.psychologist;
+    return null;
   }
+
+  NotificationItem markedRead() => NotificationItem(
+    id: id,
+    type: type,
+    titre: titre,
+    contenu: contenu,
+    lu: true,
+    dateEnvoi: dateEnvoi,
+    dateLecture: DateTime.now(),
+    univers: univers,
+    ressourceType: ressourceType,
+    ressourceId: ressourceId,
+  );
 }

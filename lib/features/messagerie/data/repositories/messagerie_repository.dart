@@ -3,15 +3,20 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/network/network_providers.dart';
 import '../models/messagerie_model.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Repository Messagerie — Interface abstraite & Implémentation API
-// ─────────────────────────────────────────────────────────────────────────────
-
+/// Messagerie client ↔ professionnel (Spring Boot `/api/conversations`).
 abstract class MessagerieRepository {
-  Future<List<ConversationModel>> getMesConversations();
-  Future<List<MessageModel>> getMessages(String conversationId, String myUid);
-  Future<ConversationModel> createConversation(String professionnelId);
-  Future<MessageModel> sendMessage(String conversationId, String contenu);
+  Future<List<Conversation>> getConversations();
+
+  /// Total des messages non lus, tous univers confondus.
+  Future<int> getUnreadCount();
+
+  /// Messages d'une conversation (le backend les marque lus pour l'appelant).
+  Future<List<Message>> getMessages(String conversationId);
+
+  Future<Message> envoyer({required String conversationId, required String contenu});
+
+  /// Contacte un professionnel : réutilise la conversation existante si elle existe.
+  Future<Conversation> contacter({required String professionnelId, required String message});
 }
 
 class ApiMessagerieRepository implements MessagerieRepository {
@@ -20,50 +25,46 @@ class ApiMessagerieRepository implements MessagerieRepository {
   ApiMessagerieRepository(this._client);
 
   @override
-  Future<List<ConversationModel>> getMesConversations() async {
-    try {
-      final response = await _client.get('/conversations');
-      final list = response.data as List<dynamic>? ?? [];
-      return list
-          .map((e) => ConversationModel.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
-      return [];
-    }
+  Future<List<Conversation>> getConversations() async {
+    final response = await _client.get('/conversations');
+    final list = response.data as List<dynamic>? ?? [];
+    return list.map((e) => Conversation.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   @override
-  Future<List<MessageModel>> getMessages(String conversationId, String myUid) async {
-    try {
-      final response = await _client.get('/conversations/$conversationId/messages');
-      final list = response.data as List<dynamic>? ?? [];
-      return list
-          .map((e) => MessageModel.fromJson(e as Map<String, dynamic>, myUid))
-          .toList();
-    } catch (_) {
-      return [];
-    }
+  Future<int> getUnreadCount() async {
+    final response = await _client.get('/conversations/unread-count');
+    final data = response.data;
+    if (data is Map<String, dynamic>) return (data['unreadCount'] as num?)?.toInt() ?? 0;
+    return 0;
   }
 
   @override
-  Future<ConversationModel> createConversation(String professionnelId) async {
-    final response = await _client.post('/conversations', data: {
-      'professionnelId': professionnelId,
-    });
-    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  Future<List<Message>> getMessages(String conversationId) async {
+    final response = await _client.get('/conversations/$conversationId/messages');
+    final list = response.data as List<dynamic>? ?? [];
+    return list.map((e) => Message.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   @override
-  Future<MessageModel> sendMessage(String conversationId, String contenu) async {
+  Future<Message> envoyer({required String conversationId, required String contenu}) async {
     final response = await _client.post(
       '/conversations/$conversationId/messages',
       data: {'contenu': contenu},
     );
-    return MessageModel.fromJson(response.data as Map<String, dynamic>, '');
+    return Message.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Conversation> contacter({required String professionnelId, required String message}) async {
+    final response = await _client.post(
+      '/conversations',
+      data: {'destinataireId': professionnelId, 'premierMessage': message},
+    );
+    return Conversation.fromJson(response.data as Map<String, dynamic>);
   }
 }
 
 final messagerieRepositoryProvider = Provider<MessagerieRepository>((ref) {
-  final client = ref.watch(apiClientProvider);
-  return ApiMessagerieRepository(client);
+  return ApiMessagerieRepository(ref.watch(apiClientProvider));
 });

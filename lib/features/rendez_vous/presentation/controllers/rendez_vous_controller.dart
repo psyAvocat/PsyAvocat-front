@@ -1,99 +1,91 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/realtime/realtime_service.dart';
+import '../../../../core/theme/universe_provider.dart';
+import '../../../../shared/enums/appointment_status.dart';
 import '../../data/models/rendez_vous_model.dart';
 import '../../data/repositories/rendez_vous_repository.dart';
 
-/// AsyncNotifier pour la liste des rendez-vous.
-/// Charge depuis l'API backend (GET /api/rendez-vous) avec états loading/error/data.
-class RendezVousNotifier extends AsyncNotifier<List<RendezVousItem>> {
+/// Rendez-vous du compte. Aucune donnée n'est créée localement : chaque
+/// action passe par le backend, puis la liste est rechargée.
+class RendezVousController extends AsyncNotifier<List<RendezVous>> {
   @override
-  Future<List<RendezVousItem>> build() async {
-    return ref.read(rendezVousRepositoryProvider).getMyRendezVous();
+  Future<List<RendezVous>> build() {
+    listenRealtime(ref, {RealtimeEventType.notification}, (event) {
+      if (event.payload['ressourceType'] == 'RENDEZ_VOUS') reload();
+    });
+    return ref.read(rendezVousRepositoryProvider).getMesRendezVous();
   }
 
-  Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref.read(rendezVousRepositoryProvider).getMyRendezVous(),
+  Future<void> reload() async {
+    final result = await AsyncValue.guard(
+      () => ref.read(rendezVousRepositoryProvider).getMesRendezVous(),
     );
+    if (result.hasValue || !state.hasValue) state = result;
   }
 
-  /// Ajoute un rendez-vous localement + synchronise avec l'API
-  Future<void> addRendezVous({
-    required String proId,
-    required String proName,
-    required String proRole,
-    required String specialty,
-    required String day,
-    required String month,
-    required String year,
-    required String time,
+  /// Lève une ConflictException si le créneau vient d'être pris.
+  Future<RendezVous> reserver({
+    required String typeProfessionnel,
+    required String professionnelId,
+    required String disponibiliteId,
     required String mode,
-    required int montantTotal,
+    required double montantTotal,
     String? motif,
-    String? disponibiliteId,
   }) async {
-    final acompte = (montantTotal * 0.20).round();
-    final newItem = RendezVousItem(
-      id: 'rdv-${DateTime.now().millisecondsSinceEpoch}',
-      day: day,
-      month: month,
-      year: year,
-      time: time,
-      proId: proId,
-      proName: proName,
-      proRole: proRole,
-      specialty: specialty,
+    final rdv = await ref.read(rendezVousRepositoryProvider).reserver(
+      typeProfessionnel: typeProfessionnel,
+      professionnelId: professionnelId,
+      disponibiliteId: disponibiliteId,
       mode: mode,
-      status: 'Confirmé',
       montantTotal: montantTotal,
-      montantAcompte: acompte,
       motif: motif,
     );
-
-    final current = state.value ?? [];
-    state = AsyncData([newItem, ...current]);
-
-    // Synchro API en arrière-plan si on a une disponibiliteId
-    if (disponibiliteId != null && disponibiliteId.isNotEmpty) {
-      ref.read(rendezVousRepositoryProvider).createRendezVousDirect(
-        proId: proId,
-        isAvocat: proRole.toLowerCase().contains('avocat'),
-        disponibiliteId: disponibiliteId,
-        mode: mode,
-        montantTotal: montantTotal.toDouble(),
-        motif: motif,
-      ).then((created) {
-        final updated = (state.value ?? [])
-            .map((r) => r.id == newItem.id ? created : r)
-            .toList();
-        state = AsyncData(updated);
-      }).catchError((_) {});
-    }
+    await reload();
+    return rdv;
   }
 
-  /// Annule un rendez-vous — mise à jour optimiste + appel API
-  void cancelRendezVous(String id) {
-    final current = state.value ?? [];
-    state = AsyncData(
-      current.map((r) {
-        if (r.id == id) {
-          return RendezVousItem(
-            id: r.id, day: r.day, month: r.month, year: r.year,
-            time: r.time, proId: r.proId, proName: r.proName,
-            proRole: r.proRole, specialty: r.specialty, mode: r.mode,
-            status: 'Annulé',
-            montantTotal: r.montantTotal, montantAcompte: r.montantAcompte,
-            motif: r.motif,
-          );
-        }
-        return r;
-      }).toList(),
-    );
-    ref.read(rendezVousRepositoryProvider).annulerRendezVous(id).catchError((_) {});
+  Future<RendezVous> modifierCreneau({required String id, required String disponibiliteId}) async {
+    final rdv = await ref
+        .read(rendezVousRepositoryProvider)
+        .modifierCreneau(id: id, disponibiliteId: disponibiliteId);
+    ref.invalidate(rendezVousDetailProvider(id));
+    await reload();
+    return rdv;
+  }
+
+  Future<void> annuler(String id) async {
+    await ref.read(rendezVousRepositoryProvider).annuler(id);
+    ref.invalidate(rendezVousDetailProvider(id));
+    await reload();
   }
 }
 
-final rendezVousListProvider =
-    AsyncNotifierProvider<RendezVousNotifier, List<RendezVousItem>>(
-  RendezVousNotifier.new,
-);
+final rendezVousControllerProvider =
+    AsyncNotifierProvider<RendezVousController, List<RendezVous>>(RendezVousController.new);
+
+/// Rendez-vous de l'univers courant, regroupés par onglet.
+final rendezVousByPhaseProvider = Provider.autoDispose
+    .family<AsyncValue<List<RendezVous>>, AppointmentPhase>((ref, phase) {
+  final universe = ref.watch(currentUniverseProvider);
+  final now = DateTime.now();
+  return ref.watch(rendezVousControllerProvider).whenData((list) {
+    final filtered = list.where((r) => r.universe == universe && r.phaseAt(now) == phase).toList()
+      ..sort((a, b) => phase == AppointmentPhase.passe
+          ? b.dateHeure.compareTo(a.dateHeure)
+          : a.dateHeure.compareTo(b.dateHeure));
+    return filtered;
+  });
+});
+
+/// Prochain rendez-vous de l'univers courant (null s'il n'y en a aucun).
+final nextAppointmentProvider = Provider.autoDispose<AsyncValue<RendezVous?>>((ref) {
+  return ref
+      .watch(rendezVousByPhaseProvider(AppointmentPhase.aVenir))
+      .whenData((list) => list.firstOrNull);
+});
+
+final rendezVousDetailProvider =
+    FutureProvider.autoDispose.family<RendezVous, String>((ref, id) {
+  return ref.read(rendezVousRepositoryProvider).getRendezVous(id);
+});

@@ -28,6 +28,16 @@ class AuthRepository {
 
   Future<void> signOut() => _datasource.signOut();
 
+  Future<void> deleteCurrentUser() => _datasource.deleteCurrentUser();
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) => _datasource.changePassword(
+    currentPassword: currentPassword,
+    newPassword: newPassword,
+  );
+
   Future<UserCredential> register(String email, String password) =>
       _datasource.register(email, password);
 

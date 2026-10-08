@@ -44,6 +44,8 @@ dependencies:
   firebase_messaging: ^16.7.0
   shared_preferences: ^2.3.5
   flutter_svg: ^2.3.0
+  image_picker: ^1.2.4
+  web_socket_channel: ^3.0.3
 
 dev_dependencies:
   flutter_test:

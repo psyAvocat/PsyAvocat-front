@@ -1,87 +1,84 @@
-/// Modèles de données pour la messagerie instantanée PsyAvocat
-class ConversationModel {
-  final String id;
-  final String participantNom;
-  final String participantPrenom;
-  final String participantRole; // AVOCAT | PSYCHOLOGUE
-  final String? dernierMessage;
-  final DateTime? dernierMessageDate;
-  final int messagesNonLus;
+import '../../../../core/theme/app_universe.dart';
 
-  const ConversationModel({
+/// Message d'une conversation (MessageResponseDTO).
+class Message {
+  final String id;
+  final String conversationId;
+  final String contenu;
+  final DateTime? dateEnvoi;
+  final String? expediteurId;
+  final bool lu;
+
+  const Message({
     required this.id,
-    required this.participantNom,
-    required this.participantPrenom,
-    required this.participantRole,
-    this.dernierMessage,
-    this.dernierMessageDate,
-    this.messagesNonLus = 0,
+    required this.conversationId,
+    required this.contenu,
+    required this.lu,
+    this.dateEnvoi,
+    this.expediteurId,
   });
 
-  String get displayName {
-    final prefix = participantRole == 'AVOCAT' ? 'Maître' : 'Dr.';
-    return '$prefix $participantPrenom $participantNom'.trim();
+  factory Message.fromJson(Map<String, dynamic> json) {
+    return Message(
+      id: json['id']?.toString() ?? '',
+      conversationId: json['conversationId']?.toString() ?? '',
+      contenu: json['contenu'] as String? ?? '',
+      dateEnvoi: DateTime.tryParse(json['dateEnvoi'] as String? ?? ''),
+      expediteurId: json['expediteurId'] as String?,
+      lu: json['lu'] as bool? ?? false,
+    );
   }
+}
 
-  factory ConversationModel.fromJson(Map<String, dynamic> json) {
-    return ConversationModel(
-      id: json['id'] as String? ?? '',
-      participantNom: json['participantNom'] as String? ?? '',
-      participantPrenom: json['participantPrenom'] as String? ?? '',
-      participantRole: json['participantRole'] as String? ?? 'AVOCAT',
-      dernierMessage: json['dernierMessage'] as String?,
-      dernierMessageDate: json['dernierMessageDate'] != null
-          ? DateTime.tryParse(json['dernierMessageDate'] as String)
-          : null,
+/// Conversation avec un professionnel (ConversationResponseDTO).
+class Conversation {
+  final String id;
+  final String? correspondantId;
+  final String correspondantNom;
+  final String correspondantPrenom;
+
+  /// AVOCAT, PSYCHOLOGUE ou CLIENT.
+  final String? correspondantType;
+  final String? correspondantPhotoUrl;
+  final Message? dernierMessage;
+  final int messagesNonLus;
+
+  const Conversation({
+    required this.id,
+    required this.correspondantNom,
+    required this.correspondantPrenom,
+    required this.messagesNonLus,
+    this.correspondantId,
+    this.correspondantType,
+    this.correspondantPhotoUrl,
+    this.dernierMessage,
+  });
+
+  factory Conversation.fromJson(Map<String, dynamic> json) {
+    final dernier = json['dernierMessage'];
+    return Conversation(
+      id: json['id']?.toString() ?? '',
+      correspondantId: json['correspondantId'] as String?,
+      correspondantNom: json['correspondantNom'] as String? ?? '',
+      correspondantPrenom: json['correspondantPrenom'] as String? ?? '',
+      correspondantType: json['correspondantType'] as String?,
+      correspondantPhotoUrl: json['correspondantPhotoUrl'] as String?,
+      dernierMessage: dernier is Map<String, dynamic> ? Message.fromJson(dernier) : null,
       messagesNonLus: (json['messagesNonLus'] as num?)?.toInt() ?? 0,
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'participantNom': participantNom,
-      'participantPrenom': participantPrenom,
-      'participantRole': participantRole,
-      'dernierMessage': dernierMessage,
-      'dernierMessageDate': dernierMessageDate?.toIso8601String(),
-      'messagesNonLus': messagesNonLus,
-    };
-  }
-}
-
-class MessageModel {
-  final String id;
-  final String contenu;
-  final DateTime dateEnvoi;
-  final bool isFromMe;
-  final String expediteurNom;
-
-  const MessageModel({
-    required this.id,
-    required this.contenu,
-    required this.dateEnvoi,
-    required this.isFromMe,
-    required this.expediteurNom,
-  });
-
-  factory MessageModel.fromJson(Map<String, dynamic> json, String myUid) {
-    return MessageModel(
-      id: json['id'] as String? ?? '',
-      contenu: json['contenu'] as String? ?? '',
-      dateEnvoi: DateTime.tryParse(json['dateEnvoi'] as String? ?? '') ?? DateTime.now(),
-      isFromMe: (json['expediteurUid'] as String?) == myUid,
-      expediteurNom: json['expediteurNom'] as String? ?? 'Moi',
-    );
+  /// Univers de la conversation (celui du professionnel), ou null si inconnu.
+  AppUniverse? get universe {
+    if (correspondantType == 'AVOCAT') return AppUniverse.lawyer;
+    if (correspondantType == 'PSYCHOLOGUE') return AppUniverse.psychologist;
+    return null;
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'contenu': contenu,
-      'dateEnvoi': dateEnvoi.toIso8601String(),
-      'isFromMe': isFromMe,
-      'expediteurNom': expediteurNom,
-    };
+  String get correspondantDisplayName {
+    final nom = '$correspondantPrenom $correspondantNom'.trim();
+    if (correspondantType == 'AVOCAT') return 'Me $nom';
+    if (correspondantType == 'PSYCHOLOGUE') return 'Dr $nom';
+    return nom;
   }
 }

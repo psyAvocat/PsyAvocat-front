@@ -21,12 +21,16 @@ class ErrorInterceptor extends Interceptor {
       case DioExceptionType.badResponse:
         final statusCode = err.response?.statusCode;
         final data = err.response?.data;
-        String message = 'Une erreur est survenue';
-
-        if (data is Map<String, dynamic> && data['message'] != null) {
-          message = data['message'].toString();
-        } else if (err.message != null && err.message!.isNotEmpty) {
-          message = err.message!;
+        // Seuls les messages métier (4xx) du backend sont affichables ; jamais
+        // le message technique de Dio (il contient le code HTTP brut).
+        String message = 'Une erreur est survenue. Veuillez réessayer.';
+        final serverMessage = data is Map<String, dynamic> ? data['message']?.toString() : null;
+        if (statusCode != null &&
+            statusCode >= 400 &&
+            statusCode < 500 &&
+            serverMessage != null &&
+            serverMessage.trim().isNotEmpty) {
+          message = serverMessage;
         }
 
         switch (statusCode) {
@@ -47,9 +51,13 @@ class ErrorInterceptor extends Interceptor {
           case 404:
             exception = NotFoundException(message, 404);
             break;
-          case 500:
+          case 409:
+            exception = ConflictException(message);
+            break;
           default:
-            exception = ServerException(message, statusCode ?? 500);
+            exception = (statusCode ?? 500) >= 500
+                ? ServerException('Le service est momentanément indisponible. Veuillez réessayer.', statusCode ?? 500)
+                : AppException(message, statusCode);
             break;
         }
         break;
@@ -64,7 +72,7 @@ class ErrorInterceptor extends Interceptor {
 
       case DioExceptionType.unknown:
       default:
-        exception = NetworkException(err.message ?? 'Erreur réseau inattendue');
+        exception = const NetworkException();
         break;
     }
 

@@ -3,52 +3,65 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/network/network_providers.dart';
 import '../models/contenu_model.dart';
 
-abstract class ContenusRepository {
-  Future<List<ContenuModel>> getContenus({String? univers});
-  Future<ContenuModel?> getContenuById(String id);
+/// Ordre d'affichage des publications.
+enum PublicationSort {
+  /// Plus récentes d'abord.
+  recent('recent'),
+
+  /// Plus consultées d'abord (nombre réel de consultations).
+  populaire('populaire');
+
+  final String apiValue;
+
+  const PublicationSort(this.apiValue);
 }
 
-/// Implémentation officielle connectée à l'API Spring Boot
-/// - GET /api/contenus
-/// - GET /api/contenus/{id}
+/// Articles et Conseils publiés depuis l'espace professionnel Angular.
+abstract class ContenusRepository {
+  /// [type] : `ARTICLE` (univers Avocat) ou `CONSEIL` (univers Psychologue).
+  Future<List<Publication>> rechercher({
+    required String type,
+    String? q,
+    String? specialiteId,
+    PublicationSort tri = PublicationSort.recent,
+  });
+
+  /// Détail (404 « ressource indisponible » si désactivé ou supprimé).
+  Future<Publication> getPublication(String id);
+}
+
 class ApiContenusRepository implements ContenusRepository {
   final ApiClient _client;
 
   ApiContenusRepository(this._client);
 
   @override
-  Future<List<ContenuModel>> getContenus({String? univers}) async {
-    try {
-      final queryParams = <String, dynamic>{};
-      if (univers != null && univers.isNotEmpty) {
-        queryParams['univers'] = univers;
-      }
-      final response = await _client.get('/contenus', queryParameters: queryParams);
-      final list = response.data as List<dynamic>? ?? [];
-      return list
-          .map((item) => ContenuModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
-      // Retourne une liste vide en cas d'indisponibilité ou 404 (pas de données métier fictives)
-      return [];
-    }
+  Future<List<Publication>> rechercher({
+    required String type,
+    String? q,
+    String? specialiteId,
+    PublicationSort tri = PublicationSort.recent,
+  }) async {
+    final response = await _client.get(
+      '/contenus',
+      queryParameters: {
+        'type': type,
+        if (q != null && q.trim().isNotEmpty) 'q': q.trim(),
+        'specialiteId': ?specialiteId,
+        'tri': tri.apiValue,
+      },
+    );
+    final list = response.data as List<dynamic>? ?? [];
+    return list.map((e) => Publication.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   @override
-  Future<ContenuModel?> getContenuById(String id) async {
-    try {
-      final response = await _client.get('/contenus/$id');
-      if (response.data != null) {
-        return ContenuModel.fromJson(response.data as Map<String, dynamic>);
-      }
-      return null;
-    } catch (_) {
-      return null;
-    }
+  Future<Publication> getPublication(String id) async {
+    final response = await _client.get('/contenus/$id');
+    return Publication.fromJson(response.data as Map<String, dynamic>);
   }
 }
 
 final contenusRepositoryProvider = Provider<ContenusRepository>((ref) {
-  final client = ref.watch(apiClientProvider);
-  return ApiContenusRepository(client);
+  return ApiContenusRepository(ref.watch(apiClientProvider));
 });
