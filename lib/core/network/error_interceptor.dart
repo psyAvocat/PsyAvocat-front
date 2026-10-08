@@ -32,7 +32,8 @@ class ErrorInterceptor extends Interceptor {
         switch (statusCode) {
           case 400:
             Map<String, dynamic>? validationErrors;
-            if (data is Map<String, dynamic> && data['errors'] is Map<String, dynamic>) {
+            if (data is Map<String, dynamic> &&
+                data['errors'] is Map<String, dynamic>) {
               validationErrors = data['errors'] as Map<String, dynamic>;
             }
             exception = ValidationException(message, validationErrors, 400);

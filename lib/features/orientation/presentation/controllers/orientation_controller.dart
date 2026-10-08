@@ -1,157 +1,167 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_universe.dart';
-import '../../../../core/theme/universe_provider.dart';
 import '../../data/models/questionnaire_model.dart';
 import '../../data/repositories/orientation_repository.dart';
 
-/// Données d'une réponse sélectionnée lors du questionnaire d'orientation
-class OrientationAnswer {
-  final String questionId;
-  final String question;
-  final String label;
-  final String code; // ID de la réponse pour la soumission au backend
-
-  const OrientationAnswer({
-    required this.questionId,
-    required this.question,
-    required this.label,
-    required this.code,
-  });
-}
-
-/// État du questionnaire d'orientation dynamique
+/// État du questionnaire en cours de remplissage.
+///
+/// Tout est dérivé du questionnaire reçu de l'API : nombre d'étapes,
+/// type de chaque question, caractère obligatoire. Rien n'est codé en dur.
 class OrientationState {
-  final int currentStep;
+  /// `null` si aucun questionnaire n'est publié pour l'univers actif.
   final QuestionnaireModel? questionnaire;
-  final Map<int, OrientationAnswer> answers;
-  final bool isLoading;
-  final String? errorMessage;
-  final ResultatOrientationModel? resultat;
+  final int currentIndex;
+
+  /// Réponses choisies : identifiant de question → identifiants de réponses.
+  final Map<String, Set<String>> answers;
+  final bool isSubmitting;
 
   const OrientationState({
-    this.currentStep = 0,
-    this.questionnaire,
+    required this.questionnaire,
+    this.currentIndex = 0,
     this.answers = const {},
-    this.isLoading = false,
-    this.errorMessage,
-    this.resultat,
+    this.isSubmitting = false,
   });
 
+  List<QuestionModel> get questions => questionnaire?.questions ?? const [];
+  int get totalQuestions => questions.length;
+  bool get isEmpty => totalQuestions == 0;
+  QuestionModel get currentQuestion => questions[currentIndex];
+  bool get isFirstQuestion => currentIndex == 0;
+  bool get isLastQuestion => currentIndex == totalQuestions - 1;
+
+  Set<String> answersFor(String questionId) => answers[questionId] ?? const {};
+
+  /// On peut avancer si la question est facultative ou a au moins une réponse.
+  bool get canGoNext =>
+      !currentQuestion.obligatoire || answersFor(currentQuestion.id).isNotEmpty;
+
   OrientationState copyWith({
-    int? currentStep,
-    QuestionnaireModel? questionnaire,
-    Map<int, OrientationAnswer>? answers,
-    bool? isLoading,
-    String? errorMessage,
-    ResultatOrientationModel? resultat,
+    int? currentIndex,
+    Map<String, Set<String>>? answers,
+    bool? isSubmitting,
   }) {
     return OrientationState(
-      currentStep: currentStep ?? this.currentStep,
-      questionnaire: questionnaire ?? this.questionnaire,
+      questionnaire: questionnaire,
+      currentIndex: currentIndex ?? this.currentIndex,
       answers: answers ?? this.answers,
-      isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage,
-      resultat: resultat ?? this.resultat,
+      isSubmitting: isSubmitting ?? this.isSubmitting,
     );
   }
 }
 
-/// Contrôleur Riverpod pour gérer l'orientation avec le backend Spring Boot & MySQL
-class OrientationController extends Notifier<OrientationState> {
+/// Charge le questionnaire de l'univers actif, gère les réponses localement,
+/// puis soumet le tout à Spring Boot qui calcule l'orientation.
+class OrientationController extends AsyncNotifier<OrientationState> {
   @override
-  OrientationState build() {
-    return const OrientationState(isLoading: false);
+  Future<OrientationState> build() async {
+    // Règle 10 : Les questionnaires sont réservés au domaine psychologique
+    final questionnaire = await ref
+        .read(orientationRepositoryProvider)
+        .getQuestionnaireByType('PSYCHOLOGIQUE');
+    return OrientationState(questionnaire: questionnaire);
   }
 
-  Future<void> loadQuestionnaire() async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
+  OrientationState? get _current => state.value;
+
+  /// Choisit (ou retire, en choix multiple) une réponse à la question courante.
+  void toggleAnswer(String reponseId) {
+    final current = _current;
+    if (current == null || current.isEmpty) return;
+
+    final question = current.currentQuestion;
+    final selected = Set<String>.from(current.answersFor(question.id));
+
+    if (question.allowsMultiple) {
+      selected.contains(reponseId)
+          ? selected.remove(reponseId)
+          : selected.add(reponseId);
+    } else {
+      // Choix unique / Oui-Non : la nouvelle réponse remplace l'ancienne.
+      selected
+        ..clear()
+        ..add(reponseId);
+    }
+
+    final answers = Map<String, Set<String>>.from(current.answers)
+      ..[question.id] = selected;
+    state = AsyncData(current.copyWith(answers: answers));
+  }
+
+  void goToNextQuestion() {
+    final current = _current;
+    if (current == null || current.isLastQuestion || !current.canGoNext) return;
+    state = AsyncData(current.copyWith(currentIndex: current.currentIndex + 1));
+  }
+
+  /// Revient à la question précédente. Renvoie `false` si on est déjà à la première.
+  bool goToPreviousQuestion() {
+    final current = _current;
+    if (current == null || current.isFirstQuestion) return false;
+    state = AsyncData(current.copyWith(currentIndex: current.currentIndex - 1));
+    return true;
+  }
+
+  /// Envoie toutes les réponses (SoumissionQuestionnaireRequest).
+  /// En cas de succès, le résultat est disponible dans [lastOrientationResultProvider].
+  /// En cas d'échec, l'erreur est levée pour que l'écran l'affiche ;
+  /// les réponses sont conservées.
+  Future<void> submit() async {
+    final current = _current;
+    final questionnaire = current?.questionnaire;
+    if (current == null || questionnaire == null || current.isSubmitting) {
+      return;
+    }
+
+    state = AsyncData(current.copyWith(isSubmitting: true));
     try {
-      final universe = ref.read(currentUniverseProvider);
-      final type = universe == AppUniverse.lawyer ? 'JURIDIQUE' : 'PSYCHOLOGIQUE';
-      final repository = ref.read(orientationRepositoryProvider);
-      final questionnaire = await repository.getQuestionnaireByType(type);
-      state = state.copyWith(
-        isLoading: false,
-        questionnaire: questionnaire,
-        currentStep: 0,
-        answers: {},
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Impossible de charger le questionnaire depuis la base de données : $e',
-      );
+      final reponseIds = current.answers.values.expand((ids) => ids).toList();
+      final result = await ref
+          .read(orientationRepositoryProvider)
+          .evaluerQuestionnaire(
+            questionnaireId: questionnaire.id,
+            reponseIds: reponseIds,
+          );
+      ref.read(lastOrientationResultProvider.notifier).set(result);
+      ref.invalidate(mesResultatsProvider);
+    } finally {
+      final latest = _current;
+      if (latest != null) {
+        state = AsyncData(latest.copyWith(isSubmitting: false));
+      }
     }
-  }
-
-  void selectAnswer({
-    required int step,
-    String? questionId,
-    required String question,
-    required String label,
-    String? reponseId,
-    String? code,
-  }) {
-    final effectiveCode = reponseId ?? code ?? '';
-    final effectiveQuestionId = questionId ?? '';
-    final updated = Map<int, OrientationAnswer>.from(state.answers);
-    updated[step] = OrientationAnswer(
-      questionId: effectiveQuestionId,
-      question: question,
-      label: label,
-      code: effectiveCode,
-    );
-    state = state.copyWith(answers: updated);
-  }
-
-  bool nextStep(int totalSteps) {
-    if (state.currentStep < totalSteps - 1) {
-      state = state.copyWith(currentStep: state.currentStep + 1);
-      return true;
-    }
-    return false; // Arrivé à la fin du questionnaire
-  }
-
-  bool previousStep() {
-    if (state.currentStep > 0) {
-      state = state.copyWith(currentStep: state.currentStep - 1);
-      return true;
-    }
-    return false;
-  }
-
-  Future<bool> soumettreQuestionnaire() async {
-    final q = state.questionnaire;
-    if (q == null) return false;
-
-    final reponseIds = state.answers.values.map((a) => a.code).toList();
-    if (reponseIds.isEmpty) return false;
-
-    state = state.copyWith(isLoading: true);
-    try {
-      final repository = ref.read(orientationRepositoryProvider);
-      final res = await repository.evaluerQuestionnaire(
-        questionnaireId: q.id,
-        reponseIds: reponseIds,
-      );
-      state = state.copyWith(isLoading: false, resultat: res);
-      return true;
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Erreur lors de l\'évaluation : $e',
-      );
-      return false;
-    }
-  }
-
-  void reset() {
-    state = const OrientationState();
-    loadQuestionnaire();
   }
 }
 
 final orientationControllerProvider =
-    NotifierProvider<OrientationController, OrientationState>(
-  OrientationController.new,
-);
+    AsyncNotifierProvider<OrientationController, OrientationState>(
+      OrientationController.new,
+    );
+
+/// Dernier résultat obtenu dans cette session (affiché par l'écran de résultat).
+class LastOrientationResultNotifier
+    extends Notifier<ResultatOrientationModel?> {
+  @override
+  ResultatOrientationModel? build() => null;
+
+  void set(ResultatOrientationModel result) => state = result;
+}
+
+final lastOrientationResultProvider =
+    NotifierProvider<LastOrientationResultNotifier, ResultatOrientationModel?>(
+      LastOrientationResultNotifier.new,
+    );
+
+/// Historique des résultats de l'utilisateur (GET /api/orientation/mes-resultats),
+/// du plus récent au plus ancien.
+final mesResultatsProvider = FutureProvider<List<ResultatOrientationModel>>((
+  ref,
+) async {
+  final results = await ref
+      .read(orientationRepositoryProvider)
+      .getMesResultats();
+  return [...results]..sort((a, b) {
+    final dateA = a.dateEvaluation ?? DateTime(0);
+    final dateB = b.dateEvaluation ?? DateTime(0);
+    return dateB.compareTo(dateA);
+  });
+});

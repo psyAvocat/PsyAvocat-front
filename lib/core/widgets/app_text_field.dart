@@ -6,7 +6,7 @@ import '../theme/design_system.dart';
 ///
 /// Intègre :
 /// - Typographie Montserrat pour labels, hints et texte de saisie.
-/// - Bordures douces modernes (12 px).
+/// - Bordures douces (14 px) et couleurs des maquettes Figma de connexion / inscription.
 /// - Gestion intégrée de la visibilité pour mot de passe.
 /// - Focus stylisé selon l'univers actif.
 /// - États d'erreur (#FB1216), disabled et validation.
@@ -79,8 +79,10 @@ class _AppTextFieldState extends State<AppTextField> {
     if (widget.obscureText && widget.suffixIcon == null) {
       effectiveSuffixIcon = IconButton(
         icon: Icon(
-          _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-          color: AppColors.textTertiary,
+          _obscureText
+              ? Icons.visibility_outlined
+              : Icons.visibility_off_outlined,
+          color: AppColors.formHint,
           size: AppIcons.sizeMd,
         ),
         splashRadius: 20,
@@ -99,7 +101,9 @@ class _AppTextFieldState extends State<AppTextField> {
         Text(
           widget.label,
           style: AppTypography.labelInput.copyWith(
-            color: widget.enabled ? AppColors.textPrimary : AppColors.textTertiary,
+            color: widget.enabled
+                ? AppColors.formLabel
+                : AppColors.textTertiary,
           ),
         ),
         AppSpacing.vGap8,
@@ -118,18 +122,22 @@ class _AppTextFieldState extends State<AppTextField> {
           minLines: widget.minLines,
           inputFormatters: widget.inputFormatters,
           style: AppTypography.texte.copyWith(
-            color: widget.enabled ? AppColors.textPrimary : AppColors.textTertiary,
+            color: widget.enabled
+                ? AppColors.textPrimary
+                : AppColors.textTertiary,
           ),
           decoration: InputDecoration(
             hintText: widget.hint,
             helperText: widget.helperText,
             helperStyle: AppTypography.miniTexte,
-            errorStyle: AppTypography.miniTexte.copyWith(color: AppColors.danger),
-            hintStyle: AppTypography.texteSecondaire.copyWith(
-              color: AppColors.textTertiary,
+            errorStyle: AppTypography.miniTexte.copyWith(
+              color: AppColors.danger,
             ),
+            hintStyle: AppTypography.texte.copyWith(color: AppColors.formHint),
             filled: true,
-            fillColor: widget.enabled ? AppColors.neutralSurface : AppColors.neutralSurfaceSecondary,
+            fillColor: widget.enabled
+                ? AppColors.neutralSurface
+                : AppColors.neutralSurfaceSecondary,
             contentPadding: AppSpacing.inputPadding,
             prefixIcon: widget.prefixIcon != null
                 ? Padding(
@@ -137,36 +145,42 @@ class _AppTextFieldState extends State<AppTextField> {
                     child: widget.prefixIcon,
                   )
                 : null,
-            prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 44,
+              minHeight: 44,
+            ),
             suffixIcon: effectiveSuffixIcon != null
                 ? Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: effectiveSuffixIcon,
                   )
                 : null,
-            suffixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            suffixIconConstraints: const BoxConstraints(
+              minWidth: 44,
+              minHeight: 44,
+            ),
             border: const OutlineInputBorder(
-              borderRadius: AppRadii.r12,
-              borderSide: BorderSide(color: AppColors.border, width: 1),
+              borderRadius: AppRadii.r14,
+              borderSide: BorderSide(color: AppColors.formBorder, width: 1),
             ),
             enabledBorder: const OutlineInputBorder(
-              borderRadius: AppRadii.r12,
-              borderSide: BorderSide(color: AppColors.border, width: 1),
+              borderRadius: AppRadii.r14,
+              borderSide: BorderSide(color: AppColors.formBorder, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: AppRadii.r12,
+              borderRadius: AppRadii.r14,
               borderSide: BorderSide(color: primaryColor, width: 1.8),
             ),
             errorBorder: const OutlineInputBorder(
-              borderRadius: AppRadii.r12,
+              borderRadius: AppRadii.r14,
               borderSide: BorderSide(color: AppColors.danger, width: 1.2),
             ),
             focusedErrorBorder: const OutlineInputBorder(
-              borderRadius: AppRadii.r12,
+              borderRadius: AppRadii.r14,
               borderSide: BorderSide(color: AppColors.danger, width: 1.8),
             ),
             disabledBorder: const OutlineInputBorder(
-              borderRadius: AppRadii.r12,
+              borderRadius: AppRadii.r14,
               borderSide: BorderSide(color: AppColors.borderSubtle, width: 1),
             ),
           ),

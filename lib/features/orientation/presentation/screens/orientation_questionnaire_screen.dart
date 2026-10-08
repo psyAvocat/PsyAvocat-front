@@ -1,437 +1,249 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/universe_provider.dart';
+import '../../../../core/errors/user_message.dart';
+import '../../../../core/theme/design_system.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../../data/models/questionnaire_model.dart';
 import '../controllers/orientation_controller.dart';
 
-/// Écran squelette dynamique du questionnaire d'orientation PsyAvocat.
-/// Une seule page dont le CONTENU change à chaque étape.
-/// Données : MySQL → API Spring Boot → provider Riverpod.
-/// Maquette : barre de segments, radio cards, bouton Suivant violet.
-class OrientationQuestionnaireScreen extends ConsumerStatefulWidget {
+/// Questionnaire d'orientation — maquettes Figma « Qst 1 Psy » / « Qst 3 Psy ».
+///
+/// Entièrement dynamique : questions, réponses, nombre d'étapes et type de
+/// sélection viennent de l'API (questionnaire administré depuis l'Admin Angular).
+class OrientationQuestionnaireScreen extends ConsumerWidget {
   const OrientationQuestionnaireScreen({super.key});
 
-  @override
-  ConsumerState<OrientationQuestionnaireScreen> createState() =>
-      _OrientationQuestionnaireScreenState();
-}
+  void _goBack(BuildContext context, WidgetRef ref) {
+    final wentBack = ref
+        .read(orientationControllerProvider.notifier)
+        .goToPreviousQuestion();
+    if (wentBack) return;
 
-class _OrientationQuestionnaireScreenState
-    extends ConsumerState<OrientationQuestionnaireScreen>
-    with SingleTickerProviderStateMixin {
-
-  // Données de secours si l'API est inaccessible
-  static final QuestionnaireModel _fallback = QuestionnaireModel(
-    id: 'q-juridique-fallback',
-    titre: 'Questionnaire d\'orientation',
-    type: 'JURIDIQUE',
-    questions: [
-      QuestionModel(
-        id: 'q1',
-        texte: 'Quel est votre problème principal ?',
-        ordre: 1,
-        reponses: [
-          ReponseModel(id: 'r1', libelle: 'Famille, mariage, divorce', valeur: 'FAMILLE'),
-          ReponseModel(id: 'r2', libelle: 'Travail, licenciement ou contrat de travail', valeur: 'TRAVAIL'),
-          ReponseModel(id: 'r3', libelle: 'Terrain, maison ou propriété', valeur: 'IMMOBILIER'),
-          ReponseModel(id: 'r4', libelle: 'Infraction, plainte ou problème pénal', valeur: 'PENAL'),
-          ReponseModel(id: 'r5', libelle: 'Autre situation', valeur: 'AUTRE'),
-        ],
-      ),
-      QuestionModel(
-        id: 'q2',
-        texte: 'Qui est principalement concerné par votre problème ?',
-        ordre: 2,
-        reponses: [
-          ReponseModel(id: 'r6', libelle: 'Moi-même', valeur: 'MOI'),
-          ReponseModel(id: 'r7', libelle: 'Un membre de ma famille', valeur: 'FAMILLE_PROCHE'),
-          ReponseModel(id: 'r8', libelle: 'Mon employeur ou mon entreprise', valeur: 'EMPLOYEUR'),
-          ReponseModel(id: 'r9', libelle: 'Une personne ou une organisation avec laquelle j\'ai un conflit', valeur: 'TIERCE'),
-        ],
-      ),
-      QuestionModel(
-        id: 'q3',
-        texte: 'Quelle situation correspond le mieux à votre problème ?',
-        ordre: 3,
-        reponses: [
-          ReponseModel(id: 'r10', libelle: 'Je suis en conflit avec mon conjoint ou ma famille', valeur: 'CONFLIT_FAMILLE'),
-          ReponseModel(id: 'r11', libelle: 'J\'ai un problème avec mon emploi ou mon employeur', valeur: 'CONFLIT_TRAVAIL'),
-          ReponseModel(id: 'r12', libelle: 'J\'ai un problème concernant un terrain, une maison ou un bien', valeur: 'CONFLIT_IMMO'),
-          ReponseModel(id: 'r13', libelle: 'Je suis concerné par une plainte, une infraction ou une procédure pénale', valeur: 'CONFLIT_PENAL'),
-        ],
-      ),
-    ],
-  );
-
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 280),
-    );
-    _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
-    _fadeController.forward();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(orientationControllerProvider.notifier).loadQuestionnaire();
-    });
+    // Première question : on quitte le questionnaire.
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/orientation/intro');
+    }
   }
 
   @override
-  void dispose() {
-    _fadeController.dispose();
-    super.dispose();
-  }
-
-  void _animateToNext(VoidCallback action) {
-    _fadeController.reverse().then((_) {
-      action();
-      _fadeController.forward();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final universe = ref.watch(currentUniverseProvider);
-    final primaryColor = universe.primaryColor;
-    final orientationState = ref.watch(orientationControllerProvider);
-
-    final questions = (orientationState.questionnaire?.questions.isNotEmpty == true)
-        ? orientationState.questionnaire!.questions
-        : _fallback.questions;
-
-    final currentIndex = orientationState.currentStep.clamp(0, questions.length - 1);
-    final currentQuestion = questions[currentIndex];
-    final selectedAnswer = orientationState.answers[currentIndex];
-    final isLastQuestion = currentIndex == questions.length - 1;
-    final hasSelection = selectedAnswer != null;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final orientation = ref.watch(orientationControllerProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFC),
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── En-tête : Retour + Ignorer ────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20),
+          child: Column(
+            children: [
+              AppSpacing.vGap12,
+              Row(
                 children: [
-                  // Bouton retour circulaire
-                  _CircleIconButton(
-                    icon: Icons.arrow_back_ios_new_rounded,
-                    onTap: () {
-                      final canGoBack = ref
-                          .read(orientationControllerProvider.notifier)
-                          .previousStep();
-                      if (!canGoBack) context.pop();
-                    },
+                  IconButton.outlined(
+                    onPressed: () => _goBack(context, ref),
+                    tooltip: 'Retour',
+                    icon: const Icon(Icons.chevron_left_rounded),
                   ),
-                  // Bouton Ignorer pill
+                  const Spacer(),
                   OutlinedButton(
                     onPressed: () => context.go('/home'),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFE5E7EB), width: 1.4),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
+                      minimumSize: const Size(48, 44),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 8,
-                      ),
-                      foregroundColor: const Color(0xFF1F2937),
-                    ),
-                    child: const Text(
-                      'Ignorer',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        horizontal: AppSpacing.s20,
                       ),
                     ),
+                    child: const Text('Ignorer'),
                   ),
                 ],
               ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // ── Barre de progression par segments ─────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: List.generate(questions.length, (i) {
-                  final filled = i <= currentIndex;
-                  return Expanded(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 350),
-                      height: 7,
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      decoration: BoxDecoration(
-                        color: filled ? primaryColor : const Color(0xFFE8EAF0),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // ── Question + Réponses (zone scrollable avec fade) ───────────────
-            Expanded(
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Texte de la question
-                      Text(
-                        currentQuestion.texte,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1E2432),
-                          fontFamily: 'Montserrat',
-                          letterSpacing: -0.3,
-                          height: 1.3,
-                        ),
-                      ),
-
-                      const SizedBox(height: 28),
-
-                      // Options radio
-                      ...currentQuestion.reponses.map((option) {
-                        final isSelected = selectedAnswer?.code == option.id;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
-                          child: _RadioCard(
-                            label: option.libelle,
-                            isSelected: isSelected,
-                            accentColor: primaryColor,
-                            onTap: () {
-                              ref
-                                  .read(orientationControllerProvider.notifier)
-                                  .selectAnswer(
-                                    step: currentIndex,
-                                    questionId: currentQuestion.id,
-                                    question: currentQuestion.texte,
-                                    label: option.libelle,
-                                    reponseId: option.id,
-                                  );
-                            },
-                          ),
-                        );
-                      }),
-
-                      const SizedBox(height: 8),
-                    ],
-                  ),
+              AppSpacing.vGap24,
+              Expanded(
+                child: AppAsyncView<OrientationState>(
+                  value: orientation,
+                  isEmpty: (state) => state.isEmpty,
+                  emptyTitle: 'Aucun questionnaire disponible',
+                  emptyMessage:
+                      "Le questionnaire d'orientation n'est pas encore publié. "
+                      'Appuyez sur « Ignorer » pour accéder directement aux professionnels.',
+                  emptyIcon: Icons.quiz_outlined,
+                  onRetry: () => ref.invalidate(orientationControllerProvider),
+                  builder: (state) => _QuestionnaireContent(state: state),
                 ),
               ),
-            ),
-
-            // ── Bouton Suivant / Valider ───────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: (hasSelection && !orientationState.isLoading)
-                      ? () async {
-                          if (!isLastQuestion) {
-                            _animateToNext(() {
-                              ref
-                                  .read(orientationControllerProvider.notifier)
-                                  .nextStep(questions.length);
-                            });
-                          } else {
-                            final success = await ref
-                                .read(orientationControllerProvider.notifier)
-                                .soumettreQuestionnaire();
-                            if (context.mounted) {
-                              if (success) {
-                                context.push('/orientation/recap');
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      orientationState.errorMessage ??
-                                          'Erreur lors de la validation',
-                                    ),
-                                    backgroundColor: Colors.redAccent,
-                                  ),
-                                );
-                              }
-                            }
-                          }
-                        }
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1B2A5A),
-                    disabledBackgroundColor: const Color(0xFFE5E7EB),
-                    disabledForegroundColor: const Color(0xFF9CA3AF),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: orientationState.isLoading
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.5,
-                          ),
-                        )
-                      : Text(
-                          isLastQuestion ? 'Voir mon orientation' : 'Suivant',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Widgets internes
-// ─────────────────────────────────────────────────────────────────────────────
+/// Progression, question courante et bouton d'action.
+class _QuestionnaireContent extends ConsumerWidget {
+  final OrientationState state;
 
-/// Bouton circulaire avec icône (retour).
-class _CircleIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
+  const _QuestionnaireContent({required this.state});
 
-  const _CircleIconButton({required this.icon, required this.onTap});
+  Future<void> _onNextPressed(BuildContext context, WidgetRef ref) async {
+    final controller = ref.read(orientationControllerProvider.notifier);
+    if (!state.isLastQuestion) {
+      controller.goToNextQuestion();
+      return;
+    }
+
+    try {
+      await controller.submit();
+      if (context.mounted) context.go('/orientation/resultat');
+    } catch (error) {
+      if (context.mounted) {
+        AppNotification.showError(context, userMessageFor(error));
+      }
+    }
+  }
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white,
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final question = state.currentQuestion;
+
+    return Column(
+      children: [
+        AppStepProgress(
+          currentStep: state.currentIndex + 1,
+          totalSteps: state.totalQuestions,
+          label: 'Question',
         ),
-        child: Icon(icon, size: 18, color: const Color(0xFF1F2937)),
-      ),
+        AppSpacing.vGap24,
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            // La question reste collée en haut (par défaut elle serait centrée).
+            layoutBuilder: (current, previous) => Stack(
+              alignment: Alignment.topCenter,
+              children: [...previous, ?current],
+            ),
+            child: _QuestionView(
+              key: ValueKey(question.id),
+              question: question,
+              selectedIds: state.answersFor(question.id),
+              onAnswerTapped: (reponseId) => ref
+                  .read(orientationControllerProvider.notifier)
+                  .toggleAnswer(reponseId),
+            ),
+          ),
+        ),
+        AppSpacing.vGap16,
+        AppPrimaryButton(
+          label: state.isLastQuestion ? 'Voir mon orientation' : 'Suivant',
+          isLoading: state.isSubmitting,
+          onPressed: state.canGoNext
+              ? () => _onNextPressed(context, ref)
+              : null,
+        ),
+        AppSpacing.vGap24,
+      ],
     );
   }
 }
 
-/// Carte radio d'une réponse — style conforme maquette.
-class _RadioCard extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final Color accentColor;
-  final VoidCallback onTap;
+/// Une question et ses réponses, affichées selon le type défini par l'Admin.
+class _QuestionView extends StatelessWidget {
+  final QuestionModel question;
+  final Set<String> selectedIds;
+  final ValueChanged<String> onAnswerTapped;
 
-  const _RadioCard({
-    required this.label,
-    required this.isSelected,
-    required this.accentColor,
-    required this.onTap,
+  const _QuestionView({
+    super.key,
+    required this.question,
+    required this.selectedIds,
+    required this.onAnswerTapped,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        decoration: BoxDecoration(
-          color: isSelected ? accentColor.withValues(alpha: 0.05) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? accentColor : const Color(0xFFE5E7EB),
-            width: isSelected ? 1.8 : 1.2,
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            question.texte,
+            textAlign: TextAlign.center,
+            style: AppTypography.petitTitre,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+          if (question.contexte != null &&
+              question.contexte!.trim().isNotEmpty) ...[
+            AppSpacing.vGap8,
+            Text(
+              question.contexte!,
+              textAlign: TextAlign.center,
+              style: AppTypography.texteSecondaire,
             ),
           ],
-        ),
-        child: Row(
-          children: [
-            // Indicateur radio
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected ? accentColor : const Color(0xFFD1D5DB),
-                  width: 2,
-                ),
-              ),
-              child: isSelected
-                  ? Center(
-                      child: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: accentColor,
-                        ),
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight:
-                      isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected
-                      ? const Color(0xFF111827)
-                      : const Color(0xFF374151),
-                  height: 1.35,
-                ),
-              ),
-            ),
-          ],
-        ),
+          AppSpacing.vGap12,
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: AppSpacing.s8,
+            runSpacing: AppSpacing.s8,
+            children: [
+              if (question.allowsMultiple)
+                const Chip(label: Text('Plusieurs réponses possibles')),
+              if (!question.obligatoire) const Chip(label: Text('Facultatif')),
+            ],
+          ),
+          AppSpacing.vGap24,
+          _buildAnswers(),
+          AppSpacing.vGap16,
+        ],
       ),
+    );
+  }
+
+  Widget _buildAnswers() {
+    final tiles = [
+      for (final reponse in question.reponses)
+        AppChoiceTile(
+          value: reponse.id,
+          label: reponse.libelle,
+          isSelected: selectedIds.contains(reponse.id),
+          allowsMultiple: question.allowsMultiple,
+          onTap: () => onAnswerTapped(reponse.id),
+        ),
+    ];
+
+    // Choix multiple : des cases à cocher, pas de groupe radio.
+    if (question.allowsMultiple) return _spacedColumn(tiles);
+
+    // Oui / Non avec exactement deux réponses : côte à côte.
+    final layout = question.isYesNo && tiles.length == 2
+        ? Row(
+            children: [
+              Expanded(child: tiles[0]),
+              AppSpacing.hGap12,
+              Expanded(child: tiles[1]),
+            ],
+          )
+        : _spacedColumn(tiles);
+
+    return RadioGroup<String>(
+      groupValue: selectedIds.isEmpty ? null : selectedIds.first,
+      onChanged: (reponseId) {
+        if (reponseId != null) onAnswerTapped(reponseId);
+      },
+      child: layout,
+    );
+  }
+
+  Widget _spacedColumn(List<Widget> tiles) {
+    return Column(
+      children: [
+        for (final tile in tiles)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.s12),
+            child: tile,
+          ),
+      ],
     );
   }
 }

@@ -5,10 +5,13 @@ import '../theme/design_system.dart';
 enum AppCardVariant {
   /// Fond blanc neutre avec bordure subtile
   elevated,
+
   /// Fond neutre avec bordure fine sans ombre
   outlined,
+
   /// Fond teinté dans la nuance claire de l'univers
   tinted,
+
   /// Carte avec gradient de transition ou gradient d'univers
   gradient,
 }
@@ -54,9 +57,9 @@ class AppCard extends StatelessWidget {
     this.borderRadius,
     this.universe,
     this.hasShadow = false,
-  })  : variant = AppCardVariant.tinted,
-        backgroundColor = null,
-        borderColor = null;
+  }) : variant = AppCardVariant.tinted,
+       backgroundColor = null,
+       borderColor = null;
 
   /// Constructeur de commodité pour carte en dégradé d'univers (transition #0C2659 → #45088E)
   const AppCard.gradient({
@@ -67,9 +70,9 @@ class AppCard extends StatelessWidget {
     this.borderRadius,
     this.universe,
     this.hasShadow = true,
-  })  : variant = AppCardVariant.gradient,
-        backgroundColor = null,
-        borderColor = null;
+  }) : variant = AppCardVariant.gradient,
+       backgroundColor = null,
+       borderColor = null;
 
   @override
   Widget build(BuildContext context) {
@@ -87,13 +90,19 @@ class AppCard extends StatelessWidget {
     switch (variant) {
       case AppCardVariant.elevated:
         effectiveBgColor = backgroundColor ?? AppColors.neutralSurface;
-        effectiveBorder = Border.all(color: borderColor ?? AppColors.border, width: 1);
+        effectiveBorder = Border.all(
+          color: borderColor ?? AppColors.border,
+          width: 1,
+        );
         effectiveShadows = AppShadows.card;
         break;
 
       case AppCardVariant.outlined:
         effectiveBgColor = backgroundColor ?? AppColors.neutralSurface;
-        effectiveBorder = Border.all(color: borderColor ?? AppColors.border, width: 1);
+        effectiveBorder = Border.all(
+          color: borderColor ?? AppColors.border,
+          width: 1,
+        );
         if (hasShadow) effectiveShadows = AppShadows.subtle;
         break;
 

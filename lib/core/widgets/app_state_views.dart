@@ -44,11 +44,7 @@ class AppFeedbackView extends StatelessWidget {
                 color: effectiveBg,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: AppIcons.sizeXl,
-                color: iconColor,
-              ),
+              child: Icon(icon, size: AppIcons.sizeXl, color: iconColor),
             ),
             AppSpacing.vGap24,
             Text(
@@ -67,10 +63,7 @@ class AppFeedbackView extends StatelessWidget {
                 ),
               ),
             ],
-            if (customContent != null) ...[
-              AppSpacing.vGap16,
-              customContent!,
-            ],
+            if (customContent != null) ...[AppSpacing.vGap16, customContent!],
             if (actionText != null && onAction != null) ...[
               AppSpacing.vGap24,
               SizedBox(
@@ -94,11 +87,7 @@ class AppLoadingView extends StatelessWidget {
   final String? message;
   final AppUniverse? universe;
 
-  const AppLoadingView({
-    super.key,
-    this.message,
-    this.universe,
-  });
+  const AppLoadingView({super.key, this.message, this.universe});
 
   @override
   Widget build(BuildContext context) {
@@ -108,11 +97,7 @@ class AppLoadingView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppCircularProgress(
-              size: 36,
-              strokeWidth: 3.5,
-              universe: universe,
-            ),
+            AppCircularProgress(size: 36, strokeWidth: 3.5, universe: universe),
             if (message != null) ...[
               AppSpacing.vGap16,
               Text(

@@ -101,40 +101,135 @@ class AppColors {
   static const LinearGradient transitionGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF0C2659),
-      Color(0xFF45088E),
-    ],
+    colors: [Color(0xFF0C2659), Color(0xFF45088E)],
   );
 
   /// Gradient horizontal doux pour l'AppBar ou bannières de transition
   static const LinearGradient transitionGradientHorizontal = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
-    colors: [
-      Color(0xFF0C2659),
-      Color(0xFF45088E),
-    ],
+    colors: [Color(0xFF0C2659), Color(0xFF45088E)],
   );
 
   /// Gradient subtil de l'univers Psychologue
   static const LinearGradient psychologistGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF45088E),
-      Color(0xFF6723BC),
-    ],
+    colors: [Color(0xFF45088E), Color(0xFF6723BC)],
   );
 
   /// Gradient subtil de l'univers Avocat
   static const LinearGradient lawyerGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF0C2659),
-      Color(0xFF1B418E),
-    ],
+    colors: [Color(0xFF0C2659), Color(0xFF1B418E)],
+  );
+
+  // ===========================================================================
+  // MARQUE (valeurs relevées dans les maquettes Figma : docs/figma)
+  // ===========================================================================
+  /// Violet de marque : liens, cases à cocher, début du dégradé des boutons.
+  static const Color brandPurple = Color(0xFF632CB5);
+
+  /// Bleu de marque : fin du dégradé des boutons.
+  static const Color brandBlue = Color(0xFF1F5AC7);
+
+  /// Violet du mot « Psy » dans le logo.
+  static const Color logoPsy = Color(0xFF672AB0);
+
+  /// Couleur du mot « avocat » mis en avant sur l'onboarding.
+  static const Color lawyerHighlight = Color(0xFF6B7AFF);
+
+  /// Dégradé des boutons principaux (gauche → droite).
+  static const LinearGradient brandGradient = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [brandPurple, brandBlue],
+  );
+
+  /// Dégradé de l'en-tête arrondi des écrans d'authentification (haut → bas).
+  static const LinearGradient authHeaderGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [brandPurple, lawyer],
+  );
+
+  // ===========================================================================
+  // ACCENTS LUMINEUX (utilisés sur fond sombre : onboarding)
+  // ===========================================================================
+  /// Lavande de l'univers Psychologue (maquette onboarding : « santé mentale »).
+  static const Color psychologistAccent = Color(0xFF8B7CF6);
+
+  /// Bleu clair de l'univers Avocat, pendant de [psychologistAccent].
+  static const Color lawyerAccent = Color(0xFF6B8CFF);
+
+  // ===========================================================================
+  // ONBOARDING SOMBRE (maquette onboarding)
+  // ===========================================================================
+  /// Fond bleu nuit très sombre de l'onboarding.
+  static const Color onboardingBackground = Color(0xFF0B0D1A);
+
+  /// Texte secondaire sur fond sombre.
+  static const Color onboardingTextMuted = Color(0xFFA9ABC6);
+
+  // ===========================================================================
+  // FONDS D'ÉCRAN (Figma)
+  // ===========================================================================
+  /// Fond lavande : onboarding avocat, choix de la catégorie.
+  static const Color backgroundLavender = Color(0xFFF7F5FA);
+
+  /// Fond gris très clair : première page, questionnaire.
+  static const Color backgroundLight = Color(0xFFF8FAFC);
+
+  /// Fond dégradé de l'onboarding psychologue (gauche → droite).
+  static const LinearGradient psychologistOnboardingBackground = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [backgroundLight, Color(0xFFE9D5FF)],
+  );
+
+  // ===========================================================================
+  // FORMULAIRES (Figma : connexion / inscription)
+  // ===========================================================================
+  /// Libellés des champs.
+  static const Color formLabel = Color(0xFF1E293B);
+
+  /// Placeholders, icônes et textes secondaires des formulaires.
+  static const Color formHint = Color(0xFF64748B);
+
+  /// Bordure des champs de saisie.
+  static const Color formBorder = Color(0xFFE2E8F0);
+
+  /// Lignes de séparation (« CONTINUE AVEC »).
+  static const Color formDivider = Color(0xFF94A3B8);
+
+  // ===========================================================================
+  // COMPOSANTS DIVERS (Figma)
+  // ===========================================================================
+  /// Sous-titre de l'écran de choix de catégorie.
+  static const Color subtitleSlate = Color(0xFF5A6E85);
+
+  /// Segments non remplis de la barre de progression du questionnaire.
+  static const Color progressTrack = Color(0xFFF2F2F7);
+
+  /// Fond du bouton « Ignorer ».
+  static const Color chipBackground = Color(0xFFF7F7F7);
+
+  /// Points inactifs de l'indicateur de pages.
+  static const Color dotInactive = Color(0xFFD9D9D9);
+
+  /// Dégradé de la carte « Avocat » (choix de catégorie).
+  static const LinearGradient lawyerCardGradient = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [lawyer, Color(0xFF1A3F7A)],
+  );
+
+  /// Dégradé de la carte « Psychologue » (choix de catégorie).
+  static const LinearGradient psychologistCardGradient = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [psychologist, Color(0xFF6519B3)],
   );
 
   // ===========================================================================

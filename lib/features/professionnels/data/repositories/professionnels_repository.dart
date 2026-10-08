@@ -2,10 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/network_providers.dart';
 import '../models/professional_detail_model.dart';
+import '../models/professionnel_summary.dart';
 
 /// Contrat du repository de professionnels
 abstract class ProfessionnelsRepository {
-  Future<List<ProfessionalDetail>> getProfessionnels({bool? isAvocat});
+  /// Professionnels d'un type donné (`AVOCAT`, `PSYCHOLOGUE`, ou tous si `null`).
+  /// Lève une [AppException] si l'API est injoignable : l'écran affiche l'erreur.
+  Future<List<ProfessionnelSummary>> searchProfessionnels({String? type});
   Future<ProfessionalDetail?> getProfessionnelById(String id);
 }
 
@@ -19,26 +22,19 @@ class ApiProfessionnelsRepository implements ProfessionnelsRepository {
   ApiProfessionnelsRepository(this._client);
 
   @override
-  Future<List<ProfessionalDetail>> getProfessionnels({bool? isAvocat}) async {
-    try {
-      final queryParams = <String, dynamic>{};
-      if (isAvocat != null) {
-        queryParams['type'] = isAvocat ? 'AVOCAT' : 'PSYCHOLOGUE';
-      }
-
-      final response = await _client.get('/professionnels', queryParameters: queryParams);
-      final list = response.data as List<dynamic>? ?? [];
-
-      final results = <ProfessionalDetail>[];
-      for (final item in list) {
-        final proJson = item as Map<String, dynamic>;
-        results.add(_mapToDetail(proJson, []));
-      }
-      return results;
-    } catch (_) {
-      // En cas d'erreur ou indisponibilité, renvoyer une liste vide (pas de fausses données)
-      return [];
-    }
+  Future<List<ProfessionnelSummary>> searchProfessionnels({
+    String? type,
+  }) async {
+    final response = await _client.get(
+      '/professionnels',
+      queryParameters: {'type': ?type},
+    );
+    final list = response.data as List<dynamic>? ?? [];
+    return list
+        .map(
+          (item) => ProfessionnelSummary.fromJson(item as Map<String, dynamic>),
+        )
+        .toList();
   }
 
   @override
@@ -143,8 +139,18 @@ class ApiProfessionnelsRepository implements ProfessionnelsRepository {
         final dt = DateTime.parse(dateStr);
         final jours = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
         final mois = [
-          'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
-          'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'
+          'Jan',
+          'Fév',
+          'Mar',
+          'Avr',
+          'Mai',
+          'Juin',
+          'Juil',
+          'Août',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Déc',
         ];
 
         result.add(
@@ -164,7 +170,9 @@ class ApiProfessionnelsRepository implements ProfessionnelsRepository {
 }
 
 /// Provider pour injecter le repository officiel de professionnels
-final professionnelsRepositoryProvider = Provider<ProfessionnelsRepository>((ref) {
+final professionnelsRepositoryProvider = Provider<ProfessionnelsRepository>((
+  ref,
+) {
   final client = ref.watch(apiClientProvider);
   return ApiProfessionnelsRepository(client);
 });

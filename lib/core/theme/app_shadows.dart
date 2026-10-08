@@ -50,6 +50,33 @@ class AppShadows {
     ];
   }
 
+  /// Ombre violette des boutons en dégradé (Figma : #632CB5 à 25 %, flou 16, y 8)
+  static const List<BoxShadow> brandButton = [
+    BoxShadow(color: Color(0x40632CB5), blurRadius: 16, offset: Offset(0, 8)),
+  ];
+
+  /// Ombre colorée des grandes cartes d'univers (Figma : flou 24, y 12)
+  static List<BoxShadow> universeCard(Color color) {
+    return [
+      BoxShadow(
+        color: color.withValues(alpha: 0.18),
+        blurRadius: 24,
+        offset: const Offset(0, 12),
+      ),
+    ];
+  }
+
+  /// Halo autour d'une option de questionnaire sélectionnée
+  static List<BoxShadow> selectedOption(Color color) {
+    return [
+      BoxShadow(
+        color: color.withValues(alpha: 0.25),
+        blurRadius: 8,
+        offset: const Offset(0, 2),
+      ),
+    ];
+  }
+
   /// Ombre pour les modales, dialogues et popups
   static const List<BoxShadow> modal = [
     BoxShadow(

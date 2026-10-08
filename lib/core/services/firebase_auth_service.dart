@@ -7,7 +7,7 @@ class FirebaseAuthService {
   final FirebaseAuth _auth;
 
   FirebaseAuthService({FirebaseAuth? auth})
-      : _auth = auth ?? FirebaseAuth.instance;
+    : _auth = auth ?? FirebaseAuth.instance;
 
   /// Utilisateur actuellement connecté
   User? get currentUser => _auth.currentUser;
@@ -63,7 +63,9 @@ class FirebaseAuthService {
     } on FirebaseAuthException catch (e) {
       throw AuthException(mapFirebaseError(e.code, e.message));
     } catch (e) {
-      throw AuthException('Impossible d\'envoyer l\'email de réinitialisation : ${e.toString()}');
+      throw AuthException(
+        'Impossible d\'envoyer l\'email de réinitialisation : ${e.toString()}',
+      );
     }
   }
 

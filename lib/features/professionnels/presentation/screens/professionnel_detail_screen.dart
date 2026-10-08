@@ -14,16 +14,15 @@ import '../../data/repositories/professionnels_repository.dart';
 class ProfessionnelDetailScreen extends ConsumerStatefulWidget {
   final String professionnelId;
 
-  const ProfessionnelDetailScreen({
-    super.key,
-    required this.professionnelId,
-  });
+  const ProfessionnelDetailScreen({super.key, required this.professionnelId});
 
   @override
-  ConsumerState<ProfessionnelDetailScreen> createState() => _ProfessionnelDetailScreenState();
+  ConsumerState<ProfessionnelDetailScreen> createState() =>
+      _ProfessionnelDetailScreenState();
 }
 
-class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailScreen>
+class _ProfessionnelDetailScreenState
+    extends ConsumerState<ProfessionnelDetailScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   bool _isFavorite = false;
@@ -73,7 +72,11 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.person_off_rounded, size: 54, color: Color(0xFF9CA3AF)),
+                  const Icon(
+                    Icons.person_off_rounded,
+                    size: 54,
+                    color: Color(0xFF9CA3AF),
+                  ),
                   const SizedBox(height: 16),
                   const Text(
                     'Professionnel introuvable',
@@ -82,8 +85,13 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                   const SizedBox(height: 12),
                   ElevatedButton(
                     onPressed: () => context.pop(),
-                    style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-                    child: const Text('Retour à la liste', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                    ),
+                    child: const Text(
+                      'Retour à la liste',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               ),
@@ -91,7 +99,8 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
           );
         }
 
-        final selectedTarif = _selectedTarif ?? (pro.tarifs.isNotEmpty ? pro.tarifs.first : null);
+        final selectedTarif =
+            _selectedTarif ?? (pro.tarifs.isNotEmpty ? pro.tarifs.first : null);
 
         return Scaffold(
           backgroundColor: const Color(0xFFF9FAFC),
@@ -113,7 +122,10 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                           color: Colors.white.withValues(alpha: 0.9),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+                          icon: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            size: 18,
+                          ),
                           color: const Color(0xFF1F2937),
                           onPressed: () => context.pop(),
                         ),
@@ -129,9 +141,13 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                           ),
                           child: IconButton(
                             icon: Icon(
-                              _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                              _isFavorite
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
                               size: 20,
-                              color: _isFavorite ? const Color(0xFFEF4444) : const Color(0xFF1F2937),
+                              color: _isFavorite
+                                  ? const Color(0xFFEF4444)
+                                  : const Color(0xFF1F2937),
                             ),
                             onPressed: () {
                               setState(() {
@@ -149,14 +165,17 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                           Image.asset(
                             pro.imagePath,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: primaryColor.withValues(alpha: 0.2),
-                              child: Icon(
-                                pro.isAvocat ? Icons.gavel_rounded : Icons.psychology_rounded,
-                                size: 80,
-                                color: primaryColor,
-                              ),
-                            ),
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  color: primaryColor.withValues(alpha: 0.2),
+                                  child: Icon(
+                                    pro.isAvocat
+                                        ? Icons.gavel_rounded
+                                        : Icons.psychology_rounded,
+                                    size: 80,
+                                    color: primaryColor,
+                                  ),
+                                ),
                           ),
                           // Dégradé de fondu
                           Positioned(
@@ -189,7 +208,9 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                       child: Container(
                         decoration: const BoxDecoration(
                           color: Color(0xFFF9FAFC),
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(28),
+                          ),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(20, 20, 20, 110),
@@ -228,7 +249,8 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           pro.nom,
@@ -258,10 +280,15 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                                         icon: Icons.phone_rounded,
                                         color: primaryColor,
                                         onTap: () {
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
-                                              content: Text('Appel vocal vers ${pro.nom}'),
-                                              behavior: SnackBarBehavior.floating,
+                                              content: Text(
+                                                'Appel vocal vers ${pro.nom}',
+                                              ),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
                                             ),
                                           );
                                         },
@@ -271,10 +298,15 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                                         icon: Icons.chat_bubble_outline_rounded,
                                         color: primaryColor,
                                         onTap: () {
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
-                                              content: Text('Messagerie avec ${pro.nom}'),
-                                              behavior: SnackBarBehavior.floating,
+                                              content: Text(
+                                                'Messagerie avec ${pro.nom}',
+                                              ),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
                                             ),
                                           );
                                         },
@@ -289,7 +321,11 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                               // Note et localisation
                               Row(
                                 children: [
-                                  const Icon(Icons.star_rounded, size: 18, color: Color(0xFFF59E0B)),
+                                  const Icon(
+                                    Icons.star_rounded,
+                                    size: 18,
+                                    color: Color(0xFFF59E0B),
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${pro.note}',
@@ -308,7 +344,11 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                                     ),
                                   ),
                                   const SizedBox(width: 14),
-                                  const Icon(Icons.location_on_outlined, size: 16, color: Color(0xFF9CA3AF)),
+                                  const Icon(
+                                    Icons.location_on_outlined,
+                                    size: 16,
+                                    color: Color(0xFF9CA3AF),
+                                  ),
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
@@ -330,12 +370,19 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                                 runSpacing: 8,
                                 children: pro.specialites.map((sp) {
                                   return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: primaryColor.withValues(alpha: 0.08),
+                                      color: primaryColor.withValues(
+                                        alpha: 0.08,
+                                      ),
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: primaryColor.withValues(alpha: 0.2),
+                                        color: primaryColor.withValues(
+                                          alpha: 0.2,
+                                        ),
                                       ),
                                     ),
                                     child: Text(
@@ -366,7 +413,9 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                                     borderRadius: BorderRadius.circular(22),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.06),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.06,
+                                        ),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -374,8 +423,14 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                                   ),
                                   labelColor: const Color(0xFF111827),
                                   unselectedLabelColor: const Color(0xFF6B7280),
-                                  labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-                                  unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                                  labelStyle: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  unselectedLabelStyle: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                   dividerColor: Colors.transparent,
                                   indicatorSize: TabBarIndicatorSize.tab,
                                   tabs: const [
@@ -390,7 +445,11 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                               const SizedBox(height: 24),
 
                               // 4. Contenu selon onglet actif
-                              _buildPresentationSection(pro, primaryColor, selectedTarif),
+                              _buildPresentationSection(
+                                pro,
+                                primaryColor,
+                                selectedTarif,
+                              ),
                             ],
                           ),
                         ),
@@ -426,7 +485,10 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                           children: [
                             const Text(
                               'Consultation',
-                              style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF6B7280),
+                              ),
                             ),
                             Text(
                               selectedTarif.formattedPrice,
@@ -450,7 +512,10 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                                 extra: selectedTarif,
                               );
                             },
-                            icon: const Icon(Icons.calendar_month_rounded, color: Colors.white),
+                            icon: const Icon(
+                              Icons.calendar_month_rounded,
+                              color: Colors.white,
+                            ),
                             label: const Text(
                               'Prendre rendez-vous',
                               style: TextStyle(
@@ -532,9 +597,14 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
               borderRadius: BorderRadius.circular(16),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
+                ),
                 decoration: BoxDecoration(
-                  color: isSelected ? primaryColor.withValues(alpha: 0.04) : Colors.white,
+                  color: isSelected
+                      ? primaryColor.withValues(alpha: 0.04)
+                      : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isSelected ? primaryColor : const Color(0xFFE5E7EB),
@@ -551,8 +621,12 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                 child: Row(
                   children: [
                     Icon(
-                      isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                      color: isSelected ? primaryColor : const Color(0xFF9CA3AF),
+                      isSelected
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      color: isSelected
+                          ? primaryColor
+                          : const Color(0xFF9CA3AF),
                       size: 22,
                     ),
                     const SizedBox(width: 14),
@@ -586,7 +660,9 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
-                        color: isSelected ? primaryColor : const Color(0xFF1E2432),
+                        color: isSelected
+                            ? primaryColor
+                            : const Color(0xFF1E2432),
                       ),
                     ),
                   ],
@@ -615,7 +691,10 @@ class _ProfessionnelDetailScreenState extends ConsumerState<ProfessionnelDetailS
               label: Text(l),
               backgroundColor: Colors.white,
               side: const BorderSide(color: Color(0xFFE5E7EB)),
-              labelStyle: const TextStyle(fontSize: 13, color: Color(0xFF374151)),
+              labelStyle: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF374151),
+              ),
             );
           }).toList(),
         ),

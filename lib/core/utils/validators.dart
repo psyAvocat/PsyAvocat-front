@@ -2,7 +2,10 @@
 class Validators {
   Validators._();
 
-  static String? required(String? value, [String message = 'Ce champ est requis']) {
+  static String? required(
+    String? value, [
+    String message = 'Ce champ est requis',
+  ]) {
     if (value == null || value.trim().isEmpty) {
       return message;
     }

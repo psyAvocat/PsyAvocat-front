@@ -26,6 +26,35 @@ enum AppUniverse {
     }
   }
 
+  /// Type de professionnel attendu par l'API (`/api/professionnels?type=`).
+  /// `null` pour l'univers neutre : tous les professionnels.
+  String? get apiProfessionalType {
+    switch (this) {
+      case AppUniverse.psychologist:
+        return 'PSYCHOLOGUE';
+      case AppUniverse.lawyer:
+        return 'AVOCAT';
+      case AppUniverse.neutral:
+        return null;
+    }
+  }
+
+  /// Type de questionnaire d'orientation attendu par l'API
+  /// (uniquement 'PSYCHOLOGIQUE', réservé aux patients).
+  String get apiQuestionnaireType => 'PSYCHOLOGIQUE';
+
+  /// Libellé pluriel des professionnels de l'univers.
+  String get professionalsLabel {
+    switch (this) {
+      case AppUniverse.psychologist:
+        return 'Psychologues';
+      case AppUniverse.lawyer:
+        return 'Avocats';
+      case AppUniverse.neutral:
+        return 'Professionnels';
+    }
+  }
+
   /// Couleur principale dédiée à l'univers
   Color get primaryColor {
     switch (this) {

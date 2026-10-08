@@ -18,19 +18,13 @@ class AuthRepository {
     required String email,
     required String password,
   }) =>
-      _datasource.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      _datasource.signInWithEmailAndPassword(email: email, password: password);
 
   Future<UserCredential> signUp({
     required String email,
     required String password,
   }) =>
-      _datasource.signUpWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      _datasource.signUpWithEmailAndPassword(email: email, password: password);
 
   Future<void> signOut() => _datasource.signOut();
 

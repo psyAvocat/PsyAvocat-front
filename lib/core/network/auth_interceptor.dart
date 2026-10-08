@@ -8,7 +8,7 @@ class AuthInterceptor extends QueuedInterceptor {
   final FirebaseAuth _firebaseAuth;
 
   AuthInterceptor({FirebaseAuth? firebaseAuth})
-      : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+    : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
 
   @override
   Future<void> onRequest(
@@ -39,7 +39,9 @@ class AuthInterceptor extends QueuedInterceptor {
     // Si Spring Boot renvoie 401 Unauthorized, tentons de forcer le rafraîchissement du token
     if (err.response?.statusCode == 401 && _firebaseAuth.currentUser != null) {
       try {
-        final refreshedToken = await _firebaseAuth.currentUser!.getIdToken(true);
+        final refreshedToken = await _firebaseAuth.currentUser!.getIdToken(
+          true,
+        );
         if (refreshedToken != null) {
           final options = err.requestOptions;
           options.headers['Authorization'] = 'Bearer $refreshedToken';

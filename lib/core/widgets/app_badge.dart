@@ -163,11 +163,7 @@ class AppBadge extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: radius,
-        child: content,
-      );
+      return InkWell(onTap: onTap, borderRadius: radius, child: content);
     }
 
     return content;

@@ -23,101 +23,108 @@ class AppTypography {
 
   /// Grand titre : 32 px, Bold
   static TextStyle get grandTitre => GoogleFonts.montserrat(
-        fontSize: 32,
-        fontWeight: FontWeight.w700,
-        height: 1.25,
-        letterSpacing: -0.5,
-        color: AppColors.textPrimary,
-      );
+    fontSize: 32,
+    fontWeight: FontWeight.w700,
+    height: 1.25,
+    letterSpacing: -0.5,
+    color: AppColors.textPrimary,
+  );
 
   /// Titre moyen : 24 px, SemiBold
   static TextStyle get titreMoyen => GoogleFonts.montserrat(
-        fontSize: 24,
-        fontWeight: FontWeight.w600,
-        height: 1.3,
-        letterSpacing: -0.2,
-        color: AppColors.textPrimary,
-      );
+    fontSize: 24,
+    fontWeight: FontWeight.w600,
+    height: 1.3,
+    letterSpacing: -0.2,
+    color: AppColors.textPrimary,
+  );
 
   /// Petit titre : 20 px, SemiBold
   static TextStyle get petitTitre => GoogleFonts.montserrat(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        height: 1.35,
-        color: AppColors.textPrimary,
-      );
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    height: 1.35,
+    color: AppColors.textPrimary,
+  );
 
   /// Texte standard : 16 px, Regular
   static TextStyle get texte => GoogleFonts.montserrat(
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-        height: 1.5,
-        color: AppColors.textPrimary,
-      );
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
+    height: 1.5,
+    color: AppColors.textPrimary,
+  );
 
   /// Variante Texte Medium : 16 px, Medium
   static TextStyle get texteMedium => GoogleFonts.montserrat(
-        fontSize: 16,
-        fontWeight: FontWeight.w500,
-        height: 1.5,
-        color: AppColors.textPrimary,
-      );
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
+    height: 1.5,
+    color: AppColors.textPrimary,
+  );
 
   /// Variante Texte SemiBold : 16 px, SemiBold
   static TextStyle get texteSemiBold => GoogleFonts.montserrat(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        height: 1.5,
-        color: AppColors.textPrimary,
-      );
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    height: 1.5,
+    color: AppColors.textPrimary,
+  );
 
   /// Texte d'appoint / description : 14 px, Regular
   static TextStyle get texteSecondaire => GoogleFonts.montserrat(
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        height: 1.45,
-        color: AppColors.textSecondary,
-      );
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    height: 1.45,
+    color: AppColors.textSecondary,
+  );
 
   /// Texte d'appoint SemiBold : 14 px, SemiBold (utilisé pour les labels de champs)
   static TextStyle get labelInput => GoogleFonts.montserrat(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        height: 1.4,
-        color: AppColors.textPrimary,
-      );
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    color: AppColors.textPrimary,
+  );
 
   /// Mini texte : 12 px, Regular
   static TextStyle get miniTexte => GoogleFonts.montserrat(
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        height: 1.4,
-        color: AppColors.textSecondary,
-      );
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    height: 1.4,
+    color: AppColors.textSecondary,
+  );
 
   /// Mini texte SemiBold : 12 px, SemiBold (pour les badges et étiquettes)
   static TextStyle get badgeTexte => GoogleFonts.montserrat(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        height: 1.3,
-        letterSpacing: 0.3,
-      );
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    height: 1.3,
+    letterSpacing: 0.3,
+  );
 
   /// Style de texte pour les boutons : 16 px, SemiBold, texte blanc #FFFFFF
   static TextStyle get buttonText => GoogleFonts.montserrat(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.2,
-        color: AppColors.buttonText,
-      );
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.2,
+    color: AppColors.buttonText,
+  );
 
   /// Style de texte pour les petits boutons : 14 px, SemiBold
   static TextStyle get buttonTextSmall => GoogleFonts.montserrat(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.2,
-        color: AppColors.buttonText,
-      );
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.2,
+    color: AppColors.buttonText,
+  );
+
+  /// Lien cliquable : 14 px, SemiBold, violet de marque (#632CB5)
+  static TextStyle get lien => GoogleFonts.montserrat(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: AppColors.brandPurple,
+  );
 
   // ===========================================================================
   // FLUTTER TEXT THEME

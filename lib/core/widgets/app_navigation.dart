@@ -31,9 +31,8 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => Size.fromHeight(
-        kToolbarHeight + (bottom?.preferredSize.height ?? 0.0),
-      );
+  Size get preferredSize =>
+      Size.fromHeight(kToolbarHeight + (bottom?.preferredSize.height ?? 0.0));
 
   @override
   Widget build(BuildContext context) {
@@ -44,17 +43,14 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
     final canPop = ModalRoute.of(context)?.canPop ?? false;
     final shouldShowBack = showBackButton && (canPop || onBackPressed != null);
 
-    final Color foregroundColor =
-        useGradient ? AppColors.textOnColor : AppColors.textPrimary;
+    final Color foregroundColor = useGradient
+        ? AppColors.textOnColor
+        : AppColors.textPrimary;
 
     Widget? effectiveLeading = leading;
     if (effectiveLeading == null && shouldShowBack) {
       effectiveLeading = IconButton(
-        icon: Icon(
-          AppIcons.back,
-          size: 20,
-          color: foregroundColor,
-        ),
+        icon: Icon(AppIcons.back, size: 20, color: foregroundColor),
         tooltip: 'Retour',
         onPressed: onBackPressed ?? () => Navigator.of(context).maybePop(),
       );
@@ -163,7 +159,9 @@ class AppUniverseSwitch extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? activeColor : Colors.transparent,
           borderRadius: AppRadii.r12,
-          boxShadow: isSelected ? AppShadows.buttonUniverse(activeColor) : AppShadows.none,
+          boxShadow: isSelected
+              ? AppShadows.buttonUniverse(activeColor)
+              : AppShadows.none,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -171,14 +169,18 @@ class AppUniverseSwitch extends StatelessWidget {
             Icon(
               icon,
               size: AppIcons.sizeSm,
-              color: isSelected ? AppColors.textOnColor : AppColors.textSecondary,
+              color: isSelected
+                  ? AppColors.textOnColor
+                  : AppColors.textSecondary,
             ),
             const SizedBox(width: 8),
             Text(
               title,
               style: AppTypography.texteSemiBold.copyWith(
                 fontSize: 14,
-                color: isSelected ? AppColors.textOnColor : AppColors.textSecondary,
+                color: isSelected
+                    ? AppColors.textOnColor
+                    : AppColors.textSecondary,
               ),
             ),
           ],

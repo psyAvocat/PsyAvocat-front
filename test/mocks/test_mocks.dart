@@ -1,6 +1,7 @@
 import 'package:psyavocat_front/features/notifications/data/models/notification_model.dart';
 import 'package:psyavocat_front/features/notifications/data/repositories/notifications_repository.dart';
 import 'package:psyavocat_front/features/professionnels/data/models/professional_detail_model.dart';
+import 'package:psyavocat_front/features/professionnels/data/models/professionnel_summary.dart';
 import 'package:psyavocat_front/features/professionnels/data/repositories/professionnels_repository.dart';
 import 'package:psyavocat_front/features/profile/data/models/profil_model.dart';
 import 'package:psyavocat_front/features/profile/data/repositories/profil_repository.dart';
@@ -106,9 +107,20 @@ class MockProfessionnelsRepository implements ProfessionnelsRepository {
   ];
 
   @override
-  Future<List<ProfessionalDetail>> getProfessionnels({bool? isAvocat}) async {
-    if (isAvocat == null) return mockPros;
-    return mockPros.where((p) => p.isAvocat == isAvocat).toList();
+  Future<List<ProfessionnelSummary>> searchProfessionnels({String? type}) async {
+    return mockPros
+        .where((p) => type == null || (type == 'AVOCAT') == p.isAvocat)
+        .map(
+          (p) => ProfessionnelSummary(
+            id: p.id,
+            fullName: p.nom,
+            ville: p.ville,
+            specialites: p.specialites,
+            noteMoyenne: p.note,
+            nombreAvis: p.nombreAvis,
+          ),
+        )
+        .toList();
   }
 
   @override

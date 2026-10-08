@@ -2,12 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/design_system.dart';
 
 /// Type d'alerte.
-enum AppAlertType {
-  info,
-  success,
-  warning,
-  danger,
-}
+enum AppAlertType { info, success, warning, danger }
 
 /// Bannière d'alerte en ligne pour retours contextuels.
 class AppAlertBanner extends StatelessWidget {
@@ -118,10 +113,7 @@ class AppAlertBanner extends StatelessWidget {
                     color: textColor,
                   ),
                 ),
-                if (action != null) ...[
-                  AppSpacing.vGap8,
-                  action!,
-                ],
+                if (action != null) ...[AppSpacing.vGap8, action!],
               ],
             ),
           ),
@@ -142,7 +134,11 @@ class AppAlertBanner extends StatelessWidget {
 class AppNotification {
   AppNotification._();
 
-  static void showSuccess(BuildContext context, String message) {
+  /// Clé globale pour déclencher des notifications même après transition d'écran.
+  static final GlobalKey<ScaffoldMessengerState> messengerKey =
+      GlobalKey<ScaffoldMessengerState>();
+
+  static void showSuccess(BuildContext? context, String message) {
     _showSnackBar(
       context: context,
       message: message,
@@ -151,7 +147,7 @@ class AppNotification {
     );
   }
 
-  static void showError(BuildContext context, String message) {
+  static void showError(BuildContext? context, String message) {
     _showSnackBar(
       context: context,
       message: message,
@@ -160,7 +156,7 @@ class AppNotification {
     );
   }
 
-  static void showWarning(BuildContext context, String message) {
+  static void showWarning(BuildContext? context, String message) {
     _showSnackBar(
       context: context,
       message: message,
@@ -170,27 +166,39 @@ class AppNotification {
     );
   }
 
-  static void showInfo(BuildContext context, String message, {AppUniverse? universe}) {
-    final universeColors = universe != null
-        ? AppUniverseColors.fromUniverse(universe)
-        : AppTheme.universeOf(context);
+  static void showInfo(
+    BuildContext? context,
+    String message, {
+    AppUniverse? universe,
+  }) {
+    Color bg = AppColors.lawyer;
+    if (universe != null) {
+      bg = AppUniverseColors.fromUniverse(universe).primary;
+    } else if (context != null) {
+      try {
+        bg = AppTheme.universeOf(context).primary;
+      } catch (_) {}
+    }
 
     _showSnackBar(
       context: context,
       message: message,
-      backgroundColor: universeColors.primary,
+      backgroundColor: bg,
       icon: AppIcons.info,
     );
   }
 
   static void _showSnackBar({
-    required BuildContext context,
+    required BuildContext? context,
     required String message,
     required Color backgroundColor,
     required IconData icon,
     Color textColor = AppColors.buttonText,
   }) {
-    final messenger = ScaffoldMessenger.of(context);
+    final messenger = (context != null ? ScaffoldMessenger.maybeOf(context) : null) ??
+        messengerKey.currentState;
+    if (messenger == null) return;
+
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
