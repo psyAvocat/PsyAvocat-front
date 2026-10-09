@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../data/models/dossier_model.dart';
 import '../controllers/dossiers_controller.dart';
+import 'create_dossier_wizard_screen.dart';
 
 /// Écran « Mes dossiers juridiques » — liste en temps réel depuis GET /api/dossiers.
 class DossiersScreen extends ConsumerWidget {
@@ -32,7 +33,8 @@ class DossiersScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.add_rounded, color: primaryColor, size: 28),
-            onPressed: () => _showCreateDossierSheet(context, ref, primaryColor),
+            onPressed: () =>
+                _showCreateDossierSheet(context, ref, primaryColor),
             tooltip: 'Nouveau dossier',
           ),
         ],
@@ -47,11 +49,13 @@ class DossiersScreen extends ConsumerWidget {
             if (dossiers.isEmpty) {
               return _EmptyDossierState(
                 primaryColor: primaryColor,
-                onCreateTap: () => _showCreateDossierSheet(context, ref, primaryColor),
+                onCreateTap: () =>
+                    _showCreateDossierSheet(context, ref, primaryColor),
               );
             }
             return RefreshIndicator(
-              onRefresh: () => ref.read(dossiersListProvider.notifier).refresh(),
+              onRefresh: () =>
+                  ref.read(dossiersListProvider.notifier).refresh(),
               child: ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
                 itemCount: dossiers.length,
@@ -76,12 +80,14 @@ class DossiersScreen extends ConsumerWidget {
     );
   }
 
-  void _showCreateDossierSheet(BuildContext context, WidgetRef ref, Color primaryColor) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _CreateDossierSheet(primaryColor: primaryColor, ref: ref),
+  void _showCreateDossierSheet(
+    BuildContext context,
+    WidgetRef ref,
+    Color primaryColor,
+  ) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CreateDossierWizardScreen()),
     );
   }
 }
@@ -123,7 +129,9 @@ class _DossierCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    dossier.reference.isNotEmpty ? '#${dossier.reference}' : 'Sans référence',
+                    dossier.reference.isNotEmpty
+                        ? '#${dossier.reference}'
+                        : 'Sans référence',
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -178,11 +186,14 @@ class _DossierCard extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () => _showDossierDetail(context, dossier, primaryColor),
+                  onPressed: () =>
+                      _showDossierDetail(context, dossier, primaryColor),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: primaryColor,
                     side: BorderSide(color: primaryColor, width: 1.4),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   child: Text(
                     dossier.soumissions.isEmpty
@@ -213,12 +224,17 @@ class _DossierCard extends StatelessWidget {
     }
   }
 
-  void _showDossierDetail(BuildContext context, DossierModel dossier, Color primaryColor) {
+  void _showDossierDetail(
+    BuildContext context,
+    DossierModel dossier,
+    Color primaryColor,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _DossierDetailSheet(dossier: dossier, primaryColor: primaryColor),
+      builder: (_) =>
+          _DossierDetailSheet(dossier: dossier, primaryColor: primaryColor),
     );
   }
 }
@@ -255,7 +271,10 @@ class _EmptyDossierState extends StatelessWidget {
   final Color primaryColor;
   final VoidCallback onCreateTap;
 
-  const _EmptyDossierState({required this.primaryColor, required this.onCreateTap});
+  const _EmptyDossierState({
+    required this.primaryColor,
+    required this.onCreateTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -265,17 +284,29 @@ class _EmptyDossierState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.folder_open_rounded, size: 72, color: primaryColor.withValues(alpha: 0.3)),
+            Icon(
+              Icons.folder_open_rounded,
+              size: 72,
+              color: primaryColor.withValues(alpha: 0.3),
+            ),
             const SizedBox(height: 20),
             const Text(
               'Aucun dossier en cours',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFF1E2432)),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1E2432),
+              ),
             ),
             const SizedBox(height: 10),
             const Text(
               'Déposez votre premier dossier juridique pour le soumettre aux avocats qualifiés.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Color(0xFF6B7280), height: 1.5),
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF6B7280),
+                height: 1.5,
+              ),
             ),
             const SizedBox(height: 28),
             ElevatedButton.icon(
@@ -283,12 +314,20 @@ class _EmptyDossierState extends StatelessWidget {
               icon: const Icon(Icons.add_rounded, color: Colors.white),
               label: const Text(
                 'Créer un dossier',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
               ),
             ),
           ],
@@ -309,7 +348,11 @@ class _ErrorState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.wifi_off_rounded, size: 60, color: Color(0xFFD1D5DB)),
+          const Icon(
+            Icons.wifi_off_rounded,
+            size: 60,
+            color: Color(0xFFD1D5DB),
+          ),
           const SizedBox(height: 16),
           const Text('Impossible de charger vos dossiers'),
           const SizedBox(height: 12),
@@ -328,7 +371,8 @@ class _CreateDossierSheet extends ConsumerStatefulWidget {
   const _CreateDossierSheet({required this.primaryColor, required this.ref});
 
   @override
-  ConsumerState<_CreateDossierSheet> createState() => _CreateDossierSheetState();
+  ConsumerState<_CreateDossierSheet> createState() =>
+      _CreateDossierSheetState();
 }
 
 class _CreateDossierSheetState extends ConsumerState<_CreateDossierSheet> {
@@ -358,7 +402,9 @@ class _CreateDossierSheetState extends ConsumerState<_CreateDossierSheet> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-    final ok = await ref.read(dossiersListProvider.notifier).createDossier(
+    final ok = await ref
+        .read(dossiersListProvider.notifier)
+        .createDossier(
           titre: _titreController.text.trim(),
           description: _descController.text.trim(),
           domaine: _domaine,
@@ -369,7 +415,9 @@ class _CreateDossierSheetState extends ConsumerState<_CreateDossierSheet> {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(ok ? 'Dossier créé avec succès !' : 'Erreur lors de la création'),
+          content: Text(
+            ok ? 'Dossier créé avec succès !' : 'Erreur lors de la création',
+          ),
           backgroundColor: ok ? const Color(0xFF059669) : Colors.redAccent,
           behavior: SnackBarBehavior.floating,
         ),
@@ -418,7 +466,14 @@ class _CreateDossierSheetState extends ConsumerState<_CreateDossierSheet> {
               const SizedBox(height: 20),
 
               // Titre
-              const Text('Titre du dossier', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1F2937))),
+              const Text(
+                'Titre du dossier',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _titreController,
@@ -429,7 +484,14 @@ class _CreateDossierSheetState extends ConsumerState<_CreateDossierSheet> {
               const SizedBox(height: 16),
 
               // Domaine juridique
-              const Text('Domaine juridique', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1F2937))),
+              const Text(
+                'Domaine juridique',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -440,12 +502,19 @@ class _CreateDossierSheetState extends ConsumerState<_CreateDossierSheet> {
                     onTap: () => setState(() => _domaine = d.$1),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
-                        color: isSelected ? widget.primaryColor : const Color(0xFFF3F4F6),
+                        color: isSelected
+                            ? widget.primaryColor
+                            : const Color(0xFFF3F4F6),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isSelected ? widget.primaryColor : const Color(0xFFE5E7EB),
+                          color: isSelected
+                              ? widget.primaryColor
+                              : const Color(0xFFE5E7EB),
                         ),
                       ),
                       child: Text(
@@ -453,7 +522,9 @@ class _CreateDossierSheetState extends ConsumerState<_CreateDossierSheet> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: isSelected ? Colors.white : const Color(0xFF374151),
+                          color: isSelected
+                              ? Colors.white
+                              : const Color(0xFF374151),
                         ),
                       ),
                     ),
@@ -464,13 +535,23 @@ class _CreateDossierSheetState extends ConsumerState<_CreateDossierSheet> {
               const SizedBox(height: 16),
 
               // Description
-              const Text('Description du problème', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1F2937))),
+              const Text(
+                'Description du problème',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _descController,
                 maxLines: 4,
-                validator: (v) => (v?.isEmpty ?? true) ? 'Décrivez votre situation' : null,
-                decoration: _inputDeco('Décrivez votre situation en quelques lignes...'),
+                validator: (v) =>
+                    (v?.isEmpty ?? true) ? 'Décrivez votre situation' : null,
+                decoration: _inputDeco(
+                  'Décrivez votre situation en quelques lignes...',
+                ),
               ),
 
               const SizedBox(height: 24),
@@ -482,18 +563,27 @@ class _CreateDossierSheetState extends ConsumerState<_CreateDossierSheet> {
                   onPressed: _isLoading ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: widget.primaryColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
                     elevation: 0,
                   ),
                   child: _isLoading
                       ? const SizedBox(
                           width: 22,
                           height: 22,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
                         )
                       : const Text(
                           'Soumettre le dossier',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                 ),
               ),
@@ -512,9 +602,18 @@ class _CreateDossierSheetState extends ConsumerState<_CreateDossierSheet> {
       filled: true,
       fillColor: const Color(0xFFF9FAFB),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: widget.primaryColor, width: 1.6)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: widget.primaryColor, width: 1.6),
+      ),
     );
   }
 }
@@ -524,7 +623,10 @@ class _DossierDetailSheet extends StatelessWidget {
   final DossierModel dossier;
   final Color primaryColor;
 
-  const _DossierDetailSheet({required this.dossier, required this.primaryColor});
+  const _DossierDetailSheet({
+    required this.dossier,
+    required this.primaryColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -543,31 +645,62 @@ class _DossierDetailSheet extends StatelessWidget {
               child: Container(
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(color: const Color(0xFFD1D5DB), borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD1D5DB),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
             const SizedBox(height: 20),
             Text(
               dossier.titre,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF111827),
+              ),
             ),
             const SizedBox(height: 8),
             if (dossier.reference.isNotEmpty)
-              Text('#${dossier.reference}', style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+              Text(
+                '#${dossier.reference}',
+                style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+              ),
             const SizedBox(height: 16),
             if (dossier.description.isNotEmpty) ...[
-              const Text('Description', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF1F2937))),
+              const Text(
+                'Description',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
               const SizedBox(height: 8),
-              Text(dossier.description, style: const TextStyle(fontSize: 14, color: Color(0xFF374151), height: 1.5)),
+              Text(
+                dossier.description,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF374151),
+                  height: 1.5,
+                ),
+              ),
               const SizedBox(height: 20),
             ],
             if (dossier.soumissions.isNotEmpty) ...[
               Text(
                 'Propositions reçues (${dossier.soumissions.length})',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF111827),
+                ),
               ),
               const SizedBox(height: 12),
-              ...dossier.soumissions.map((s) => _SoumissionCard(soumission: s, primaryColor: primaryColor)),
+              ...dossier.soumissions.map(
+                (s) =>
+                    _SoumissionCard(soumission: s, primaryColor: primaryColor),
+              ),
             ] else ...[
               Container(
                 padding: const EdgeInsets.all(16),
@@ -577,12 +710,20 @@ class _DossierDetailSheet extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.hourglass_empty_rounded, color: primaryColor, size: 24),
+                    Icon(
+                      Icons.hourglass_empty_rounded,
+                      color: primaryColor,
+                      size: 24,
+                    ),
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Text(
                         'Votre dossier est en cours d\'analyse. Les avocats vous contacteront prochainement.',
-                        style: TextStyle(fontSize: 13, color: Color(0xFF374151), height: 1.4),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF374151),
+                          height: 1.4,
+                        ),
                       ),
                     ),
                   ],
@@ -618,17 +759,28 @@ class _SoumissionCard extends StatelessWidget {
         children: [
           Text(
             soumission.displayName,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
           ),
           if (soumission.reponse != null) ...[
             const SizedBox(height: 6),
-            Text(soumission.reponse!, style: const TextStyle(fontSize: 13, color: Color(0xFF374151))),
+            Text(
+              soumission.reponse!,
+              style: const TextStyle(fontSize: 13, color: Color(0xFF374151)),
+            ),
           ],
           if (soumission.montantPropose != null) ...[
             const SizedBox(height: 8),
             Text(
               '${soumission.montantPropose!.toInt()} FCFA',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: primaryColor),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: primaryColor,
+              ),
             ),
           ],
         ],

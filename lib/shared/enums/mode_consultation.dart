@@ -8,11 +8,4 @@ enum ModeConsultation {
   final String label;
 
   const ModeConsultation(this.code, this.label);
-
-  static ModeConsultation fromCode(String? code) {
-    return ModeConsultation.values.firstWhere(
-      (m) => m.code == code,
-      orElse: () => ModeConsultation.visio,
-    );
-  }
 }

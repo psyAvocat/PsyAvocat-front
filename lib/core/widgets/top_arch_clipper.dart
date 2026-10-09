@@ -40,6 +40,3 @@ class TopArchClipper extends CustomClipper<Path> {
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
-
-/// Alias pour compatibilité ascendante avec les suites de test
-typedef TopWaveClipper = TopArchClipper;

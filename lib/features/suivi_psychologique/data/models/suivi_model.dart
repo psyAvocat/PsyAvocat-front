@@ -40,7 +40,8 @@ class HumeurEntryModel {
       noteHumeur: (json['noteHumeur'] as num?)?.toInt() ?? 3,
       emotionDominante: json['emotionDominante'] as String? ?? 'Serein',
       noteText: json['noteText'] as String?,
-      facteursDeclencheurs: (json['facteursDeclencheurs'] as List<dynamic>?)
+      facteursDeclencheurs:
+          (json['facteursDeclencheurs'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],

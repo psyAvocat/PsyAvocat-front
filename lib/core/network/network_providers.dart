@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/data/datasources/firebase_auth_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository.dart';
+import '../../features/auth/presentation/controllers/session_controller.dart';
 import 'api_client.dart';
-import 'auth_interceptor.dart';
 
 /// Provider pour la datasource Firebase Auth
 final authDatasourceProvider = Provider<FirebaseAuthDatasource>((ref) {
@@ -15,15 +15,13 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(datasource);
 });
 
-/// Provider pour l'intercepteur d'authentification
-final authInterceptorProvider = Provider<AuthInterceptor>((ref) {
-  return AuthInterceptor();
-});
-
-/// Provider pour le client HTTP Dio configuré avec l'AuthInterceptor
+/// Client HTTP Dio (jeton Firebase injecté par l'AuthInterceptor).
+/// Un refus de compte par le backend (403 codé) réévalue la session.
 final apiClientProvider = Provider<ApiClient>((ref) {
-  final authInterceptor = ref.watch(authInterceptorProvider);
-  return ApiClient(interceptors: [authInterceptor]);
+  return ApiClient(
+    onAccountRefused: () =>
+        ref.read(sessionControllerProvider.notifier).revalidate(),
+  );
 });
 
 /// StreamProvider pour écouter l'état de connexion de l'utilisateur

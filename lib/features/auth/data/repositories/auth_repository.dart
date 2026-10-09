@@ -30,21 +30,9 @@ class AuthRepository {
 
   Future<void> deleteCurrentUser() => _datasource.deleteCurrentUser();
 
-  Future<void> changePassword({
-    required String currentPassword,
-    required String newPassword,
-  }) => _datasource.changePassword(
-    currentPassword: currentPassword,
-    newPassword: newPassword,
-  );
+  Future<void> sendEmailVerification() => _datasource.sendEmailVerification();
 
-  Future<UserCredential> register(String email, String password) =>
-      _datasource.register(email, password);
-
-  Future<UserCredential> login(String email, String password) =>
-      _datasource.login(email, password);
-
-  Future<void> logout() => _datasource.logout();
+  Future<void> reloadUser() => _datasource.reloadUser();
 
   Future<void> sendPasswordResetEmail(String email) =>
       _datasource.sendPasswordResetEmail(email);

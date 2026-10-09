@@ -5,6 +5,7 @@ import '../../../../core/errors/user_message.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/universe_selection_controller.dart';
+import '../../../../core/router/app_routes.dart';
 
 /// Choix de l'univers Avocat ou Psychologue — maquette Figma « category-selection ».
 ///
@@ -24,9 +25,9 @@ class SelectionUniversScreen extends ConsumerWidget {
     if (success && context.mounted) {
       // Règle 10 & 11 : Aucun questionnaire pour l'avocat ; étape préalable pour le psychologue
       if (universe.isPsychologist) {
-        context.go('/orientation/intro');
+        context.go(AppRoutes.orientationIntro);
       } else {
-        context.go('/home');
+        context.go(AppRoutes.home);
       }
     }
   }

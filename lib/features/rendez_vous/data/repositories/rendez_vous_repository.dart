@@ -23,7 +23,10 @@ abstract class RendezVousRepository {
   });
 
   /// Déplace un rendez-vous sur un autre créneau libre du même professionnel.
-  Future<RendezVous> modifierCreneau({required String id, required String disponibiliteId});
+  Future<RendezVous> modifierCreneau({
+    required String id,
+    required String disponibiliteId,
+  });
 
   Future<RendezVous> annuler(String id);
 }
@@ -37,7 +40,9 @@ class ApiRendezVousRepository implements RendezVousRepository {
   Future<List<RendezVous>> getMesRendezVous() async {
     final response = await _client.get('/rendez-vous');
     final list = response.data as List<dynamic>? ?? [];
-    return list.map((e) => RendezVous.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => RendezVous.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -70,7 +75,10 @@ class ApiRendezVousRepository implements RendezVousRepository {
   }
 
   @override
-  Future<RendezVous> modifierCreneau({required String id, required String disponibiliteId}) async {
+  Future<RendezVous> modifierCreneau({
+    required String id,
+    required String disponibiliteId,
+  }) async {
     final response = await _client.patch(
       '/rendez-vous/$id/creneau',
       data: {'disponibiliteId': disponibiliteId},

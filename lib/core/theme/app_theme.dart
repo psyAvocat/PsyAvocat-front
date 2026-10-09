@@ -100,7 +100,7 @@ class AppUniverseColors extends ThemeExtension<AppUniverseColors> {
 /// La couleur dépend de l'univers actif (voir `currentUniverseProvider`) :
 /// - neutre (avant le choix) : violet de marque ;
 /// - Avocat : bleu nuit #0C2659 ;
-/// - Psychologue : violet #45088E.
+/// - Psychologue : violet #522578.
 ///
 /// Les widgets lisent les couleurs via `Theme.of(context).colorScheme`
 /// et ne codent jamais une couleur d'univers en dur.
@@ -112,20 +112,6 @@ class AppTheme {
     return Theme.of(context).extension<AppUniverseColors>() ??
         AppUniverseColors.fromUniverse(AppUniverse.neutral);
   }
-
-  /// Thème par défaut (avant l'entrée dans un univers / transition)
-  static ThemeData get lightTheme => buildTheme(AppUniverse.neutral);
-
-  /// Thème dédié à l'univers Psychologue (#45088E)
-  static ThemeData get psychologistTheme =>
-      buildTheme(AppUniverse.psychologist);
-
-  /// Thème dédié à l'univers Avocat (#0C2659)
-  static ThemeData get lawyerTheme => buildTheme(AppUniverse.lawyer);
-
-  /// Thème sombre (univers neutre).
-  static ThemeData get darkTheme =>
-      buildTheme(AppUniverse.neutral, brightness: Brightness.dark);
 
   // ===========================================================================
   // COLOR SCHEME — source unique des couleurs d'univers
@@ -411,7 +397,9 @@ class AppTheme {
         backgroundColor: scheme.surface,
         elevation: 0,
         shape: const RoundedRectangleBorder(borderRadius: AppRadii.r20),
-        titleTextStyle: AppTypography.petitTitre.copyWith(color: scheme.onSurface),
+        titleTextStyle: AppTypography.petitTitre.copyWith(
+          color: scheme.onSurface,
+        ),
         contentTextStyle: AppTypography.texteSecondaire.copyWith(
           color: scheme.onSurfaceVariant,
         ),

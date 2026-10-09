@@ -22,8 +22,6 @@ enum SlotStatus {
     );
   }
 
-  bool get isBookable => this == SlotStatus.libre;
-
   /// Fond du créneau (légende du calendrier).
   Color background(ColorScheme scheme) {
     switch (this) {

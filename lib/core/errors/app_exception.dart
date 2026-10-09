@@ -58,7 +58,8 @@ class ValidationException extends AppException {
 /// Conflit métier (créneau déjà réservé, doublon...) : l'écran recharge ses données.
 class ConflictException extends AppException {
   const ConflictException([
-    super.message = "Cette action n'est plus possible : les données ont changé.",
+    super.message =
+        "Cette action n'est plus possible : les données ont changé.",
     super.statusCode = 409,
   ]);
 }

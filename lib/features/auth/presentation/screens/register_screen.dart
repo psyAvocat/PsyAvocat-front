@@ -6,12 +6,13 @@ import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/auth_controller.dart';
+import '../../../../core/router/app_routes.dart';
 
 /// Inscription en 3 étapes (style de la maquette Figma « Inscription ») :
 /// 1. Identité — 2. Coordonnées — 3. Mot de passe et conditions.
 ///
-/// À la fin, le compte Firebase est créé ; le profil métier (patient ou
-/// justiciable) est créé à l'étape suivante, lors du choix de l'univers.
+/// À la fin : compte Firebase + profil client unique (valable dans les deux
+/// univers) + email de confirmation, puis retour à l'écran de connexion.
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
@@ -68,7 +69,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } else if (context.canPop()) {
       context.pop();
     } else {
-      context.go('/login');
+      context.go(AppRoutes.login);
     }
   }
 
@@ -86,24 +87,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         .register(
           prenom: _prenomController.text.trim(),
           nom: _nomController.text.trim(),
-          telephone: phone.isEmpty ? null : phone,
+          telephone: phone,
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
-    if (isSuccess && mounted) {
+    if (!mounted) return;
+    // Compte créé mais profil à compléter : la suite se fait à la connexion.
+    if (ref.read(authControllerProvider).error
+        is IncompleteRegistrationException) {
+      context.go(AppRoutes.login);
+      return;
+    }
+    if (isSuccess) {
       AppNotification.showSuccess(
         context,
-        'Inscription réussie ! Vous pouvez maintenant vous connecter.',
+        'Inscription réussie ! Confirmez votre adresse via le lien reçu par '
+        'email, puis connectez-vous.',
       );
-      context.go('/login');
+      context.go(AppRoutes.login);
     }
-  }
-
-  void _signUpWithGoogle() {
-    AppNotification.showInfo(
-      context,
-      'Inscription Google disponible dans une prochaine version.',
-    );
   }
 
   @override
@@ -159,14 +161,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     : _onContinuePressed,
               ),
               AppSpacing.vGap16,
-              const AppTextDivider(label: 'CONTINUE AVEC'),
-              AppSpacing.vGap8,
-              Center(child: GoogleSignInButton(onPressed: _signUpWithGoogle)),
-              AppSpacing.vGap16,
               AppInlineLink(
                 text: 'Vous avez un compte ?',
                 linkText: 'Connexion',
-                onTap: () => context.go('/login'),
+                onTap: () => context.go(AppRoutes.login),
               ),
             ],
           ),
@@ -216,8 +214,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             AppSpacing.vGap20,
             AppTextField(
               controller: _phoneController,
-              label: 'Téléphone (facultatif)',
-              hint: 'Ex: +221 77 123 45 67',
+              label: 'Téléphone',
+              hint: 'Ex: +223 76 12 34 56',
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.done,
               validator: Validators.phone,

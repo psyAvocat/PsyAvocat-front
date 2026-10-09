@@ -4,4 +4,7 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Développement : le serveur Spring Boot local est joint en HTTP
+         (dart-define=ip=...). Android bloque le HTTP en clair par défaut. -->
+    <application android:usesCleartextTraffic="true"/>
 </manifest>

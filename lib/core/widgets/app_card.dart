@@ -61,7 +61,7 @@ class AppCard extends StatelessWidget {
        backgroundColor = null,
        borderColor = null;
 
-  /// Constructeur de commodité pour carte en dégradé d'univers (transition #0C2659 → #45088E)
+  /// Constructeur de commodité pour carte en dégradé d'univers (transition #0C2659 → #522578)
   const AppCard.gradient({
     super.key,
     required this.child,

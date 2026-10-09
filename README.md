@@ -1,17 +1,28 @@
-# psyavocat_front
+# PsyAvocat — application mobile (Flutter)
 
-A new Flutter project.
+## Lancer l'application
 
-## Getting Started
+Démarrer d'abord le backend Spring Boot (port 8080), puis :
 
-This project is a starting point for a Flutter application.
+| Appareil                         | Commande                                         |
+|----------------------------------|--------------------------------------------------|
+| Émulateur Android, Web, desktop  | `flutter run`                                    |
+| Téléphone sur le même Wi-Fi      | `flutter run --dart-define=ip=192.168.1.20`      |
+| Téléphone en USB                 | `adb reverse tcp:8080 tcp:8080` puis `flutter run --dart-define=ip=localhost` |
+| Autre port que 8080              | ajouter `--dart-define=port=9090`                |
 
-A few resources to get you started if this is your first Flutter project:
+`ip` est l'adresse IPv4 du PC qui lance Spring Boot (`ipconfig` sous Windows).
+L'adresse utilisée est affichée dans la console au démarrage.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Si le téléphone n'atteint pas le serveur :
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- le téléphone et le PC sont sur le même réseau Wi-Fi ;
+- le pare-feu Windows autorise les connexions entrantes sur le port 8080 ;
+- `http://<ip>:8080/health` s'ouvre dans le navigateur du téléphone.
+
+## Tests
+
+```bash
+flutter analyze
+flutter test
+```

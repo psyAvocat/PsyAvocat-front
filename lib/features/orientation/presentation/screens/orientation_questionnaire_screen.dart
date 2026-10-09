@@ -6,6 +6,7 @@ import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../data/models/questionnaire_model.dart';
 import '../controllers/orientation_controller.dart';
+import '../../../../core/router/app_routes.dart';
 
 /// Questionnaire d'orientation — maquettes Figma « Qst 1 Psy » / « Qst 3 Psy ».
 ///
@@ -24,7 +25,7 @@ class OrientationQuestionnaireScreen extends ConsumerWidget {
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go('/orientation/intro');
+      context.go(AppRoutes.orientationIntro);
     }
   }
 
@@ -48,7 +49,7 @@ class OrientationQuestionnaireScreen extends ConsumerWidget {
                   ),
                   const Spacer(),
                   OutlinedButton(
-                    onPressed: () => context.go('/home'),
+                    onPressed: () => context.go(AppRoutes.home),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(48, 44),
                       padding: const EdgeInsets.symmetric(
@@ -96,7 +97,7 @@ class _QuestionnaireContent extends ConsumerWidget {
 
     try {
       await controller.submit();
-      if (context.mounted) context.go('/orientation/resultat');
+      if (context.mounted) context.go(AppRoutes.orientationResult);
     } catch (error) {
       if (context.mounted) {
         AppNotification.showError(context, userMessageFor(error));
@@ -148,7 +149,6 @@ class _QuestionnaireContent extends ConsumerWidget {
   }
 }
 
-/// Une question et ses réponses, affichées selon le type défini par l'Admin.
 class _QuestionView extends StatelessWidget {
   final QuestionModel question;
   final Set<String> selectedIds;
@@ -167,34 +167,67 @@ class _QuestionView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          AppSpacing.vGap24,
           Text(
             question.texte,
-            textAlign: TextAlign.center,
-            style: AppTypography.petitTitre,
+            textAlign: TextAlign.left,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF1E2432),
+              height: 1.3,
+            ),
           ),
           if (question.contexte != null &&
               question.contexte!.trim().isNotEmpty) ...[
-            AppSpacing.vGap8,
+            AppSpacing.vGap12,
             Text(
               question.contexte!,
-              textAlign: TextAlign.center,
-              style: AppTypography.texteSecondaire,
+              textAlign: TextAlign.left,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF6B7280),
+                height: 1.5,
+              ),
             ),
           ],
-          AppSpacing.vGap12,
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: AppSpacing.s8,
-            runSpacing: AppSpacing.s8,
-            children: [
-              if (question.allowsMultiple)
-                const Chip(label: Text('Plusieurs réponses possibles')),
-              if (!question.obligatoire) const Chip(label: Text('Facultatif')),
-            ],
-          ),
           AppSpacing.vGap24,
+          if (question.allowsMultiple || !question.obligatoire) ...[
+            Wrap(
+              spacing: AppSpacing.s8,
+              runSpacing: AppSpacing.s8,
+              children: [
+                if (question.allowsMultiple)
+                  const Chip(
+                    label: Text(
+                      'Plusieurs réponses possibles',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    backgroundColor: Color(0xFFF3F4F6),
+                    side: BorderSide.none,
+                  ),
+                if (!question.obligatoire)
+                  const Chip(
+                    label: Text(
+                      'Facultatif',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    backgroundColor: Color(0xFFF3F4F6),
+                    side: BorderSide.none,
+                  ),
+              ],
+            ),
+            AppSpacing.vGap24,
+          ],
           _buildAnswers(),
-          AppSpacing.vGap16,
+          AppSpacing.vGap32,
         ],
       ),
     );
@@ -212,10 +245,8 @@ class _QuestionView extends StatelessWidget {
         ),
     ];
 
-    // Choix multiple : des cases à cocher, pas de groupe radio.
     if (question.allowsMultiple) return _spacedColumn(tiles);
 
-    // Oui / Non avec exactement deux réponses : côte à côte.
     final layout = question.isYesNo && tiles.length == 2
         ? Row(
             children: [
@@ -237,10 +268,11 @@ class _QuestionView extends StatelessWidget {
 
   Widget _spacedColumn(List<Widget> tiles) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final tile in tiles)
           Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.s12),
+            padding: const EdgeInsets.only(bottom: AppSpacing.s16),
             child: tile,
           ),
       ],

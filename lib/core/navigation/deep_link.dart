@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../config/app_routes.dart';
+import '../router/app_routes.dart';
 import '../theme/app_universe.dart';
 
 /// Cible d'un lien profond (notification push ou notification in-app).
@@ -35,15 +35,16 @@ class DeepLinkTarget {
     if (id == null || id.isEmpty) return AppRoutes.notifications;
     switch (ressourceType) {
       case 'RENDEZ_VOUS':
-        return AppRoutes.appointment(id);
+        // Pas d'écran de détail : la liste des rendez-vous.
+        return AppRoutes.rendezVous;
       case 'CONVERSATION':
         return AppRoutes.conversation(id);
       case 'ARTICLE':
       case 'CONSEIL':
       case 'CONTENU':
-        return AppRoutes.publication(id);
+        return AppRoutes.contenu(id);
       case 'PROFESSIONNEL':
-        return AppRoutes.professional(id);
+        return AppRoutes.professionnel(id);
       default:
         return AppRoutes.notifications;
     }
@@ -70,6 +71,7 @@ class PendingDeepLinkNotifier extends Notifier<DeepLinkTarget?> {
   }
 }
 
-final pendingDeepLinkProvider = NotifierProvider<PendingDeepLinkNotifier, DeepLinkTarget?>(
-  PendingDeepLinkNotifier.new,
-);
+final pendingDeepLinkProvider =
+    NotifierProvider<PendingDeepLinkNotifier, DeepLinkTarget?>(
+      PendingDeepLinkNotifier.new,
+    );

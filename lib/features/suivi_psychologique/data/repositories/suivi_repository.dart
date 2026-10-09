@@ -27,7 +27,9 @@ class ApiSuiviRepository implements SuiviRepository {
       final response = await _client.get('/suivi-psychologique');
       final list = response.data as List<dynamic>? ?? [];
       return list
-          .map((item) => HumeurEntryModel.fromJson(item as Map<String, dynamic>))
+          .map(
+            (item) => HumeurEntryModel.fromJson(item as Map<String, dynamic>),
+          )
           .toList();
     } catch (_) {
       // Retourne une liste vide (pas de données fictives hardcodées)

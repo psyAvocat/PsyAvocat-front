@@ -44,7 +44,9 @@ class Publication {
       titre: json['titre'] as String? ?? '',
       description: json['description'] as String?,
       contenu: json['contenu'] as String?,
-      datePublication: DateTime.tryParse(json['datePublication'] as String? ?? ''),
+      datePublication: DateTime.tryParse(
+        json['datePublication'] as String? ?? '',
+      ),
       auteurId: json['auteurId'] as String?,
       auteurNom: json['auteurNom'] as String?,
       auteurPrenom: json['auteurPrenom'] as String?,

@@ -12,6 +12,8 @@ abstract class NotificationsRepository {
   Future<void> markAsRead(String id);
 
   Future<void> markAllAsRead();
+
+  Future<void> deleteNotification(String id);
 }
 
 class ApiNotificationsRepository implements NotificationsRepository {
@@ -23,7 +25,9 @@ class ApiNotificationsRepository implements NotificationsRepository {
   Future<List<NotificationItem>> getNotifications() async {
     final response = await _client.get('/notifications');
     final list = response.data as List<dynamic>? ?? [];
-    return list.map((e) => NotificationItem.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => NotificationItem.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -37,8 +41,14 @@ class ApiNotificationsRepository implements NotificationsRepository {
 
   @override
   Future<void> markAllAsRead() => _client.patch('/notifications/lu-tout');
+
+  @override
+  Future<void> deleteNotification(String id) =>
+      _client.delete('/notifications/$id');
 }
 
-final notificationsRepositoryProvider = Provider<NotificationsRepository>((ref) {
+final notificationsRepositoryProvider = Provider<NotificationsRepository>((
+  ref,
+) {
   return ApiNotificationsRepository(ref.watch(apiClientProvider));
 });

@@ -16,8 +16,6 @@ class RealtimeEventType {
 
   static const notification = 'NOTIFICATION';
   static const message = 'MESSAGE';
-  static const creneauMisAJour = 'CRENEAU_MIS_A_JOUR';
-  static const creneauxMisAJour = 'CRENEAUX_MIS_A_JOUR';
   static const contenuMisAJour = 'CONTENU_MIS_A_JOUR';
   static const professionnelMisAJour = 'PROFESSIONNEL_MIS_A_JOUR';
 }
@@ -38,7 +36,10 @@ class RealtimeEvent {
       final type = json['type'];
       if (type is! String) return null;
       final payload = json['payload'];
-      return RealtimeEvent(type, payload is Map<String, dynamic> ? payload : const {});
+      return RealtimeEvent(
+        type,
+        payload is Map<String, dynamic> ? payload : const {},
+      );
     } catch (_) {
       return null;
     }
@@ -155,7 +156,9 @@ class RealtimeService {
 /// Service temps réel, piloté par l'état de session.
 final realtimeServiceProvider = Provider<RealtimeService>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
-  final service = RealtimeService(tokenProvider: () => authRepository.getIdToken());
+  final service = RealtimeService(
+    tokenProvider: () => authRepository.getIdToken(),
+  );
   ref.listen<SessionState>(sessionControllerProvider, (_, session) {
     if (session.isAuthorized) {
       service.start();

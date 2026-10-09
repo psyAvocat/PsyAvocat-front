@@ -7,6 +7,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../professionnels/presentation/widgets/professionnel_card.dart';
 import '../../data/models/questionnaire_model.dart';
 import '../controllers/orientation_controller.dart';
+import '../../../../core/router/app_routes.dart';
 
 /// Résultat d'orientation, tel que calculé par Spring Boot.
 ///
@@ -26,7 +27,7 @@ class OrientationResultScreen extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: "Aller à l'accueil",
-            onPressed: () => context.go('/home'),
+            onPressed: () => context.go(AppRoutes.home),
             icon: const Icon(Icons.close_rounded),
           ),
         ],
@@ -38,7 +39,7 @@ class OrientationResultScreen extends ConsumerWidget {
                   "Répondez au questionnaire pour obtenir votre orientation.",
               icon: Icons.quiz_outlined,
               actionText: 'Faire le questionnaire',
-              onAction: () => context.go('/orientation'),
+              onAction: () => context.go(AppRoutes.orientation),
             )
           : _ResultContent(result: result),
     );
@@ -85,18 +86,18 @@ class _ResultContent extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: AppSpacing.s12),
               child: ProfessionnelCard(
                 professionnel: pro,
-                onTap: () => context.push('/professionnels/${pro.id}'),
+                onTap: () => context.push(AppRoutes.professionnel(pro.id)),
               ),
             ),
         AppSpacing.vGap24,
         AppPrimaryButton(
           label: 'Voir les ${universe.professionalsLabel.toLowerCase()}',
-          onPressed: () => context.go('/professionnels'),
+          onPressed: () => context.go(AppRoutes.professionnels),
         ),
         AppSpacing.vGap12,
         Center(
           child: TextButton(
-            onPressed: () => context.go('/home'),
+            onPressed: () => context.go(AppRoutes.home),
             child: const Text("Aller à l'accueil"),
           ),
         ),

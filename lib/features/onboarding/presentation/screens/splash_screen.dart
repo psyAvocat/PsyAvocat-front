@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import '../../../../core/errors/user_message.dart';
-import '../../../../core/services/app_preferences_service.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../auth/presentation/controllers/session_controller.dart';
 
 /// Écran de démarrage — maquette Figma « première page ».
 ///
-/// Pendant que le logo apparaît en fondu, on restaure la session
-/// (Firebase → `GET /me`), puis on ouvre la bonne page via GoRouter.
-/// Aucune attente artificielle : on attend seulement la fin de l'animation
-/// ET la réponse du backend.
+/// Affiché tant que la session est en cours de vérification (`GET /me`), avec
+/// « Réessayer » si le serveur est injoignable. La page suivante est choisie
+/// par le routeur (voir route_guard.dart) dès que la session est connue.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -32,13 +28,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     end: 1,
   ).animate(CurvedAnimation(parent: _animation, curve: Curves.easeOutBack));
 
-  /// Message affiché si la session n'a pas pu être restaurée (API injoignable…).
-  String? _errorMessage;
-
   @override
   void initState() {
     super.initState();
-    _start();
+    _animation.forward();
   }
 
   @override
@@ -47,50 +40,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     super.dispose();
   }
 
-  Future<void> _start() async {
-    setState(() => _errorMessage = null);
-
-    final results = await Future.wait<Object?>([
-      _animation.forward(),
-      _resolveNextRoute(),
-    ]);
-    if (!mounted) return;
-
-    final route = results[1] as String?;
-    if (route != null) context.go(route);
-  }
-
-  /// Route à ouvrir, ou `null` si la restauration de session a échoué.
-  Future<String?> _resolveNextRoute() async {
-    final authRepository = ref.read(authRepositoryProvider);
-    if (authRepository.currentUser != null) {
-      // Attendre la résolution de la session
-      await ref.read(sessionControllerProvider.notifier).resolve();
-      final sessionState = ref.read(sessionControllerProvider);
-      
-      if (sessionState.status == SessionStatus.error) {
-        if (mounted) {
-          setState(() => _errorMessage = sessionState.message ?? 'Erreur de connexion');
-        }
-        return null;
-      }
-      
-      if (sessionState.isAuthorized) {
-        final hasUniverse = ref.read(appPreferencesServiceProvider).getSelectedUniverse() != null;
-        return hasUniverse ? '/home' : '/selection-univers';
-      }
-      return '/login'; // Fallback if denied or profile incomplete handling not specified here
-    }
-
-    // Personne n'est connecté.
-    final hasSeenOnboarding = ref
-        .read(appPreferencesServiceProvider)
-        .hasSeenOnboarding();
-    return hasSeenOnboarding ? '/login' : '/onboarding';
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Seul cas où le splash reste affiché : première connexion sur l'appareil
+    // et serveur injoignable (GET /me). On propose alors de réessayer.
+    final session = ref.watch(sessionControllerProvider);
+    final errorMessage = session.status == SessionStatus.error
+        ? (session.message ?? 'Connexion au serveur impossible.')
+        : null;
     final logoSize = (MediaQuery.sizeOf(context).width * 0.55).clamp(
       140.0,
       240.0,
@@ -121,16 +78,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     style: AppTypography.petitTitre,
                   ),
                 ),
-                if (_errorMessage != null) ...[
+                if (errorMessage != null) ...[
                   AppSpacing.vGap32,
                   Text(
-                    _errorMessage!,
+                    errorMessage,
                     textAlign: TextAlign.center,
                     style: AppTypography.texteSecondaire,
                   ),
                   AppSpacing.vGap16,
                   FilledButton.icon(
-                    onPressed: _start,
+                    onPressed: () =>
+                        ref.read(sessionControllerProvider.notifier).resolve(),
                     icon: const Icon(Icons.refresh_rounded),
                     label: const Text('Réessayer'),
                   ),

@@ -78,16 +78,27 @@ class FirebaseAuthDatasource {
     }
   }
 
-  /// Inscription (alias conforme aux spécifications)
-  Future<UserCredential> register(String email, String password) =>
-      signUpWithEmailAndPassword(email: email, password: password);
+  /// Envoie l'email de confirmation d'adresse à l'utilisateur connecté.
+  Future<void> sendEmailVerification() async {
+    try {
+      await _firebaseAuth.currentUser?.sendEmailVerification();
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapFirebaseError(e.code, e.message));
+    } catch (_) {
+      throw const AuthException(
+        "Impossible d'envoyer l'email de confirmation. Réessayez plus tard.",
+      );
+    }
+  }
 
-  /// Connexion (alias conforme aux spécifications)
-  Future<UserCredential> login(String email, String password) =>
-      signInWithEmailAndPassword(email: email, password: password);
-
-  /// Déconnexion (alias conforme aux spécifications)
-  Future<void> logout() => signOut();
+  /// Recharge l'utilisateur puis force un nouveau jeton : le backend lit
+  /// `email_verified` dans le jeton, qui n'est pas mis à jour sans cela.
+  Future<void> reloadUser() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) return;
+    await user.reload();
+    await _firebaseAuth.currentUser?.getIdToken(true);
+  }
 
   String _mapFirebaseError(String code, String? defaultMessage) {
     switch (code) {
@@ -121,26 +132,5 @@ class FirebaseAuthDatasource {
   /// Supprime le compte Firebase connecté (annulation d'une inscription inachevée).
   Future<void> deleteCurrentUser() async {
     await _firebaseAuth.currentUser?.delete();
-  }
-
-  /// Changement de mot de passe : ré-authentification puis mise à jour.
-  Future<void> changePassword({
-    required String currentPassword,
-    required String newPassword,
-  }) async {
-    final user = _firebaseAuth.currentUser;
-    if (user == null || user.email == null) {
-      throw const AuthException('Session expirée. Veuillez vous reconnecter.');
-    }
-    try {
-      final credential = EmailAuthProvider.credential(
-        email: user.email!,
-        password: currentPassword,
-      );
-      await user.reauthenticateWithCredential(credential);
-      await user.updatePassword(newPassword);
-    } on FirebaseAuthException catch (e) {
-      throw AuthException(_mapFirebaseError(e.code, e.message));
-    }
   }
 }

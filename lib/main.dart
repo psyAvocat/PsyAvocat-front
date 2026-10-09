@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/config/app_config.dart';
+import 'core/network/api_logger_interceptor.dart';
 import 'core/services/app_preferences_service.dart';
 import 'core/services/firebase_messaging_service.dart';
-import 'core/config/app_router.dart';
+import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/universe_provider.dart';
 import 'core/widgets/widgets.dart';
@@ -15,6 +16,16 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Configuration réseau utilisée (visible dans la console `flutter run`).
+  apiLog(
+    'Serveur backend : ${AppConfig.serverBaseUrl} '
+    '(source : ${AppConfig.serverUrlSource})',
+  );
+  apiLog(
+    'Délais : connexion ${AppConfig.connectTimeout.inSeconds} s, '
+    'réponse ${AppConfig.receiveTimeout.inSeconds} s',
+  );
 
   // Initialisation de Firebase avec la configuration multi-plateforme (Android, iOS, Web)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);

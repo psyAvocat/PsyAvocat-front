@@ -1,14 +1,18 @@
 /// Utilisateur connecté, tel que retourné par Spring Boot (`GET /me`).
 ///
-/// Les rôles viennent exclusivement du backend (MySQL) :
-/// ils ne sont jamais déduits de l'email ou d'une donnée locale.
+/// Les rôles viennent exclusivement du profil métier MySQL (le backend ignore
+/// les custom claims Firebase) : ils ne sont jamais déduits localement.
 class CurrentUser {
   final String? userId;
   final String email;
   final String? nom;
   final String? prenom;
+  final String? telephone;
   final List<String> roles;
   final bool hasMetierProfile;
+
+  /// Adresse email confirmée (lien Firebase) : exigée pour tout accès client.
+  final bool emailVerified;
 
   /// Compte désactivé par l'administration → accès refusé.
   final bool actif;
@@ -18,8 +22,10 @@ class CurrentUser {
     required this.email,
     required this.nom,
     required this.prenom,
+    this.telephone,
     required this.roles,
     required this.hasMetierProfile,
+    required this.emailVerified,
     this.actif = true,
   });
 
@@ -29,10 +35,13 @@ class CurrentUser {
       email: json['email'] as String? ?? '',
       nom: json['nom'] as String?,
       prenom: json['prenom'] as String?,
+      telephone: json['telephone'] as String?,
       roles: (json['roles'] as List<dynamic>? ?? [])
           .map((r) => r.toString())
           .toList(),
       hasMetierProfile: json['hasMetierProfile'] as bool? ?? false,
+      // Échec sûr : sans information, l'adresse est considérée non confirmée.
+      emailVerified: json['emailVerified'] as bool? ?? false,
       // Champ absent (backend antérieur) : compte considéré actif.
       actif: json['actif'] as bool? ?? true,
     );

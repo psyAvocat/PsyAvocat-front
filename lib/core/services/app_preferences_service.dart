@@ -1,14 +1,12 @@
-import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_universe.dart';
 
 /// Préférences LOCALES de l'appareil (jamais des données métier ni des autorisations) :
-/// onboarding vu, dernier univers affiché, thème, réception des notifications push.
+/// onboarding vu, dernier univers affiché, réception des notifications push.
 class AppPreferencesService {
   static const String _keyHasSeenOnboarding = 'has_seen_onboarding';
   static const String _keySelectedUniverse = 'selected_universe';
-  static const String _keyThemeMode = 'theme_mode';
   static const String _keyPushEnabled = 'push_enabled';
 
   final SharedPreferences _prefs;
@@ -44,29 +42,11 @@ class AppPreferencesService {
     await _prefs.remove(_keySelectedUniverse);
   }
 
-  /// Thème choisi : clair, sombre ou celui du système (par défaut).
-  ThemeMode getThemeMode() {
-    final value = _prefs.getString(_keyThemeMode);
-    return ThemeMode.values.firstWhere(
-      (mode) => mode.name == value,
-      orElse: () => ThemeMode.system,
-    );
-  }
-
-  Future<void> setThemeMode(ThemeMode mode) async {
-    await _prefs.setString(_keyThemeMode, mode.name);
-  }
-
   /// Réception des notifications push sur cet appareil (activée par défaut).
   bool isPushEnabled() => _prefs.getBool(_keyPushEnabled) ?? true;
 
   Future<void> setPushEnabled(bool enabled) async {
     await _prefs.setBool(_keyPushEnabled, enabled);
-  }
-
-  /// Réinitialise les préférences locales (utile lors du logout complet ou pour les tests)
-  Future<void> clearAll() async {
-    await _prefs.clear();
   }
 }
 

@@ -3,8 +3,11 @@ import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../data/models/professionnel_summary.dart';
 
-/// Carte d'un professionnel : photo, nom, spécialités, ville, note, mode.
-/// Les informations absentes de l'API ne sont simplement pas affichées.
+/// Ligne d'un professionnel — maquettes « Avocats » et « Psychologues » :
+/// photo ronde, nom, spécialité, mode de consultation, ville.
+///
+/// Seules les informations fournies par l'API sont affichées
+/// (aucun âge, statut ou ville par défaut).
 class ProfessionnelCard extends StatelessWidget {
   final ProfessionnelSummary professionnel;
   final VoidCallback onTap;
@@ -19,94 +22,87 @@ class ProfessionnelCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final pro = professionnel;
+    final details = [
+      if (pro.modeConsultationLabel != null) pro.modeConsultationLabel!,
+      if (pro.ville != null && pro.ville!.isNotEmpty) pro.ville!,
+    ].join(' · ');
 
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: AppSpacing.cardPaddingCompact,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppAvatar(name: pro.fullName, photoUrl: pro.photoUrl),
-              AppSpacing.hGap16,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppRadii.r16,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppAvatar(name: pro.fullName, photoUrl: pro.photoUrl, size: 64),
+            AppSpacing.hGap16,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          pro.displayName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.texteSemiBold,
+                        ),
+                      ),
+                      // Information réelle du backend (`enLigne`).
+                      if (pro.enLigne) ...[
+                        AppSpacing.hGap8,
+                        const AppBadge.success(label: 'En ligne'),
+                      ],
+                    ],
+                  ),
+                  if (pro.specialites.isNotEmpty) ...[
+                    AppSpacing.vGap4,
                     Text(
-                      pro.fullName,
-                      style: AppTypography.texteSemiBold,
+                      pro.specialites.join(' · '),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                    ),
-                    if (pro.specialites.isNotEmpty) ...[
-                      AppSpacing.vGap4,
-                      Text(
-                        pro.specialites.join(' · '),
-                        style: AppTypography.texteSecondaire.copyWith(
-                          color: scheme.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      style: AppTypography.texteSecondaire.copyWith(
+                        color: scheme.primary,
                       ),
-                    ],
-                    AppSpacing.vGap8,
-                    // Wrap : les informations passent à la ligne au lieu de déborder.
-                    Wrap(
-                      spacing: AppSpacing.s12,
-                      runSpacing: AppSpacing.s4,
+                    ),
+                  ],
+                  if (details.isNotEmpty) ...[
+                    AppSpacing.vGap4,
+                    Text(
+                      details,
+                      style: AppTypography.miniTexte.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  if (pro.hasRating) ...[
+                    AppSpacing.vGap4,
+                    Row(
                       children: [
-                        if (pro.ville != null && pro.ville!.isNotEmpty)
-                          _Info(icon: Icons.place_outlined, text: pro.ville!),
-                        if (pro.hasRating)
-                          _Info(
-                            icon: Icons.star_rounded,
-                            text:
-                                '${pro.noteMoyenne!.toStringAsFixed(1)} (${pro.nombreAvis} avis)',
-                          ),
-                        if (pro.modeConsultationLabel != null)
-                          _Info(
-                            icon: Icons.videocam_outlined,
-                            text: pro.modeConsultationLabel!,
-                          ),
+                        Icon(
+                          Icons.star_rounded,
+                          size: 16,
+                          color: scheme.primary,
+                        ),
+                        AppSpacing.hGap4,
+                        Text(
+                          '${pro.noteMoyenne!.toStringAsFixed(1)} (${pro.nombreAvis} avis)',
+                          style: AppTypography.miniTexte,
+                        ),
                       ],
                     ),
                   ],
-                ),
+                ],
               ),
-              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
-            ],
-          ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+          ],
         ),
       ),
-    );
-  }
-}
-
-class _Info extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _Info({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.onSurfaceVariant;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: AppIcons.sizeXs + 2, color: color),
-        AppSpacing.hGap4,
-        Flexible(
-          child: Text(
-            text,
-            style: AppTypography.miniTexte.copyWith(color: color),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
     );
   }
 }

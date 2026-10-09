@@ -23,7 +23,6 @@ class NotificationsController extends AsyncNotifier<List<NotificationItem>> {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading<List<NotificationItem>>().copyWithPrevious(state);
     await _reload();
   }
 
@@ -38,20 +37,18 @@ class NotificationsController extends AsyncNotifier<List<NotificationItem>> {
     ]);
   }
 
-  /// Marque comme lues les notifications visibles dans l'univers courant.
-  Future<void> markVisibleAsRead() async {
+  Future<void> markAllAsRead() async {
     final current = state.value;
     if (current == null) return;
-    final universe = ref.read(currentUniverseProvider);
-    final repository = ref.read(notificationsRepositoryProvider);
-    final unread = current.where((n) => !n.lu && isVisibleIn(n, universe)).toList();
-    for (final n in unread) {
-      await repository.markAsRead(n.id);
-    }
-    final ids = unread.map((n) => n.id).toSet();
-    state = AsyncData([
-      for (final n in current) ids.contains(n.id) ? n.markedRead() : n,
-    ]);
+    await ref.read(notificationsRepositoryProvider).markAllAsRead();
+    state = AsyncData([for (final n in current) n.markedRead()]);
+  }
+
+  Future<void> deleteNotification(String id) async {
+    final current = state.value;
+    if (current == null) return;
+    await ref.read(notificationsRepositoryProvider).deleteNotification(id);
+    state = AsyncData(current.where((n) => n.id != id).toList());
   }
 }
 
@@ -65,15 +62,23 @@ final notificationsControllerProvider =
       NotificationsController.new,
     );
 
+/// Alias pour la compatibilité avec les écrans existants
+final notificationsListProvider = notificationsControllerProvider;
+
 /// Notifications de l'univers courant, les plus récentes d'abord.
-final visibleNotificationsProvider = Provider<AsyncValue<List<NotificationItem>>>((ref) {
-  final universe = ref.watch(currentUniverseProvider);
-  return ref.watch(notificationsControllerProvider).whenData((items) {
-    final visible = items.where((n) => isVisibleIn(n, universe)).toList()
-      ..sort((a, b) => (b.dateEnvoi ?? DateTime(0)).compareTo(a.dateEnvoi ?? DateTime(0)));
-    return visible;
-  });
-});
+final visibleNotificationsProvider =
+    Provider<AsyncValue<List<NotificationItem>>>((ref) {
+      final universe = ref.watch(currentUniverseProvider);
+      return ref.watch(notificationsControllerProvider).whenData((items) {
+        final visible = items.where((n) => isVisibleIn(n, universe)).toList()
+          ..sort(
+            (a, b) => (b.dateEnvoi ?? DateTime(0)).compareTo(
+              a.dateEnvoi ?? DateTime(0),
+            ),
+          );
+        return visible;
+      });
+    });
 
 /// Badge de la cloche : non lues de l'univers courant (0 tant que non chargé).
 final unreadNotificationsBadgeProvider = Provider<int>((ref) {
