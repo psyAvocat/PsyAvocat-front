@@ -33,13 +33,21 @@ class Validators {
     return null;
   }
 
+  /// Message identique à `PhoneNumbers.MESSAGE_INVALIDE` (Spring Boot).
+  static const phoneInvalidMessage =
+      'Numéro de téléphone invalide : 8 à 15 chiffres, indicatif international '
+      'facultatif (ex. +223 76 12 34 56).';
+
+  /// Téléphone obligatoire d'un client, même règle que le backend (`PhoneNumbers`) :
+  /// espaces, points, tirets et parenthèses ignorés, puis 8 à 15 chiffres
+  /// précédés d'un `+` facultatif.
   static String? phone(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return null; // optionnel selon les cas
+      return 'Le numéro de téléphone est requis';
     }
-    final phoneRegex = RegExp(r'^\+?[0-9\s\-]{8,15}$');
-    if (!phoneRegex.hasMatch(value.trim())) {
-      return 'Numéro de téléphone invalide';
+    final compact = value.replaceAll(RegExp(r'[\s.\-()]'), '');
+    if (!RegExp(r'^\+?[0-9]{8,15}$').hasMatch(compact)) {
+      return phoneInvalidMessage;
     }
     return null;
   }

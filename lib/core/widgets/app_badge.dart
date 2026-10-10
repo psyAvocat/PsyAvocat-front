@@ -66,7 +66,7 @@ class AppBadge extends StatelessWidget {
     this.onTap,
   }) : type = AppBadgeType.danger;
 
-  /// Constructeur pour l'univers Psychologue (#45088E)
+  /// Constructeur pour l'univers Psychologue (#522578)
   const AppBadge.psychologist({
     super.key,
     required this.label,

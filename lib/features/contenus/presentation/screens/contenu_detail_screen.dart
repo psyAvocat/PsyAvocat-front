@@ -1,159 +1,212 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/universe_provider.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/errors/app_exception.dart';
+import '../../../../core/errors/user_message.dart';
+import '../../../../core/router/app_routes.dart';
+import '../../../../core/theme/design_system.dart';
+import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/widgets.dart';
+import '../../data/models/contenu_model.dart';
 import '../controllers/contenus_controller.dart';
+import '../widgets/publication_image.dart';
+import '../widgets/publication_meta.dart';
 
-/// Écran de lecture détaillée d'un article ou guide juridique/psychologique
+/// Détail d'un article ou d'un conseil — maquettes « Article » et « Conseil ».
+///
+/// Si l'auteur désactive ou supprime la publication (même pendant la lecture),
+/// l'API répond 404 et l'écran l'indique au lieu d'afficher une vieille copie.
 class ContenuDetailScreen extends ConsumerWidget {
   final String contenuId;
 
   const ContenuDetailScreen({super.key, required this.contenuId});
 
+  void _leave(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.home);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final universe = ref.watch(currentUniverseProvider);
-    final primaryColor = universe.primaryColor;
-    final detailAsync = ref.watch(contenuDetailProvider(contenuId));
+    final detail = ref.watch(publicationDetailProvider(contenuId));
+
+    return detail.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, _) => Scaffold(
+        appBar: AppBar(),
+        body: error is NotFoundException
+            ? AppEmptyStateView(
+                title: "Cette ressource n'est plus disponible",
+                message: "Elle a été retirée par son auteur.",
+                icon: Icons.link_off_rounded,
+                actionText: 'Retour',
+                onAction: () => _leave(context),
+              )
+            : AppErrorStateView(
+                message: userMessageFor(error),
+                onRetry: () =>
+                    ref.invalidate(publicationDetailProvider(contenuId)),
+              ),
+      ),
+      data: (publication) => publication.isArticle
+          ? _ArticleView(
+              publication: publication,
+              onQuit: () => _leave(context),
+            )
+          : _ConseilView(
+              publication: publication,
+              onBack: () => _leave(context),
+            ),
+    );
+  }
+}
+
+/// Maquette « Article » : image pleine largeur, titre, date, auteur, texte,
+/// puis barre d'action avec « Quitter ».
+class _ArticleView extends StatelessWidget {
+  final Publication publication;
+  final VoidCallback onQuit;
+
+  const _ArticleView({required this.publication, required this.onQuit});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final pub = publication;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: BackButton(color: primaryColor),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share_outlined, color: Color(0xFF4B5563)),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Lien copié dans le presse-papiers !'), behavior: SnackBarBehavior.floating),
-              );
-            },
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 220,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              background: PublicationImage(
+                imageUrl: pub.imageUrl,
+                borderRadius: BorderRadius.zero,
+              ),
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.bookmark_outline_rounded, color: Color(0xFF4B5563)),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Article ajouté aux favoris.'), behavior: SnackBarBehavior.floating),
-              );
-            },
+          SliverPadding(
+            padding: AppSpacing.screenPadding,
+            sliver: SliverList.list(
+              children: [
+                Text(pub.titre, style: AppTypography.titreMoyen),
+                AppSpacing.vGap12,
+                if (pub.datePublication != null)
+                  Text(
+                    'Publié le ${Formatters.formatLongDate(pub.datePublication)}',
+                    style: AppTypography.texteSecondaire,
+                  ),
+                if (pub.auteurDisplayName != null)
+                  Text.rich(
+                    TextSpan(
+                      style: AppTypography.texteSecondaire,
+                      children: [
+                        const TextSpan(text: 'par '),
+                        TextSpan(
+                          text: pub.auteurDisplayName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                AppSpacing.vGap24,
+                Text(
+                  pub.contenu ?? '',
+                  style: AppTypography.texte.copyWith(height: 1.6),
+                ),
+                AppSpacing.vGap24,
+              ],
+            ),
           ),
         ],
       ),
-      body: detailAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => const Center(child: Text('Erreur lors du chargement de l\'article')),
-        data: (article) {
-          if (article == null) {
-            return const Center(child: Text('Article introuvable'));
-          }
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.all(AppSpacing.s16),
+        child: FilledButton(onPressed: onQuit, child: const Text('Quitter')),
+      ),
+    );
+  }
+}
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+/// Maquette « Conseil » : barre « Conseil », image arrondie, titre, auteur
+/// avec photo, catégorie, date et temps de lecture, puis le texte.
+class _ConseilView extends StatelessWidget {
+  final Publication publication;
+  final VoidCallback onBack;
+
+  const _ConseilView({required this.publication, required this.onBack});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final pub = publication;
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          tooltip: 'Retour',
+          onPressed: onBack,
+          icon: const Icon(Icons.chevron_left_rounded),
+        ),
+        title: Text('Conseil', style: TextStyle(color: scheme.primary)),
+      ),
+      body: ListView(
+        padding: AppSpacing.screenPadding,
+        children: [
+          PublicationImage(
+            imageUrl: pub.imageUrl,
+            height: 200,
+            width: double.infinity,
+            borderRadius: AppRadii.r16,
+          ),
+          AppSpacing.vGap20,
+          Text(pub.titre, style: AppTypography.titreMoyen),
+          if (pub.auteurDisplayName != null) ...[
+            AppSpacing.vGap12,
+            Row(
               children: [
-                // Tag & Catégorie
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        article.categorie,
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: primaryColor),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      '•  ${article.dureeLecture}',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500),
-                    ),
-                  ],
+                AppAvatar(
+                  name: pub.auteurDisplayName!,
+                  photoUrl: pub.auteurPhotoUrl,
+                  size: 32,
                 ),
-                const SizedBox(height: 14),
-
-                // Titre
-                Text(
-                  article.titre,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1E2432),
-                    height: 1.25,
+                AppSpacing.hGap8,
+                Expanded(
+                  child: Text(
+                    'Par ${pub.auteurDisplayName}',
+                    style: AppTypography.texteSecondaire,
                   ),
-                ),
-                const SizedBox(height: 16),
-
-                // Auteur
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFC),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: primaryColor.withValues(alpha: 0.15),
-                        child: Text(
-                          article.auteur.isNotEmpty ? article.auteur[0] : 'P',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: primaryColor),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            article.auteur,
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF1E2432)),
-                          ),
-                          Text(
-                            article.auteurTitre,
-                            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Contenu complet formaté
-                Text(
-                  article.contenuComplet,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    height: 1.7,
-                    color: Color(0xFF374151),
-                  ),
-                ),
-                const SizedBox(height: 30),
-
-                // Tags
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: article.tags
-                      .map(
-                        (t) => Chip(
-                          label: Text('#$t', style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
-                          backgroundColor: const Color(0xFFF3F4F6),
-                          side: BorderSide.none,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                      )
-                      .toList(),
                 ),
               ],
             ),
-          );
-        },
+          ],
+          AppSpacing.vGap12,
+          Wrap(
+            spacing: AppSpacing.s12,
+            runSpacing: AppSpacing.s8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (pub.specialiteNom != null)
+                PublicationCategoryChip(label: pub.specialiteNom!),
+              PublicationMetaRow(publication: pub),
+            ],
+          ),
+          AppSpacing.vGap24,
+          Text(
+            pub.contenu ?? '',
+            style: AppTypography.texte.copyWith(height: 1.6),
+          ),
+          AppSpacing.vGap32,
+        ],
       ),
     );
   }

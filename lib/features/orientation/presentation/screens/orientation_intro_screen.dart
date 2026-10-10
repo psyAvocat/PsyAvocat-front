@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/router/app_routes.dart';
 
 /// Étape préalable bienveillante avant le questionnaire d'orientation psychologique.
 ///
@@ -28,13 +29,13 @@ class OrientationIntroScreen extends ConsumerWidget {
             if (context.canPop()) {
               context.pop();
             } else {
-              context.go('/home');
+              context.go(AppRoutes.home);
             }
           },
         ),
         actions: [
           TextButton(
-            onPressed: () => context.go('/home'),
+            onPressed: () => context.go(AppRoutes.home),
             child: const Text('Passer'),
           ),
           AppSpacing.hGap8,
@@ -61,7 +62,9 @@ class OrientationIntroScreen extends ConsumerWidget {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.psychologist.withValues(alpha: 0.35),
+                              color: AppColors.psychologist.withValues(
+                                alpha: 0.35,
+                              ),
                               blurRadius: 28,
                               offset: const Offset(0, 8),
                             ),
@@ -116,14 +119,14 @@ class OrientationIntroScreen extends ConsumerWidget {
                       AppPrimaryButton(
                         label: 'Oui, commencer',
                         trailingIcon: Icons.arrow_forward_rounded,
-                        onPressed: () => context.go('/orientation'),
+                        onPressed: () => context.go(AppRoutes.orientation),
                       ),
                       AppSpacing.vGap12,
                       // Action 2 : Pas maintenant / Non
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton(
-                          onPressed: () => context.go('/home'),
+                          onPressed: () => context.go(AppRoutes.home),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             side: BorderSide(

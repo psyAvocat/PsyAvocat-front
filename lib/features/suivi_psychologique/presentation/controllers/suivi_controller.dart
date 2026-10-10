@@ -5,8 +5,8 @@ import '../../data/repositories/suivi_repository.dart';
 
 final humeurHistoryProvider =
     AsyncNotifierProvider<HumeurHistoryNotifier, List<HumeurEntryModel>>(
-  HumeurHistoryNotifier.new,
-);
+      HumeurHistoryNotifier.new,
+    );
 
 class HumeurHistoryNotifier extends AsyncNotifier<List<HumeurEntryModel>> {
   @override
@@ -21,7 +21,9 @@ class HumeurHistoryNotifier extends AsyncNotifier<List<HumeurEntryModel>> {
     List<String> facteurs = const [],
   }) async {
     try {
-      final newEntry = await ref.read(suiviRepositoryProvider).addHumeurEntry(
+      final newEntry = await ref
+          .read(suiviRepositoryProvider)
+          .addHumeurEntry(
             noteHumeur: noteHumeur,
             emotionDominante: emotionDominante,
             noteText: noteText,

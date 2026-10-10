@@ -61,19 +61,37 @@ class PaiementsScreen extends ConsumerWidget {
                       children: [
                         const Text(
                           'Paiements sécurisés',
-                          style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Row(
                             children: [
-                              Icon(Icons.lock_rounded, size: 12, color: Colors.white),
+                              Icon(
+                                Icons.lock_rounded,
+                                size: 12,
+                                color: Colors.white,
+                              ),
                               SizedBox(width: 4),
-                              Text('100% Crypté', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
+                              Text(
+                                '100% Crypté',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -82,12 +100,20 @@ class PaiementsScreen extends ConsumerWidget {
                     const SizedBox(height: 12),
                     const Text(
                       'Acomptes légaux de 20%',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     const Text(
                       'Conformément aux règles déontologiques, l\'acompte garantit la réservation de votre créneau horaire.',
-                      style: TextStyle(fontSize: 12, color: Colors.white70, height: 1.4),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                        height: 1.4,
+                      ),
                     ),
                   ],
                 ),
@@ -100,10 +126,17 @@ class PaiementsScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
             sliver: paiementsAsync.when(
               loading: () => const SliverToBoxAdapter(
-                child: Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator())),
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
               ),
               error: (err, stack) => const SliverToBoxAdapter(
-                child: Center(child: Text('Erreur lors du chargement des paiements')),
+                child: Center(
+                  child: Text('Erreur lors du chargement des paiements'),
+                ),
               ),
               data: (transactions) {
                 if (transactions.isEmpty) {
@@ -111,23 +144,25 @@ class PaiementsScreen extends ConsumerWidget {
                     child: Center(
                       child: Padding(
                         padding: EdgeInsets.all(40),
-                        child: Text('Aucun paiement enregistré pour l\'instant.'),
+                        child: Text(
+                          'Aucun paiement enregistré pour l\'instant.',
+                        ),
                       ),
                     ),
                   );
                 }
 
                 return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final item = transactions[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _PaiementCard(item: item, primaryColor: primaryColor),
-                      );
-                    },
-                    childCount: transactions.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final item = transactions[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _PaiementCard(
+                        item: item,
+                        primaryColor: primaryColor,
+                      ),
+                    );
+                  }, childCount: transactions.length),
                 );
               },
             ),
@@ -167,7 +202,11 @@ class _PaiementCard extends StatelessWidget {
             children: [
               Text(
                 item.reference,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF6B7280),
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -177,7 +216,11 @@ class _PaiementCard extends StatelessWidget {
                 ),
                 child: const Text(
                   'Payé',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF059669)),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF059669),
+                  ),
                 ),
               ),
             ],
@@ -185,7 +228,11 @@ class _PaiementCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             item.description,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1E2432)),
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1E2432),
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -201,17 +248,28 @@ class _PaiementCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Moyen de paiement', style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+                  const Text(
+                    'Moyen de paiement',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     item.moyenPaiement.replaceAll('_', ' '),
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF1E2432)),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E2432),
+                    ),
                   ),
                 ],
               ),
               Text(
                 item.formattedMontant,
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: primaryColor),
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                  color: primaryColor,
+                ),
               ),
             ],
           ),

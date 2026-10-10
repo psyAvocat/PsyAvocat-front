@@ -63,7 +63,9 @@ class Conversation {
       correspondantPrenom: json['correspondantPrenom'] as String? ?? '',
       correspondantType: json['correspondantType'] as String?,
       correspondantPhotoUrl: json['correspondantPhotoUrl'] as String?,
-      dernierMessage: dernier is Map<String, dynamic> ? Message.fromJson(dernier) : null,
+      dernierMessage: dernier is Map<String, dynamic>
+          ? Message.fromJson(dernier)
+          : null,
       messagesNonLus: (json['messagesNonLus'] as num?)?.toInt() ?? 0,
     );
   }

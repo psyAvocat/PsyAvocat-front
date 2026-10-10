@@ -33,19 +33,24 @@ class RendezVousController extends AsyncNotifier<List<RendezVous>> {
     required double montantTotal,
     String? motif,
   }) async {
-    final rdv = await ref.read(rendezVousRepositoryProvider).reserver(
-      typeProfessionnel: typeProfessionnel,
-      professionnelId: professionnelId,
-      disponibiliteId: disponibiliteId,
-      mode: mode,
-      montantTotal: montantTotal,
-      motif: motif,
-    );
+    final rdv = await ref
+        .read(rendezVousRepositoryProvider)
+        .reserver(
+          typeProfessionnel: typeProfessionnel,
+          professionnelId: professionnelId,
+          disponibiliteId: disponibiliteId,
+          mode: mode,
+          montantTotal: montantTotal,
+          motif: motif,
+        );
     await reload();
     return rdv;
   }
 
-  Future<RendezVous> modifierCreneau({required String id, required String disponibiliteId}) async {
+  Future<RendezVous> modifierCreneau({
+    required String id,
+    required String disponibiliteId,
+  }) async {
     final rdv = await ref
         .read(rendezVousRepositoryProvider)
         .modifierCreneau(id: id, disponibiliteId: disponibiliteId);
@@ -62,30 +67,39 @@ class RendezVousController extends AsyncNotifier<List<RendezVous>> {
 }
 
 final rendezVousControllerProvider =
-    AsyncNotifierProvider<RendezVousController, List<RendezVous>>(RendezVousController.new);
+    AsyncNotifierProvider<RendezVousController, List<RendezVous>>(
+      RendezVousController.new,
+    );
 
 /// Rendez-vous de l'univers courant, regroupés par onglet.
 final rendezVousByPhaseProvider = Provider.autoDispose
     .family<AsyncValue<List<RendezVous>>, AppointmentPhase>((ref, phase) {
-  final universe = ref.watch(currentUniverseProvider);
-  final now = DateTime.now();
-  return ref.watch(rendezVousControllerProvider).whenData((list) {
-    final filtered = list.where((r) => r.universe == universe && r.phaseAt(now) == phase).toList()
-      ..sort((a, b) => phase == AppointmentPhase.passe
-          ? b.dateHeure.compareTo(a.dateHeure)
-          : a.dateHeure.compareTo(b.dateHeure));
-    return filtered;
-  });
-});
+      final universe = ref.watch(currentUniverseProvider);
+      final now = DateTime.now();
+      return ref.watch(rendezVousControllerProvider).whenData((list) {
+        final filtered =
+            list
+                .where((r) => r.universe == universe && r.phaseAt(now) == phase)
+                .toList()
+              ..sort(
+                (a, b) => phase == AppointmentPhase.passe
+                    ? b.dateHeure.compareTo(a.dateHeure)
+                    : a.dateHeure.compareTo(b.dateHeure),
+              );
+        return filtered;
+      });
+    });
 
 /// Prochain rendez-vous de l'univers courant (null s'il n'y en a aucun).
-final nextAppointmentProvider = Provider.autoDispose<AsyncValue<RendezVous?>>((ref) {
+final nextAppointmentProvider = Provider.autoDispose<AsyncValue<RendezVous?>>((
+  ref,
+) {
   return ref
       .watch(rendezVousByPhaseProvider(AppointmentPhase.aVenir))
       .whenData((list) => list.firstOrNull);
 });
 
-final rendezVousDetailProvider =
-    FutureProvider.autoDispose.family<RendezVous, String>((ref, id) {
-  return ref.read(rendezVousRepositoryProvider).getRendezVous(id);
-});
+final rendezVousDetailProvider = FutureProvider.autoDispose
+    .family<RendezVous, String>((ref, id) {
+      return ref.read(rendezVousRepositoryProvider).getRendezVous(id);
+    });

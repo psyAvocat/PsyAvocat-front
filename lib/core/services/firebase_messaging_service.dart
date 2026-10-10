@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../firebase_options.dart';
 import '../config/app_config.dart';
 
@@ -87,11 +88,6 @@ class FirebaseMessagingService {
     }
   }
 
-  /// Suppression du token FCM (par exemple lors de la déconnexion)
-  Future<void> deleteToken() async {
-    await _messaging.deleteToken();
-  }
-
   /// Flux de rafraîchissement automatique du token FCM
   Stream<String> get onTokenRefresh => _messaging.onTokenRefresh;
 
@@ -106,18 +102,8 @@ class FirebaseMessagingService {
   Future<RemoteMessage?> getInitialMessage() async {
     return await _messaging.getInitialMessage();
   }
-
-  /// Inscription à un sujet FCM (Topic)
-  Future<void> subscribeToTopic(String topic) async {
-    if (!kIsWeb) {
-      await _messaging.subscribeToTopic(topic);
-    }
-  }
-
-  /// Désinscription d'un sujet FCM (Topic)
-  Future<void> unsubscribeFromTopic(String topic) async {
-    if (!kIsWeb) {
-      await _messaging.unsubscribeFromTopic(topic);
-    }
-  }
 }
+
+final firebaseMessagingServiceProvider = Provider<FirebaseMessagingService>(
+  (ref) => FirebaseMessagingService(),
+);

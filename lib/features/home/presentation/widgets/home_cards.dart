@@ -5,11 +5,11 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../../../orientation/data/models/questionnaire_model.dart';
-import '../../../orientation/presentation/controllers/orientation_controller.dart';
 import '../../../rendez_vous/data/models/rendez_vous_model.dart';
-import '../../../rendez_vous/presentation/controllers/rendez_vous_controller.dart' hide nextAppointmentProvider;
+import '../../../rendez_vous/presentation/controllers/rendez_vous_controller.dart'
+    hide nextAppointmentProvider;
 import '../controllers/home_providers.dart';
+import '../../../../core/router/app_routes.dart';
 
 /// Carte « Prochain rendez-vous » (GET /api/rendez-vous).
 class NextAppointmentCard extends ConsumerWidget {
@@ -17,59 +17,111 @@ class NextAppointmentCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final universe = ref.watch(currentUniverseProvider);
-
     return AppAsyncView<RendezVous?>(
       compact: true,
       value: ref.watch(nextAppointmentProvider),
       onRetry: () => ref.invalidate(rendezVousControllerProvider),
       builder: (rdv) => rdv == null
-          // État vide avec une action utile : trouver un professionnel.
-          ? _NoAppointmentContent(
-              actionLabel:
-                  'Trouver un ${universe.isPsychologist ? 'psychologue' : 'avocat'}',
-            )
+          ? const _NoAppointmentContent()
           : _AppointmentContent(appointment: rdv),
     );
   }
 }
 
-class _NoAppointmentContent extends StatelessWidget {
-  final String actionLabel;
-
-  const _NoAppointmentContent({required this.actionLabel});
+class _NoAppointmentContent extends ConsumerWidget {
+  const _NoAppointmentContent();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final universe = ref.watch(currentUniverseProvider);
+
+    if (universe.isPsychologist) {
+      return Card(
+        color: scheme.primaryContainer,
+        elevation: 0,
+        child: Padding(
+          padding: AppSpacing.cardPadding,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.calendar_month_outlined, color: scheme.primary),
+              AppSpacing.hGap12,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Aucun rendez-vous prévu',
+                      style: AppTypography.texteSemiBold.copyWith(
+                        color: scheme.primary,
+                      ),
+                    ),
+                    AppSpacing.vGap4,
+                    Text(
+                      'Vous n\'avez pas de rendez-vous pour le moment.',
+                      style: AppTypography.miniTexte.copyWith(
+                        color: scheme.primary.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Card(
-      child: Padding(
-        padding: AppSpacing.cardPaddingCompact,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.event_available_outlined,
-                  color: scheme.onSurfaceVariant,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: AppRadii.r16,
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+      child: InkWell(
+        onTap: () => context.go(AppRoutes.professionnels),
+        borderRadius: AppRadii.r16,
+        child: Padding(
+          padding: AppSpacing.cardPadding,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: scheme.surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: scheme.outlineVariant),
                 ),
-                AppSpacing.hGap12,
-                Expanded(
-                  child: Text(
-                    'Aucun rendez-vous à venir.',
-                    style: AppTypography.texteSecondaire,
-                  ),
+                child: Icon(
+                  Icons.calendar_month_outlined,
+                  color: scheme.onSurface,
                 ),
-              ],
-            ),
-            AppSpacing.vGap8,
-            OutlinedButton(
-              onPressed: () => context.go('/professionnels'),
-              child: Text(actionLabel),
-            ),
-          ],
+              ),
+              AppSpacing.hGap16,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Aucun rendez-vous prévu',
+                      style: AppTypography.texteSemiBold,
+                    ),
+                    AppSpacing.vGap4,
+                    Text(
+                      'Prenez rendez-vous avec un professionnel pour être accompagné.',
+                      style: AppTypography.miniTexte.copyWith(
+                        color: scheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AppSpacing.hGap8,
+              Icon(Icons.chevron_right, color: scheme.onSurface),
+            ],
+          ),
         ),
       ),
     );
@@ -87,7 +139,7 @@ class _AppointmentContent extends StatelessWidget {
 
     return Card(
       child: InkWell(
-        onTap: () => context.go('/rendez-vous'),
+        onTap: () => context.go(AppRoutes.rendezVous),
         child: Padding(
           padding: AppSpacing.cardPaddingCompact,
           child: Row(
@@ -109,7 +161,10 @@ class _AppointmentContent extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      DateFormat('MMM', 'fr_FR').format(appointment.dateHeure).toUpperCase(),
+                      DateFormat(
+                        'MMM',
+                        'fr_FR',
+                      ).format(appointment.dateHeure).toUpperCase(),
                       style: AppTypography.miniTexte.copyWith(
                         color: scheme.primary,
                       ),
@@ -131,7 +186,10 @@ class _AppointmentContent extends StatelessWidget {
                       DateFormat('HH:mm').format(appointment.dateHeure),
                       style: AppTypography.texteSecondaire,
                     ),
-                    Text(appointment.mode ?? 'Visio', style: AppTypography.miniTexte),
+                    Text(
+                      appointment.mode ?? 'Visio',
+                      style: AppTypography.miniTexte,
+                    ),
                     AppSpacing.vGap4,
                     Text(
                       appointment.statut.label,
@@ -149,128 +207,3 @@ class _AppointmentContent extends StatelessWidget {
     );
   }
 }
-
-/// Carte « Votre orientation » (GET /api/orientation/mes-resultats).
-class OrientationSummaryCard extends ConsumerWidget {
-  const OrientationSummaryCard({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final latest = ref.watch(latestOrientationProvider);
-
-    return AppAsyncView<ResultatOrientationModel?>(
-      compact: true,
-      value: latest,
-      onRetry: () => ref.invalidate(mesResultatsProvider),
-      builder: (result) => _OrientationContent(result: result),
-    );
-  }
-}
-
-class _OrientationContent extends ConsumerWidget {
-  final ResultatOrientationModel? result;
-
-  const _OrientationContent({required this.result});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
-    final hasResult = result?.mainLabel != null;
-
-    return Card(
-      color: scheme.secondaryContainer,
-      shape: const RoundedRectangleBorder(borderRadius: AppRadii.r20),
-      child: Padding(
-        padding: AppSpacing.cardPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.explore_outlined, color: scheme.primary),
-                AppSpacing.hGap8,
-                Expanded(
-                  child: Text(
-                    hasResult
-                        ? 'Votre dernière orientation'
-                        : 'Trouvez le bon professionnel',
-                    style: AppTypography.texteSemiBold,
-                  ),
-                ),
-              ],
-            ),
-            AppSpacing.vGap8,
-            Text(
-              hasResult
-                  ? result!.mainLabel!
-                  : 'Répondez à quelques questions : nous vous orientons vers '
-                        'l’accompagnement adapté à votre situation.',
-              style: hasResult
-                  ? AppTypography.petitTitre.copyWith(color: scheme.primary)
-                  : AppTypography.texteSecondaire,
-            ),
-            AppSpacing.vGap16,
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FilledButton(
-                onPressed: () => context.push('/orientation/intro'),
-                child: Text(
-                  hasResult ? 'Refaire le questionnaire' : 'Commencer',
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Carte « Mes dossiers juridiques » (univers Avocat uniquement).
-class DossiersSummaryCard extends StatelessWidget {
-  const DossiersSummaryCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Card(
-      color: scheme.secondaryContainer,
-      shape: const RoundedRectangleBorder(borderRadius: AppRadii.r20),
-      child: Padding(
-        padding: AppSpacing.cardPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.folder_special_outlined, color: scheme.primary),
-                AppSpacing.hGap8,
-                Expanded(
-                  child: Text(
-                    'Suivi de vos dossiers juridiques',
-                    style: AppTypography.texteSemiBold,
-                  ),
-                ),
-              ],
-            ),
-            AppSpacing.vGap8,
-            Text(
-              'Consultez vos dossiers en cours, transmettez vos pièces et échangez avec votre avocat.',
-              style: AppTypography.texteSecondaire,
-            ),
-            AppSpacing.vGap16,
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FilledButton(
-                onPressed: () => context.push('/dossiers'),
-                child: const Text('Accéder à mes dossiers'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-

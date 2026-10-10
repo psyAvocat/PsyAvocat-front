@@ -13,10 +13,16 @@ abstract class MessagerieRepository {
   /// Messages d'une conversation (le backend les marque lus pour l'appelant).
   Future<List<Message>> getMessages(String conversationId);
 
-  Future<Message> envoyer({required String conversationId, required String contenu});
+  Future<Message> envoyer({
+    required String conversationId,
+    required String contenu,
+  });
 
   /// Contacte un professionnel : réutilise la conversation existante si elle existe.
-  Future<Conversation> contacter({required String professionnelId, required String message});
+  Future<Conversation> contacter({
+    required String professionnelId,
+    required String message,
+  });
 }
 
 class ApiMessagerieRepository implements MessagerieRepository {
@@ -28,26 +34,36 @@ class ApiMessagerieRepository implements MessagerieRepository {
   Future<List<Conversation>> getConversations() async {
     final response = await _client.get('/conversations');
     final list = response.data as List<dynamic>? ?? [];
-    return list.map((e) => Conversation.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => Conversation.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
   Future<int> getUnreadCount() async {
     final response = await _client.get('/conversations/unread-count');
     final data = response.data;
-    if (data is Map<String, dynamic>) return (data['unreadCount'] as num?)?.toInt() ?? 0;
+    if (data is Map<String, dynamic>)
+      return (data['unreadCount'] as num?)?.toInt() ?? 0;
     return 0;
   }
 
   @override
   Future<List<Message>> getMessages(String conversationId) async {
-    final response = await _client.get('/conversations/$conversationId/messages');
+    final response = await _client.get(
+      '/conversations/$conversationId/messages',
+    );
     final list = response.data as List<dynamic>? ?? [];
-    return list.map((e) => Message.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => Message.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
-  Future<Message> envoyer({required String conversationId, required String contenu}) async {
+  Future<Message> envoyer({
+    required String conversationId,
+    required String contenu,
+  }) async {
     final response = await _client.post(
       '/conversations/$conversationId/messages',
       data: {'contenu': contenu},
@@ -56,7 +72,10 @@ class ApiMessagerieRepository implements MessagerieRepository {
   }
 
   @override
-  Future<Conversation> contacter({required String professionnelId, required String message}) async {
+  Future<Conversation> contacter({
+    required String professionnelId,
+    required String message,
+  }) async {
     final response = await _client.post(
       '/conversations',
       data: {'destinataireId': professionnelId, 'premierMessage': message},

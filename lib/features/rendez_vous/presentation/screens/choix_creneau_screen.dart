@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../shared/enums/slot_status.dart';
 import '../../../../core/theme/universe_provider.dart';
+import '../../../professionnels/data/models/creneau.dart';
 import '../../../professionnels/data/models/professional_detail_model.dart';
+import '../../../professionnels/data/models/professionnel_detail.dart';
 import '../../../professionnels/data/repositories/professionnels_repository.dart';
+import '../../../../core/router/app_routes.dart';
 
 /// Écran « Choix du créneau » (Étape 4) conforme à la maquette Figma.
 /// Permet la sélection directe de la date, de la modalité (visio / cabinet) et du créneau horaire.
@@ -40,7 +44,94 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
     final repo = ref.watch(professionnelsRepositoryProvider);
 
     return FutureBuilder<ProfessionalDetail?>(
-      future: repo.getProfessionnel(widget.professionnelId),
+      future:
+          Future.wait([
+            repo.getProfessionnel(widget.professionnelId),
+            repo.getCreneaux(widget.professionnelId),
+          ]).then((results) {
+            final apiModel = results[0] as ProfessionnelDetail;
+            final creneauxList = results[1] as List<Creneau>;
+
+            final Map<String, List<String>> creneauxParJour = {};
+            final Map<String, DateTime> datesParJour = {};
+            for (final c in creneauxList) {
+              if (c.statut == SlotStatus.libre) {
+                final dateKey =
+                    '${c.debut.year}-${c.debut.month.toString().padLeft(2, '0')}-${c.debut.day.toString().padLeft(2, '0')}';
+                final heure =
+                    '${c.debut.hour.toString().padLeft(2, '0')}:${c.debut.minute.toString().padLeft(2, '0')}';
+                creneauxParJour.putIfAbsent(dateKey, () => []).add(heure);
+                datesParJour[dateKey] = c.debut;
+              }
+            }
+
+            const joursSemaine = [
+              'Lun',
+              'Mar',
+              'Mer',
+              'Jeu',
+              'Ven',
+              'Sam',
+              'Dim',
+            ];
+            const moisAnnee = [
+              'Jan',
+              'Fév',
+              'Mar',
+              'Avr',
+              'Mai',
+              'Juin',
+              'Juil',
+              'Août',
+              'Sep',
+              'Oct',
+              'Nov',
+              'Déc',
+            ];
+
+            final disponibilites = creneauxParJour.entries.map((e) {
+              final d = datesParJour[e.key]!;
+              return DisponibiliteJour(
+                date: e.key,
+                labelJour: joursSemaine[d.weekday - 1],
+                labelNumero: d.day.toString().padLeft(2, '0'),
+                labelMois: moisAnnee[d.month - 1],
+                creneaux: e.value..sort(),
+              );
+            }).toList();
+
+            return ProfessionalDetail(
+              id: apiModel.id,
+              nom: apiModel.summary.fullName,
+              titre: apiModel.summary.type ?? '',
+              specialitePrincipale: apiModel.specialites.isNotEmpty
+                  ? apiModel.specialites.first.nom
+                  : '',
+              specialites: apiModel.specialites.map((s) => s.nom).toList(),
+              ville: apiModel.summary.ville ?? '',
+              adresse: apiModel.adresse ?? '',
+              distance: '1.2 km',
+              imagePath:
+                  apiModel.summary.photoUrl ??
+                  'assets/images/default_avatar.png',
+              note: apiModel.summary.noteMoyenne ?? 0.0,
+              nombreAvis: apiModel.summary.nombreAvis,
+              biographie: apiModel.biographie ?? '',
+              tarifs: apiModel.tarifs
+                  .map(
+                    (t) => ProfessionalTarif(
+                      titre: t.titre,
+                      montantFcfa: t.montant.toInt(),
+                      description: t.description,
+                    ),
+                  )
+                  .toList(),
+              langues: apiModel.langues?.split(',') ?? ['Français'],
+              enLigne: true,
+              isAvocat: apiModel.summary.type == 'AVOCAT',
+              disponibilites: disponibilites,
+            );
+          }),
       builder: (context, snapshot) {
         final pro = snapshot.data;
         if (pro == null) {
@@ -55,7 +146,8 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
             : null;
         final creneauxDisponibles = jourActif?.creneaux ?? <String>[];
 
-        final currentTarif = _tarif ?? (pro.tarifs.isNotEmpty ? pro.tarifs.first : null);
+        final currentTarif =
+            _tarif ?? (pro.tarifs.isNotEmpty ? pro.tarifs.first : null);
 
         return Scaffold(
           backgroundColor: const Color(0xFFF9FAFC),
@@ -102,7 +194,10 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFE5E7EB), width: 1.2),
+                          border: Border.all(
+                            color: const Color(0xFFE5E7EB),
+                            width: 1.2,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.03),
@@ -122,15 +217,21 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                                     width: 60,
                                     height: 60,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) => Container(
-                                      width: 60,
-                                      height: 60,
-                                      color: primaryColor.withValues(alpha: 0.1),
-                                      child: Icon(
-                                        pro.isAvocat ? Icons.gavel_rounded : Icons.psychology_rounded,
-                                        color: primaryColor,
-                                      ),
-                                    ),
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Container(
+                                              width: 60,
+                                              height: 60,
+                                              color: primaryColor.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              child: Icon(
+                                                pro.isAvocat
+                                                    ? Icons.gavel_rounded
+                                                    : Icons.psychology_rounded,
+                                                color: primaryColor,
+                                              ),
+                                            ),
                                   ),
                                 ),
                                 if (pro.enLigne)
@@ -143,7 +244,10 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF16A34A),
                                         shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.white, width: 2),
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 2,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -167,13 +271,22 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                                         ),
                                       ),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 3,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: primaryColor.withValues(alpha: 0.08),
-                                          borderRadius: BorderRadius.circular(8),
+                                          color: primaryColor.withValues(
+                                            alpha: 0.08,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: Text(
-                                          pro.isAvocat ? 'Avocat' : 'Psychologue',
+                                          pro.isAvocat
+                                              ? 'Avocat'
+                                              : 'Psychologue',
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w700,
@@ -186,7 +299,11 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                                   const SizedBox(height: 3),
                                   Row(
                                     children: [
-                                      const Icon(Icons.star_rounded, size: 16, color: Color(0xFFF59E0B)),
+                                      const Icon(
+                                        Icons.star_rounded,
+                                        size: 16,
+                                        color: Color(0xFFF59E0B),
+                                      ),
                                       const SizedBox(width: 3),
                                       Text(
                                         '${pro.note} (${pro.nombreAvis} avis)',
@@ -233,7 +350,9 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                               icon: Icons.videocam_rounded,
                               isSelected: _mode.contains('ligne'),
                               primaryColor: primaryColor,
-                              onTap: () => setState(() => _mode = 'En ligne (visioconférence)'),
+                              onTap: () => setState(
+                                () => _mode = 'En ligne (visioconférence)',
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -243,7 +362,9 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                               icon: Icons.business_rounded,
                               isSelected: _mode.contains('cabinet'),
                               primaryColor: primaryColor,
-                              onTap: () => setState(() => _mode = 'Au cabinet (${pro.ville})'),
+                              onTap: () => setState(
+                                () => _mode = 'Au cabinet (${pro.ville})',
+                              ),
                             ),
                           ),
                         ],
@@ -290,26 +411,36 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                               onTap: () {
                                 setState(() {
                                   _selectedDayIndex = index;
-                                  _selectedCreneau = j.creneaux.isNotEmpty ? j.creneaux.first : null;
+                                  _selectedCreneau = j.creneaux.isNotEmpty
+                                      ? j.creneaux.first
+                                      : null;
                                 });
                               },
                               borderRadius: BorderRadius.circular(18),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 200),
                                 width: 64,
-                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? primaryColor : Colors.white,
+                                  color: isSelected
+                                      ? primaryColor
+                                      : Colors.white,
                                   borderRadius: BorderRadius.circular(18),
                                   border: Border.all(
-                                    color: isSelected ? primaryColor : const Color(0xFFE5E7EB),
+                                    color: isSelected
+                                        ? primaryColor
+                                        : const Color(0xFFE5E7EB),
                                     width: 1.2,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: isSelected
                                           ? primaryColor.withValues(alpha: 0.3)
-                                          : Colors.black.withValues(alpha: 0.02),
+                                          : Colors.black.withValues(
+                                              alpha: 0.02,
+                                            ),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
@@ -323,7 +454,9 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
-                                        color: isSelected ? Colors.white70 : const Color(0xFF6B7280),
+                                        color: isSelected
+                                            ? Colors.white70
+                                            : const Color(0xFF6B7280),
                                       ),
                                     ),
                                     const SizedBox(height: 3),
@@ -332,7 +465,9 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w800,
-                                        color: isSelected ? Colors.white : const Color(0xFF111827),
+                                        color: isSelected
+                                            ? Colors.white
+                                            : const Color(0xFF111827),
                                       ),
                                     ),
                                     const SizedBox(height: 2),
@@ -341,7 +476,9 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                                       style: TextStyle(
                                         fontSize: 10.5,
                                         fontWeight: FontWeight.w500,
-                                        color: isSelected ? Colors.white70 : const Color(0xFF9CA3AF),
+                                        color: isSelected
+                                            ? Colors.white70
+                                            : const Color(0xFF9CA3AF),
                                       ),
                                     ),
                                   ],
@@ -377,53 +514,65 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                         )
                       else
                         Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: creneauxDisponibles.map((creneau) {
-                          final isSelected = creneau == _selectedCreneau;
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: creneauxDisponibles.map((creneau) {
+                            final isSelected = creneau == _selectedCreneau;
 
-                          return InkWell(
-                            onTap: () {
-                              setState(() {
-                                _selectedCreneau = creneau;
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(14),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
-                              width: 78,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                color: isSelected ? primaryColor : Colors.white,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: isSelected ? primaryColor : const Color(0xFFE5E7EB),
-                                  width: 1.2,
+                            return InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _selectedCreneau = creneau;
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(14),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                width: 78,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? primaryColor
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
                                     color: isSelected
-                                        ? primaryColor.withValues(alpha: 0.25)
-                                        : Colors.black.withValues(alpha: 0.02),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
+                                        ? primaryColor
+                                        : const Color(0xFFE5E7EB),
+                                    width: 1.2,
                                   ),
-                                ],
-                              ),
-                              child: Center(
-                                child: Text(
-                                  creneau,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                    color: isSelected ? Colors.white : const Color(0xFF374151),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: isSelected
+                                          ? primaryColor.withValues(alpha: 0.25)
+                                          : Colors.black.withValues(
+                                              alpha: 0.02,
+                                            ),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    creneau,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w800
+                                          : FontWeight.w600,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : const Color(0xFF374151),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
+                            );
+                          }).toList(),
+                        ),
 
                       const SizedBox(height: 24),
 
@@ -434,14 +583,20 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                           decoration: BoxDecoration(
                             color: primaryColor.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
+                            border: Border.all(
+                              color: primaryColor.withValues(alpha: 0.15),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.shield_outlined, size: 20, color: primaryColor),
+                                  Icon(
+                                    Icons.shield_outlined,
+                                    size: 20,
+                                    color: primaryColor,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     'Réservation directe et sécurisée',
@@ -493,7 +648,7 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                             ? null
                             : () {
                                 context.push(
-                                  '/rendez-vous/confirmation',
+                                  AppRoutes.rendezVousConfirmation,
                                   extra: {
                                     'pro': pro,
                                     'jour': jourActif,
@@ -523,7 +678,11 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                               ),
                             ),
                             SizedBox(width: 8),
-                            Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ],
                         ),
                       ),
@@ -552,7 +711,9 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? primaryColor.withValues(alpha: 0.05) : Colors.white,
+          color: isSelected
+              ? primaryColor.withValues(alpha: 0.05)
+              : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? primaryColor : const Color(0xFFE5E7EB),

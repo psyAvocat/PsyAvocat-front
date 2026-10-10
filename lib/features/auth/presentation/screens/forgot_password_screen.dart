@@ -6,6 +6,7 @@ import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/auth_controller.dart';
+import '../../../../core/router/app_routes.dart';
 
 /// Écran de réinitialisation de mot de passe (Mot de passe oublié).
 /// Envoie un email de réinitialisation via Firebase Authentication.
@@ -133,7 +134,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         AppSpacing.vGap32,
         AppGradientButton(
           label: 'Retour à la connexion',
-          onPressed: () => context.go('/login'),
+          onPressed: () => context.go(AppRoutes.login),
         ),
       ],
     );

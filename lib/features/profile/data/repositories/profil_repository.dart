@@ -27,7 +27,10 @@ abstract class ProfilRepository {
   });
 
   /// Photo de profil envoyée au backend (stockage R2 côté serveur).
-  Future<ProfilModel> uploadPhoto({required Uint8List bytes, required String fileName});
+  Future<ProfilModel> uploadPhoto({
+    required Uint8List bytes,
+    required String fileName,
+  });
 
   Future<ProfilModel> deletePhoto();
 }
@@ -49,11 +52,10 @@ class ApiProfilRepository implements ProfilRepository {
     required String prenom,
     required String telephone,
   }) async {
-    final response = await _client.post('/profil/client', data: {
-      'nom': nom,
-      'prenom': prenom,
-      'telephone': telephone,
-    });
+    final response = await _client.post(
+      '/profil/client',
+      data: {'nom': nom, 'prenom': prenom, 'telephone': telephone},
+    );
     return ProfilModel.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -63,16 +65,18 @@ class ApiProfilRepository implements ProfilRepository {
     required String prenom,
     required String telephone,
   }) async {
-    final response = await _client.put('/profil', data: {
-      'nom': nom,
-      'prenom': prenom,
-      'telephone': telephone,
-    });
+    final response = await _client.put(
+      '/profil',
+      data: {'nom': nom, 'prenom': prenom, 'telephone': telephone},
+    );
     return ProfilModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
-  Future<ProfilModel> uploadPhoto({required Uint8List bytes, required String fileName}) async {
+  Future<ProfilModel> uploadPhoto({
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
     final formData = FormData.fromMap({
       'file': MultipartFile.fromBytes(bytes, filename: fileName),
     });

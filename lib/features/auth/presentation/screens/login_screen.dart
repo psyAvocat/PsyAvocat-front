@@ -6,6 +6,8 @@ import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/auth_controller.dart';
+import '../controllers/session_controller.dart';
+import '../../../../core/router/app_routes.dart';
 
 /// Écran de connexion — interface fixe, stable et réactive.
 ///
@@ -33,34 +35,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final isSuccess = await ref
+    // Firebase uniquement : la suite (GET /me, rôle, univers) est décidée
+    // par la session et le routeur, pas par cet écran.
+    await ref
         .read(authControllerProvider.notifier)
         .signIn(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
-
-    if (isSuccess && mounted) {
-      AppNotification.showSuccess(context, 'Connexion réussie !');
-      // GoRouter automatically redirects to /home based on authStateChanges
-    }
-  }
-
-  void _signInWithGoogle() {
-    AppNotification.showInfo(
-      context,
-      'Connexion Google disponible dans une prochaine version.',
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(authControllerProvider).isLoading;
 
-    // Erreurs Firebase (identifiants…) ou API (/me injoignable, compte pro…).
+    // Erreurs Firebase (identifiants incorrects, réseau…).
     ref.listen<AsyncValue<void>>(authControllerProvider, (_, next) {
       if (next.hasError && !next.isLoading) {
         AppNotification.showError(context, userMessageFor(next.error!));
+      }
+    });
+
+    // Succès confirmé seulement quand le backend a validé le compte (GET /me).
+    ref.listen<SessionState>(sessionControllerProvider, (previous, next) {
+      if (next.isAuthorized && previous?.isAuthorized != true) {
+        AppNotification.showSuccess(context, 'Connexion réussie');
       }
     });
 
@@ -95,7 +94,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               AppSpacing.vGap16,
                               AppTextField(
                                 controller: _emailController,
-                                label: 'Email ou numéro de téléphone',
+                                label: 'Email',
                                 hint: 'Ex: ramla@gmail.com',
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
@@ -115,7 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 alignment: Alignment.centerRight,
                                 child: TextButton(
                                   onPressed: () =>
-                                      context.push('/forgot-password'),
+                                      context.push(AppRoutes.forgotPassword),
                                   child: Text(
                                     'Mot de passe oublié ?',
                                     style: AppTypography.lien,
@@ -123,30 +122,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                               AppSpacing.vGap8,
-                              AppGradientButton(
-                                label: 'Se connecter',
+                              AppButton(
+                                text: 'Se connecter',
+                                color: AppColors.lawyer,
                                 isLoading: isLoading,
                                 onPressed: _submit,
-                              ),
-                              AppSpacing.vGap20,
-                              const Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.s24,
-                                ),
-                                child: AppTextDivider(),
-                              ),
-                              AppSpacing.vGap16,
-                              Center(
-                                child: GoogleSignInButton(
-                                  onPressed: _signInWithGoogle,
-                                ),
                               ),
                               const Spacer(),
                               AppSpacing.vGap24,
                               AppInlineLink(
                                 text: 'Pas encore de compte ?',
                                 linkText: "S'inscrire",
-                                onTap: () => context.push('/register'),
+                                onTap: () => context.push(AppRoutes.register),
                               ),
                               AppSpacing.vGap24,
                             ],

@@ -52,7 +52,9 @@ class ApiContenusRepository implements ContenusRepository {
       },
     );
     final list = response.data as List<dynamic>? ?? [];
-    return list.map((e) => Publication.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => Publication.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override

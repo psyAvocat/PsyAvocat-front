@@ -8,7 +8,6 @@ import '../../features/auth/presentation/controllers/session_controller.dart';
 import '../navigation/deep_link.dart';
 import '../services/app_preferences_service.dart';
 import '../services/firebase_messaging_service.dart';
-import '../services/services_providers.dart';
 import '../widgets/app_alert.dart';
 import 'device_repository.dart';
 
@@ -108,16 +107,25 @@ class PushService {
     if (_listening) return;
     _listening = true;
     try {
-      _subscriptions.add(_messaging.onTokenRefresh.listen((token) {
-        if (_registeredToken != null && _preferences.isPushEnabled()) {
-          _sendToken(token).catchError((_) {});
-        }
-      }));
-      _subscriptions.add(_messaging.onForegroundMessage.listen(_showForeground));
-      _subscriptions.add(_messaging.onMessageOpenedApp.listen(_openFromMessage));
-      _messaging.getInitialMessage().then((message) {
-        if (message != null) _openFromMessage(message);
-      }).catchError((_) {});
+      _subscriptions.add(
+        _messaging.onTokenRefresh.listen((token) {
+          if (_registeredToken != null && _preferences.isPushEnabled()) {
+            _sendToken(token).catchError((_) {});
+          }
+        }),
+      );
+      _subscriptions.add(
+        _messaging.onForegroundMessage.listen(_showForeground),
+      );
+      _subscriptions.add(
+        _messaging.onMessageOpenedApp.listen(_openFromMessage),
+      );
+      _messaging
+          .getInitialMessage()
+          .then((message) {
+            if (message != null) _openFromMessage(message);
+          })
+          .catchError((_) {});
     } catch (_) {
       debugPrint('Push: Firebase Messaging indisponible sur cette plateforme.');
     }
@@ -156,7 +164,8 @@ final pushServiceProvider = Provider<PushService>((ref) {
     messaging: ref.watch(firebaseMessagingServiceProvider),
     devices: ref.watch(deviceRepositoryProvider),
     preferences: ref.watch(appPreferencesServiceProvider),
-    openTarget: (target) => ref.read(pendingDeepLinkProvider.notifier).push(target),
+    openTarget: (target) =>
+        ref.read(pendingDeepLinkProvider.notifier).push(target),
   );
   ref.listen<SessionState>(sessionControllerProvider, (previous, session) {
     if (session.isAuthorized && previous?.isAuthorized != true) {

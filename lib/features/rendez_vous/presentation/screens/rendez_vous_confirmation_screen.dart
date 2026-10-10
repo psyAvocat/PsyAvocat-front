@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../../professionnels/data/models/professional_detail_model.dart';
 import '../controllers/rendez_vous_controller.dart';
+import '../../../../core/router/app_routes.dart';
 
 /// Écran de confirmation du rendez-vous (Étape 5).
 /// Enregistre le rendez-vous immédiatement en état 'Confirmé' avec son acompte de 20%,
@@ -11,16 +12,15 @@ import '../controllers/rendez_vous_controller.dart';
 class RendezVousConfirmationScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> bookingData;
 
-  const RendezVousConfirmationScreen({
-    super.key,
-    required this.bookingData,
-  });
+  const RendezVousConfirmationScreen({super.key, required this.bookingData});
 
   @override
-  ConsumerState<RendezVousConfirmationScreen> createState() => _RendezVousConfirmationScreenState();
+  ConsumerState<RendezVousConfirmationScreen> createState() =>
+      _RendezVousConfirmationScreenState();
 }
 
-class _RendezVousConfirmationScreenState extends ConsumerState<RendezVousConfirmationScreen> {
+class _RendezVousConfirmationScreenState
+    extends ConsumerState<RendezVousConfirmationScreen> {
   bool _hasSaved = false;
 
   @override
@@ -37,14 +37,17 @@ class _RendezVousConfirmationScreenState extends ConsumerState<RendezVousConfirm
 
     final pro = widget.bookingData['pro'] as ProfessionalDetail?;
     final jour = widget.bookingData['jour'] as DisponibiliteJour?;
-    final mode = widget.bookingData['mode'] as String? ?? 'En ligne (visioconférence)';
+    final mode =
+        widget.bookingData['mode'] as String? ?? 'En ligne (visioconférence)';
     final tarif = widget.bookingData['tarif'] as ProfessionalTarif?;
 
     if (pro != null && jour != null) {
       final total = tarif?.montantFcfa ?? 150000;
       final dispoId = widget.bookingData['disponibiliteId'] as String?;
       if (dispoId != null) {
-        ref.read(rendezVousControllerProvider.notifier).reserver(
+        ref
+            .read(rendezVousControllerProvider.notifier)
+            .reserver(
               typeProfessionnel: pro.isAvocat ? 'AVOCAT' : 'PSYCHOLOGUE',
               professionnelId: pro.id,
               disponibiliteId: dispoId,
@@ -64,7 +67,8 @@ class _RendezVousConfirmationScreenState extends ConsumerState<RendezVousConfirm
     final pro = widget.bookingData['pro'] as ProfessionalDetail?;
     final jour = widget.bookingData['jour'] as DisponibiliteJour?;
     final creneau = widget.bookingData['creneau'] as String? ?? '10:00';
-    final mode = widget.bookingData['mode'] as String? ?? 'En ligne (visioconférence)';
+    final mode =
+        widget.bookingData['mode'] as String? ?? 'En ligne (visioconférence)';
     final tarif = widget.bookingData['tarif'] as ProfessionalTarif?;
     final montantTotal = tarif?.montantFcfa ?? 150000;
     final acompte = (montantTotal * 0.20).round();
@@ -137,7 +141,10 @@ class _RendezVousConfirmationScreenState extends ConsumerState<RendezVousConfirm
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: const Color(0xFFE5E7EB), width: 1.2),
+                  border: Border.all(
+                    color: const Color(0xFFE5E7EB),
+                    width: 1.2,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.04),
@@ -155,16 +162,21 @@ class _RendezVousConfirmationScreenState extends ConsumerState<RendezVousConfirm
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: Image.asset(
-                            pro?.imagePath ?? 'assets/images/onboarding_lawyer.png',
+                            pro?.imagePath ??
+                                'assets/images/onboarding_lawyer.png',
                             width: 50,
                             height: 50,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              width: 50,
-                              height: 50,
-                              color: primaryColor.withValues(alpha: 0.1),
-                              child: Icon(Icons.person, color: primaryColor),
-                            ),
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  color: primaryColor.withValues(alpha: 0.1),
+                                  child: Icon(
+                                    Icons.person,
+                                    color: primaryColor,
+                                  ),
+                                ),
                           ),
                         ),
                         const SizedBox(width: 14),
@@ -192,7 +204,10 @@ class _RendezVousConfirmationScreenState extends ConsumerState<RendezVousConfirm
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFDCFCE7),
                             borderRadius: BorderRadius.circular(12),
@@ -215,7 +230,8 @@ class _RendezVousConfirmationScreenState extends ConsumerState<RendezVousConfirm
                     _buildDetailRow(
                       icon: Icons.calendar_today_rounded,
                       label: 'Date & Heure',
-                      value: '${jour?.labelJour ?? ""} ${jour?.labelNumero ?? ""} ${jour?.labelMois ?? ""} à $creneau',
+                      value:
+                          '${jour?.labelJour ?? ""} ${jour?.labelNumero ?? ""} ${jour?.labelMois ?? ""} à $creneau',
                     ),
                     const SizedBox(height: 12),
 
@@ -252,7 +268,7 @@ class _RendezVousConfirmationScreenState extends ConsumerState<RendezVousConfirm
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () => context.go('/rendez-vous'),
+                  onPressed: () => context.go(AppRoutes.rendezVous),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     shape: RoundedRectangleBorder(
@@ -278,9 +294,12 @@ class _RendezVousConfirmationScreenState extends ConsumerState<RendezVousConfirm
                 width: double.infinity,
                 height: 48,
                 child: OutlinedButton(
-                  onPressed: () => context.go('/home'),
+                  onPressed: () => context.go(AppRoutes.home),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFFE5E7EB), width: 1.4),
+                    side: const BorderSide(
+                      color: Color(0xFFE5E7EB),
+                      width: 1.4,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
                     ),

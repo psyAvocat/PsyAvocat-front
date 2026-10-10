@@ -3,29 +3,31 @@ import 'package:flutter/material.dart';
 /// Palette officielle du Design System PsyAvocat.
 ///
 /// Respecte scrupuleusement les codes couleurs de la marque :
-/// - Univers Psychologue : #45088E (et ses nuances douces)
+/// - Univers Psychologue : #522578 (et ses nuances douces)
 /// - Univers Avocat : #0C2659 (et ses nuances douces)
 /// - Texte principal : #383636 (évite le noir pur #000000 pour un confort de lecture optimal)
 /// - Validation / succès : #4BD418
 /// - Avertissement : #F2C121
 /// - Danger / erreur critique : #FB1216
 /// - Boutons : texte blanc #FFFFFF
-/// - Gradient d'avant-entrée : #0C2659 → #45088E
+/// - Gradient d'avant-entrée : #0C2659 → #522578
 class AppColors {
   AppColors._();
 
   // ===========================================================================
-  // UNIVERS PSYCHOLOGUE (#45088E)
+  // UNIVERS PSYCHOLOGUE (#522578)
   // ===========================================================================
-  static const Color psychologist = Color(0xFF45088E);
-  static const Color psychologistDark = Color(0xFF320469);
-  static const Color psychologistLight = Color(0xFF6723BC);
-  static const Color psychologistSecondary = Color(0xFF8B47E2);
+  /// Couleur officielle de l'univers Psychologue. Toutes les nuances
+  /// ci-dessous sont dérivées de cette teinte (même famille violet prune).
+  static const Color psychologist = Color(0xFF522578);
+  static const Color psychologistDark = Color(0xFF3A1A56);
+  static const Color psychologistLight = Color(0xFF6E3A9C);
+  static const Color psychologistSecondary = Color(0xFF8A5BB5);
 
   /// Nuances claires de l'univers Psychologue (fonds, cartes, surfaces d'accent)
-  static const Color psychologistSurface = Color(0xFFF7F1FD);
-  static const Color psychologistSurfaceSelected = Color(0xFFEEDDFB);
-  static const Color psychologistBorder = Color(0xFFD6BEF5);
+  static const Color psychologistSurface = Color(0xFFF6F1FA);
+  static const Color psychologistSurfaceSelected = Color(0xFFEADDF3);
+  static const Color psychologistBorder = Color(0xFFD4BFE6);
 
   // ===========================================================================
   // UNIVERS AVOCAT (#0C2659)
@@ -97,25 +99,25 @@ class AppColors {
   // ===========================================================================
   // GRADIENTS D'UNIVERS
   // ===========================================================================
-  /// Gradient doux de transition avant l'entrée dans un univers (#0C2659 → #45088E)
+  /// Gradient doux de transition avant l'entrée dans un univers (#0C2659 → #522578)
   static const LinearGradient transitionGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF0C2659), Color(0xFF45088E)],
+    colors: [Color(0xFF0C2659), Color(0xFF522578)],
   );
 
   /// Gradient horizontal doux pour l'AppBar ou bannières de transition
   static const LinearGradient transitionGradientHorizontal = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
-    colors: [Color(0xFF0C2659), Color(0xFF45088E)],
+    colors: [Color(0xFF0C2659), Color(0xFF522578)],
   );
 
   /// Gradient subtil de l'univers Psychologue
   static const LinearGradient psychologistGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF45088E), Color(0xFF6723BC)],
+    colors: [psychologist, psychologistLight],
   );
 
   /// Gradient subtil de l'univers Avocat
@@ -229,7 +231,7 @@ class AppColors {
   static const LinearGradient psychologistCardGradient = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
-    colors: [psychologist, Color(0xFF6519B3)],
+    colors: [psychologist, psychologistLight],
   );
 
   // ===========================================================================
@@ -255,9 +257,4 @@ class AppColors {
   static const Color darkTextPrimary = Color(0xFFF3F4F6);
   static const Color darkTextSecondary = Color(0xFF9CA3AF);
   static const Color darkBorder = Color(0xFF243350);
-
-  static const Color statusPending = warning;
-  static const Color statusApproved = success;
-  static const Color statusRejected = danger;
-  static const Color statusSuspended = Color(0xFF6B7280);
 }

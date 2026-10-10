@@ -16,8 +16,14 @@ class ApiDeviceRepository implements DeviceRepository {
   ApiDeviceRepository(this._client);
 
   @override
-  Future<void> register({required String token, required String plateforme}) async {
-    await _client.post('/devices', data: {'token': token, 'plateforme': plateforme});
+  Future<void> register({
+    required String token,
+    required String plateforme,
+  }) async {
+    await _client.post(
+      '/devices',
+      data: {'token': token, 'plateforme': plateforme},
+    );
   }
 
   @override

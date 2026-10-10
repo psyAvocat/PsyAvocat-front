@@ -6,8 +6,8 @@ import '../../data/repositories/dossier_repository.dart';
 /// Provider pour la liste des dossiers de l'utilisateur
 final dossiersListProvider =
     AsyncNotifierProvider<DossiersNotifier, List<DossierModel>>(
-  DossiersNotifier.new,
-);
+      DossiersNotifier.new,
+    );
 
 class DossiersNotifier extends AsyncNotifier<List<DossierModel>> {
   @override
@@ -21,7 +21,9 @@ class DossiersNotifier extends AsyncNotifier<List<DossierModel>> {
     required String domaine,
   }) async {
     try {
-      final newDossier = await ref.read(dossierRepositoryProvider).createDossier(
+      final newDossier = await ref
+          .read(dossierRepositoryProvider)
+          .createDossier(
             titre: titre,
             description: description,
             domaine: domaine,

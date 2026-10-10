@@ -79,8 +79,9 @@ class RendezVous {
   }
 
   /// Univers auquel appartient ce rendez-vous.
-  AppUniverse get universe =>
-      typeProfessionnel == 'AVOCAT' ? AppUniverse.lawyer : AppUniverse.psychologist;
+  AppUniverse get universe => typeProfessionnel == 'AVOCAT'
+      ? AppUniverse.lawyer
+      : AppUniverse.psychologist;
 
   String get professionnelDisplayName {
     final nom = '$professionnelPrenom $professionnelNom'.trim();
@@ -88,13 +89,18 @@ class RendezVous {
   }
 
   /// Fin réelle (renvoyée par le backend), sinon début + durée.
-  DateTime get fin => dateFin ?? dateHeure.add(Duration(minutes: dureeMinutes ?? 45));
+  DateTime get fin =>
+      dateFin ?? dateHeure.add(Duration(minutes: dureeMinutes ?? 45));
 
   /// Onglet d'affichage, calculé à partir du statut backend et de l'heure réelle.
   AppointmentPhase phaseAt(DateTime now) {
-    final actif = statut == AppointmentStatus.confirme || statut == AppointmentStatus.enAttente;
+    final actif =
+        statut == AppointmentStatus.confirme ||
+        statut == AppointmentStatus.enAttente;
     if (actif && dateHeure.isAfter(now)) return AppointmentPhase.aVenir;
-    if (statut == AppointmentStatus.confirme && !dateHeure.isAfter(now) && fin.isAfter(now)) {
+    if (statut == AppointmentStatus.confirme &&
+        !dateHeure.isAfter(now) &&
+        fin.isAfter(now)) {
       return AppointmentPhase.enCours;
     }
     return AppointmentPhase.passe;
@@ -102,6 +108,7 @@ class RendezVous {
 
   /// Modifiable / annulable : rendez-vous actif qui n'a pas encore commencé.
   bool canBeChangedAt(DateTime now) =>
-      (statut == AppointmentStatus.confirme || statut == AppointmentStatus.enAttente) &&
+      (statut == AppointmentStatus.confirme ||
+          statut == AppointmentStatus.enAttente) &&
       dateHeure.isAfter(now);
 }

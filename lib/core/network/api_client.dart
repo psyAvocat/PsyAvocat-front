@@ -1,13 +1,17 @@
 import 'package:dio/dio.dart';
 import '../config/app_config.dart';
 import '../errors/app_exception.dart';
+import 'api_logger_interceptor.dart';
+import 'auth_interceptor.dart';
 import 'error_interceptor.dart';
 
 /// Client HTTP Dio configuré pour l'API Spring Boot PsyAvocat.
 class ApiClient {
   late final Dio dio;
 
-  ApiClient({Dio? customDio, List<Interceptor>? interceptors}) {
+  /// [onAccountRefused] : le backend a refusé le compte (désactivé, email non
+  /// confirmé) ; voir [AuthInterceptor].
+  ApiClient({Dio? customDio, void Function()? onAccountRefused}) {
     dio =
         customDio ??
         Dio(
@@ -23,10 +27,14 @@ class ApiClient {
           ),
         );
 
-    // Ajout des intercepteurs personnalisés (notamment AuthInterceptor)
-    if (interceptors != null) {
-      dio.interceptors.addAll(interceptors);
-    }
+    // Jeton Firebase sur chaque requête ; nouvel essai sur 401 avec ce même client.
+    dio.interceptors.add(
+      AuthInterceptor(dio, onAccountRefused: onAccountRefused),
+    );
+
+    // Journal des requêtes (mode debug) : placé avant l'ErrorInterceptor pour
+    // voir l'erreur réseau d'origine (timeout, connexion refusée...).
+    dio.interceptors.add(ApiLoggerInterceptor());
 
     // Gestion centralisée des erreurs
     dio.interceptors.add(ErrorInterceptor());

@@ -18,25 +18,9 @@ class DossierModel {
     this.soumissions = const [],
   });
 
-  String get statutLabel {
-    switch (statut) {
-      case 'EN_COURS':
-        return 'En cours';
-      case 'EN_ATTENTE':
-        return 'En attente';
-      case 'ACCEPTE':
-        return 'Accepté';
-      case 'REJETE':
-        return 'Rejeté';
-      case 'CLOS':
-        return 'Clôturé';
-      default:
-        return statut;
-    }
-  }
-
   factory DossierModel.fromJson(Map<String, dynamic> json) {
-    final soumissionsList = (json['soumissions'] as List<dynamic>?)
+    final soumissionsList =
+        (json['soumissions'] as List<dynamic>?)
             ?.map((e) => SoumissionModel.fromJson(e as Map<String, dynamic>))
             .toList() ??
         [];
@@ -46,7 +30,9 @@ class DossierModel {
       titre: json['titre'] as String? ?? 'Sans titre',
       description: json['description'] as String? ?? '',
       statut: json['statut'] as String? ?? 'EN_ATTENTE',
-      dateCreation: DateTime.tryParse(json['dateCreation'] as String? ?? '') ?? DateTime.now(),
+      dateCreation:
+          DateTime.tryParse(json['dateCreation'] as String? ?? '') ??
+          DateTime.now(),
       soumissions: soumissionsList,
     );
   }

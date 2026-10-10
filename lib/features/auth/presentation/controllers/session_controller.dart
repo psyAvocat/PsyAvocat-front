@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/user_message.dart';
+import '../../../../core/network/api_logger_interceptor.dart';
 import '../../../../core/network/network_providers.dart';
 import '../../../../core/push/push_service.dart';
 import '../../../../core/services/app_preferences_service.dart';
@@ -25,8 +26,11 @@ enum SessionStatus {
   /// Client autorisé.
   authorized,
 
-  /// Compte sans profil métier : le profil doit être complété.
+  /// Compte sans profil métier (inscription interrompue) : le profil doit être complété.
   profileIncomplete,
+
+  /// Client dont l'adresse email n'est pas encore confirmée.
+  emailNotVerified,
 
   /// Accès refusé (professionnel, administrateur ou compte désactivé) ; déconnecté.
   denied,
@@ -99,28 +103,52 @@ class SessionController extends Notifier<SessionState> {
       return;
     }
     state = const SessionState(SessionStatus.loading);
+    apiLog('Session : vérification du compte (GET /me)…');
     try {
       ref.invalidate(currentUserProvider);
       final user = await ref.read(currentUserProvider.future);
 
-      switch (evaluateAccess(user)) {
+      final decision = evaluateAccess(user);
+      apiLog('Session : /me OK → décision d’accès : ${decision.name}');
+      switch (decision) {
         case AccessDecision.authorized:
           state = SessionState(SessionStatus.authorized, user: user);
         case AccessDecision.profileIncomplete:
           state = SessionState(SessionStatus.profileIncomplete, user: user);
+        case AccessDecision.emailNotVerified:
+          state = SessionState(SessionStatus.emailNotVerified, user: user);
         case AccessDecision.deniedProfessional:
           await _deny(professionalAccountMessage);
         case AccessDecision.deniedDeactivated:
           await _deny(deactivatedAccountMessage);
       }
     } catch (error) {
+      apiLog('Session : /me en échec → ${error.runtimeType} : $error');
       // Échec sûr : sans réponse fiable de /me, aucun accès n'est accordé.
       state = SessionState(SessionStatus.error, message: userMessageFor(error));
     }
   }
 
+  /// Le backend a refusé le compte en cours de session (403 `ACCOUNT_DISABLED`
+  /// ou `EMAIL_NOT_VERIFIED`) : l'accès est réévalué via `GET /me`.
+  /// Plusieurs requêtes refusées en même temps ne déclenchent qu'une vérification.
+  void revalidate() {
+    if (state.status == SessionStatus.loading) return;
+    resolve();
+  }
+
   /// Après création du profil manquant : l'accès est réévalué.
   Future<void> refreshAfterProfileCreation() => resolve();
+
+  /// L'utilisateur indique avoir cliqué sur le lien : le jeton est renouvelé
+  /// (le backend lit `email_verified` dans le jeton), puis l'accès réévalué.
+  Future<void> confirmEmailVerified() async {
+    await ref.read(authRepositoryProvider).reloadUser();
+    await resolve();
+  }
+
+  Future<void> resendVerificationEmail() =>
+      ref.read(authRepositoryProvider).sendEmailVerification();
 
   /// Déconnexion volontaire : Firebase + nettoyage des états locaux sensibles.
   /// La connexion temps réel se ferme d'elle-même sur ce changement d'état.
@@ -138,6 +166,13 @@ class SessionController extends Notifier<SessionState> {
     state = const SessionState(SessionStatus.unauthenticated);
   }
 
+  /// Après lecture du message « accès refusé » : retour à l'écran de connexion.
+  void acknowledgeDenied() {
+    if (state.status == SessionStatus.denied) {
+      state = const SessionState(SessionStatus.unauthenticated);
+    }
+  }
+
   void beginRegistration() => _registrationInProgress = true;
 
   void endRegistration() {
@@ -147,6 +182,10 @@ class SessionController extends Notifier<SessionState> {
 
   Future<void> _deny(String message) async {
     _pendingDeniedMessage = message;
+    // Plus d'univers enregistré : l'accueil ne pourra plus être rouvert
+    // directement au prochain démarrage (voir route_guard.dart).
+    await ref.read(appPreferencesServiceProvider).clearSelectedUniverse();
+    await ref.read(currentUniverseProvider.notifier).resetToNeutral();
     ref.invalidate(currentUserProvider);
     await ref.read(authRepositoryProvider).signOut();
     // Si Firebase n'émet pas d'événement (déjà déconnecté), on applique le refus ici.

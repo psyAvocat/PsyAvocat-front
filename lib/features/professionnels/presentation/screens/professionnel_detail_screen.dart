@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../data/models/professional_detail_model.dart';
 import '../../data/repositories/professionnels_repository.dart';
+import '../../../../core/router/app_routes.dart';
 
 /// Écran de profil détaillé du professionnel (Étape 3) :
 /// - Photo héro haute définition
@@ -47,7 +48,38 @@ class _ProfessionnelDetailScreenState
     final repo = ref.watch(professionnelsRepositoryProvider);
 
     return FutureBuilder<ProfessionalDetail?>(
-      future: repo.getProfessionnel(widget.professionnelId),
+      future: repo.getProfessionnel(widget.professionnelId).then((apiModel) {
+        return ProfessionalDetail(
+          id: apiModel.id,
+          nom: apiModel.summary.fullName,
+          titre: apiModel.summary.type ?? '',
+          specialitePrincipale: apiModel.specialites.isNotEmpty
+              ? apiModel.specialites.first.nom
+              : '',
+          specialites: apiModel.specialites.map((s) => s.nom).toList(),
+          ville: apiModel.summary.ville ?? '',
+          adresse: apiModel.adresse ?? '',
+          distance: '1.2 km',
+          imagePath:
+              apiModel.summary.photoUrl ?? 'assets/images/default_avatar.png',
+          note: apiModel.summary.noteMoyenne ?? 0.0,
+          nombreAvis: apiModel.summary.nombreAvis,
+          biographie: apiModel.biographie ?? '',
+          tarifs: apiModel.tarifs
+              .map(
+                (t) => ProfessionalTarif(
+                  titre: t.titre,
+                  montantFcfa: t.montant.toInt(),
+                  description: t.description,
+                ),
+              )
+              .toList(),
+          langues: apiModel.langues?.split(',') ?? ['Français'],
+          enLigne: true,
+          isAvocat: apiModel.summary.type == 'AVOCAT',
+          disponibilites: [],
+        );
+      }),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -508,7 +540,7 @@ class _ProfessionnelDetailScreenState
                           child: ElevatedButton.icon(
                             onPressed: () {
                               context.push(
-                                '/professionnels/${pro.id}/creneau',
+                                AppRoutes.choixCreneau(pro.id),
                                 extra: selectedTarif,
                               );
                             },

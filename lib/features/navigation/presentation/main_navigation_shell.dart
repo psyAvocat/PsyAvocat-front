@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/universe_provider.dart';
-import '../../../core/widgets/app_navigation_bar.dart';
+import '../../../core/widgets/widgets.dart';
+import 'navigation_destinations.dart';
 
-/// Shell de navigation principal : contenu de l'onglet actif + [AppNavigationBar].
+/// Shell de navigation principal : contenu de l'onglet actif + [PsyAvocatNavigationBar].
 ///
 /// Les onglets sont des branches d'un `StatefulShellRoute.indexedStack` :
 /// chaque onglet garde son état (scroll, sous-pages) quand on change d'onglet,
@@ -28,10 +29,12 @@ class MainNavigationShell extends ConsumerWidget {
 
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: AppNavigationBar(
+      // La barre flotte au-dessus du contenu (capsule de la maquette).
+      extendBody: true,
+      bottomNavigationBar: PsyAvocatNavigationBar(
+        destinations: navigationDestinationsFor(universe),
         currentIndex: navigationShell.currentIndex,
         onDestinationSelected: _onDestinationSelected,
-        universe: universe,
       ),
     );
   }

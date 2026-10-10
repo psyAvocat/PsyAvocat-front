@@ -5,8 +5,8 @@ import '../../data/repositories/paiements_repository.dart';
 
 final paiementsListProvider =
     AsyncNotifierProvider<PaiementsNotifier, List<PaiementModel>>(
-  PaiementsNotifier.new,
-);
+      PaiementsNotifier.new,
+    );
 
 class PaiementsNotifier extends AsyncNotifier<List<PaiementModel>> {
   @override

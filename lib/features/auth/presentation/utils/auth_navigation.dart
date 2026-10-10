@@ -17,6 +17,9 @@ enum AccessDecision {
   /// Compte Firebase sans profil métier : le profil doit être complété.
   profileIncomplete,
 
+  /// Client dont l'adresse email n'est pas encore confirmée.
+  emailNotVerified,
+
   /// Professionnel ou administrateur : refusé sur le mobile.
   deniedProfessional,
 
@@ -29,8 +32,8 @@ AccessDecision evaluateAccess(CurrentUser user) {
   if (!user.actif) return AccessDecision.deniedDeactivated;
   if (user.isProfessionalOrAdmin) return AccessDecision.deniedProfessional;
   if (!user.hasMetierProfile) return AccessDecision.profileIncomplete;
-  return user.isClient
-      ? AccessDecision.authorized
-      // Rôle inconnu : on refuse plutôt que d'autoriser par défaut.
-      : AccessDecision.deniedProfessional;
+  // Rôle inconnu : on refuse plutôt que d'autoriser par défaut.
+  if (!user.isClient) return AccessDecision.deniedProfessional;
+  if (!user.emailVerified) return AccessDecision.emailNotVerified;
+  return AccessDecision.authorized;
 }

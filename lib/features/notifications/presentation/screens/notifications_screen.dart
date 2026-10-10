@@ -10,7 +10,8 @@ class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
@@ -55,7 +56,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               ref.read(notificationsListProvider.notifier).markAllAsRead();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Toutes les notifications ont été marquées comme lues.'),
+                  content: Text(
+                    'Toutes les notifications ont été marquées comme lues.',
+                  ),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -63,7 +66,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             icon: Icon(Icons.done_all_rounded, size: 18, color: primaryColor),
             label: Text(
               'Tout lire',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: primaryColor),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: primaryColor,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -74,7 +81,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           unselectedLabelColor: const Color(0xFF9CA3AF),
           indicatorColor: primaryColor,
           indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
           tabs: const [
             Tab(text: 'Toutes'),
             Tab(text: 'Rendez-vous'),
@@ -88,12 +98,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline_rounded, size: 48, color: Colors.redAccent),
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: Colors.redAccent,
+              ),
               const SizedBox(height: 12),
               const Text('Impossible de charger les notifications'),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => ref.read(notificationsListProvider.notifier).refresh(),
+                onPressed: () =>
+                    ref.read(notificationsListProvider.notifier).refresh(),
                 child: const Text('Réessayer'),
               ),
             ],
@@ -104,8 +119,16 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             controller: _tabController,
             children: [
               _buildList(context, notifications, primaryColor),
-              _buildList(context, notifications.where((n) => n.type == 'RDV').toList(), primaryColor),
-              _buildList(context, notifications.where((n) => n.type == 'DOSSIER').toList(), primaryColor),
+              _buildList(
+                context,
+                notifications.where((n) => n.type == 'RDV').toList(),
+                primaryColor,
+              ),
+              _buildList(
+                context,
+                notifications.where((n) => n.type == 'DOSSIER').toList(),
+                primaryColor,
+              ),
             ],
           );
         },
@@ -113,7 +136,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     );
   }
 
-  Widget _buildList(BuildContext context, List<NotificationModel> list, Color primaryColor) {
+  Widget _buildList(
+    BuildContext context,
+    List<NotificationModel> list,
+    Color primaryColor,
+  ) {
     if (list.isEmpty) {
       return Center(
         child: Column(
@@ -125,7 +152,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                 color: primaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.notifications_none_rounded, size: 44, color: primaryColor),
+              child: Icon(
+                Icons.notifications_none_rounded,
+                size: 44,
+                color: primaryColor,
+              ),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -162,7 +193,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             }
           },
           onDismissed: () {
-            ref.read(notificationsListProvider.notifier).deleteNotification(notif.id);
+            ref
+                .read(notificationsListProvider.notifier)
+                .deleteNotification(notif.id);
           },
         );
       },
@@ -225,10 +258,14 @@ class _NotificationCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: notification.isRead ? Colors.white : primaryColor.withValues(alpha: 0.04),
+            color: notification.isRead
+                ? Colors.white
+                : primaryColor.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: notification.isRead ? const Color(0xFFE5E7EB) : primaryColor.withValues(alpha: 0.3),
+              color: notification.isRead
+                  ? const Color(0xFFE5E7EB)
+                  : primaryColor.withValues(alpha: 0.3),
               width: notification.isRead ? 1 : 1.5,
             ),
             boxShadow: [
@@ -263,7 +300,9 @@ class _NotificationCard extends StatelessWidget {
                             notification.titre,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.w800,
+                              fontWeight: notification.isRead
+                                  ? FontWeight.w600
+                                  : FontWeight.w800,
                               color: const Color(0xFF1E2432),
                             ),
                           ),
@@ -272,19 +311,30 @@ class _NotificationCard extends StatelessWidget {
                           Container(
                             width: 8,
                             height: 8,
-                            decoration: BoxDecoration(color: primaryColor, shape: BoxShape.circle),
+                            decoration: BoxDecoration(
+                              color: primaryColor,
+                              shape: BoxShape.circle,
+                            ),
                           ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       notification.message,
-                      style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563), height: 1.3),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF4B5563),
+                        height: 1.3,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _formatDate(notification.date),
-                      style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF9CA3AF),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
@@ -296,7 +346,8 @@ class _NotificationCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
     final diff = DateTime.now().difference(date);
     if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
     if (diff.inHours < 24) return 'Il y a ${diff.inHours} h';

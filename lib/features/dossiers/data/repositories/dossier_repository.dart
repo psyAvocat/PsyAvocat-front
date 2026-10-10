@@ -47,11 +47,10 @@ class ApiDossierRepository implements DossierRepository {
     required String description,
     required String domaine,
   }) async {
-    final response = await _client.post('/dossiers', data: {
-      'titre': titre,
-      'description': description,
-      'domaine': domaine,
-    });
+    final response = await _client.post(
+      '/dossiers',
+      data: {'titre': titre, 'description': description, 'domaine': domaine},
+    );
     return DossierModel.fromJson(response.data as Map<String, dynamic>);
   }
 }

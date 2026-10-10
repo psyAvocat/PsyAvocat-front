@@ -33,7 +33,9 @@ class ProfilModel {
       email: json['email'] as String? ?? '',
       telephone: json['telephone'] as String?,
       typeUtilisateur: json['typeUtilisateur'] as String? ?? '',
-      dateInscription: DateTime.tryParse(json['dateInscription'] as String? ?? ''),
+      dateInscription: DateTime.tryParse(
+        json['dateInscription'] as String? ?? '',
+      ),
       photoUrl: json['photoUrl'] as String?,
     );
   }

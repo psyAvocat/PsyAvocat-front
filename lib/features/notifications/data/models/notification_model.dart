@@ -1,4 +1,5 @@
 import '../../../../core/theme/app_universe.dart';
+import '../../../../core/router/app_routes.dart';
 
 /// Notification métier persistée (Spring Boot `/api/notifications`).
 class NotificationItem {
@@ -55,6 +56,30 @@ class NotificationItem {
     return null;
   }
 
+  bool get isRead => lu;
+  String get message => contenu;
+  DateTime? get date => dateEnvoi;
+
+  String? get targetRoute {
+    if (ressourceType == null || ressourceId == null) return null;
+    switch (ressourceType!.toUpperCase()) {
+      case 'RENDEZ_VOUS':
+      case 'RDV':
+        return AppRoutes.rendezVous;
+      case 'CONVERSATION':
+      case 'MESSAGE':
+        return AppRoutes.conversation(ressourceId!);
+      case 'ARTICLE':
+      case 'CONSEIL':
+      case 'CONTENU':
+        return AppRoutes.contenu(ressourceId!);
+      case 'DOSSIER':
+        return AppRoutes.dossiers;
+      default:
+        return null;
+    }
+  }
+
   NotificationItem markedRead() => NotificationItem(
     id: id,
     type: type,
@@ -68,3 +93,6 @@ class NotificationItem {
     ressourceId: ressourceId,
   );
 }
+
+/// Alias rétrocompatible
+typedef NotificationModel = NotificationItem;

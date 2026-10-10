@@ -47,7 +47,9 @@ class ApiProfessionnelsRepository implements ProfessionnelsRepository {
     );
     final list = response.data as List<dynamic>? ?? [];
     return list
-        .map((item) => ProfessionnelSummary.fromJson(item as Map<String, dynamic>))
+        .map(
+          (item) => ProfessionnelSummary.fromJson(item as Map<String, dynamic>),
+        )
         .toList();
   }
 
@@ -82,6 +84,8 @@ class ApiProfessionnelsRepository implements ProfessionnelsRepository {
   }
 }
 
-final professionnelsRepositoryProvider = Provider<ProfessionnelsRepository>((ref) {
+final professionnelsRepositoryProvider = Provider<ProfessionnelsRepository>((
+  ref,
+) {
   return ApiProfessionnelsRepository(ref.watch(apiClientProvider));
 });

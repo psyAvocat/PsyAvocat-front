@@ -24,7 +24,9 @@ class ErrorInterceptor extends Interceptor {
         // Seuls les messages métier (4xx) du backend sont affichables ; jamais
         // le message technique de Dio (il contient le code HTTP brut).
         String message = 'Une erreur est survenue. Veuillez réessayer.';
-        final serverMessage = data is Map<String, dynamic> ? data['message']?.toString() : null;
+        final serverMessage = data is Map<String, dynamic>
+            ? data['message']?.toString()
+            : null;
         if (statusCode != null &&
             statusCode >= 400 &&
             statusCode < 500 &&
@@ -56,7 +58,10 @@ class ErrorInterceptor extends Interceptor {
             break;
           default:
             exception = (statusCode ?? 500) >= 500
-                ? ServerException('Le service est momentanément indisponible. Veuillez réessayer.', statusCode ?? 500)
+                ? ServerException(
+                    'Le service est momentanément indisponible. Veuillez réessayer.',
+                    statusCode ?? 500,
+                  )
                 : AppException(message, statusCode);
             break;
         }

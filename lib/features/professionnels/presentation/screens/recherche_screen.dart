@@ -7,6 +7,7 @@ import '../../../../shared/models/specialite.dart';
 import '../../data/models/professionnel_summary.dart';
 import '../controllers/professionnels_controller.dart';
 import '../widgets/professionnel_card.dart';
+import '../../../../core/router/app_routes.dart';
 
 class RechercheScreen extends ConsumerStatefulWidget {
   const RechercheScreen({super.key});
@@ -75,7 +76,8 @@ class _RechercheScreenState extends ConsumerState<RechercheScreen> {
               value: professionnelsAsync,
               isEmpty: (list) => list.isEmpty,
               emptyTitle: 'Aucun résultat',
-              emptyMessage: 'Aucun professionnel ne correspond à votre recherche.',
+              emptyMessage:
+                  'Aucun professionnel ne correspond à votre recherche.',
               emptyIcon: Icons.search_off,
               onRetry: () => ref.invalidate(professionnelsProvider(query)),
               builder: (list) => ListView.separated(
@@ -86,7 +88,7 @@ class _RechercheScreenState extends ConsumerState<RechercheScreen> {
                   final pro = list[index];
                   return ProfessionnelCard(
                     professionnel: pro,
-                    onTap: () => context.push('/professionnels/${pro.id}'),
+                    onTap: () => context.push(AppRoutes.professionnel(pro.id)),
                   );
                 },
               ),
@@ -99,7 +101,10 @@ class _RechercheScreenState extends ConsumerState<RechercheScreen> {
 
   Widget _buildFilters(AsyncValue<List<Specialite>> specialitesAsync) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.s16,
+        vertical: AppSpacing.s8,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -114,12 +119,12 @@ class _RechercheScreenState extends ConsumerState<RechercheScreen> {
                       value: null,
                       child: Text('Toutes spécialités'),
                     ),
-                    ...specialites.map((s) => DropdownMenuItem(
-                          value: s.id,
-                          child: Text(s.nom),
-                        )),
+                    ...specialites.map(
+                      (s) => DropdownMenuItem(value: s.id, child: Text(s.nom)),
+                    ),
                   ],
-                  onChanged: (val) => setState(() => _selectedSpecialiteId = val),
+                  onChanged: (val) =>
+                      setState(() => _selectedSpecialiteId = val),
                 ),
               ),
               loading: () => const LinearProgressIndicator(),

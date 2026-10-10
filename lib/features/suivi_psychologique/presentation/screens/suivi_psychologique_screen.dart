@@ -33,7 +33,10 @@ class SuiviPsychologiqueScreen extends ConsumerWidget {
         backgroundColor: primaryColor,
         onPressed: () => _showAddEntrySheet(context, ref, primaryColor),
         icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('Noter mon humeur', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        label: const Text(
+          'Noter mon humeur',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        ),
       ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
@@ -52,7 +55,11 @@ class SuiviPsychologiqueScreen extends ConsumerWidget {
               padding: EdgeInsets.fromLTRB(20, 16, 20, 10),
               child: Text(
                 'Mon journal de bord récent',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Color(0xFF1E2432)),
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1E2432),
+                ),
               ),
             ),
           ),
@@ -61,9 +68,13 @@ class SuiviPsychologiqueScreen extends ConsumerWidget {
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
             sliver: historyAsync.when(
-              loading: () => const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator())),
+              loading: () => const SliverToBoxAdapter(
+                child: Center(child: CircularProgressIndicator()),
+              ),
               error: (err, stack) => const SliverToBoxAdapter(
-                child: Center(child: Text('Erreur de chargement de l\'historique')),
+                child: Center(
+                  child: Text('Erreur de chargement de l\'historique'),
+                ),
               ),
               data: (entries) {
                 if (entries.isEmpty) {
@@ -74,7 +85,10 @@ class SuiviPsychologiqueScreen extends ConsumerWidget {
                         child: Text(
                           'Aucune note pour le moment.\nCliquez sur "Noter mon humeur" pour commencer.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Color(0xFF9CA3AF), height: 1.4),
+                          style: TextStyle(
+                            color: Color(0xFF9CA3AF),
+                            height: 1.4,
+                          ),
                         ),
                       ),
                     ),
@@ -82,16 +96,16 @@ class SuiviPsychologiqueScreen extends ConsumerWidget {
                 }
 
                 return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final item = entries[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _HumeurCard(entry: item, primaryColor: primaryColor),
-                      );
-                    },
-                    childCount: entries.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final item = entries[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _HumeurCard(
+                        entry: item,
+                        primaryColor: primaryColor,
+                      ),
+                    );
+                  }, childCount: entries.length),
                 );
               },
             ),
@@ -101,7 +115,11 @@ class SuiviPsychologiqueScreen extends ConsumerWidget {
     );
   }
 
-  void _showAddEntrySheet(BuildContext context, WidgetRef ref, Color primaryColor) {
+  void _showAddEntrySheet(
+    BuildContext context,
+    WidgetRef ref,
+    Color primaryColor,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -172,7 +190,9 @@ class _BreathingExerciseCardState extends State<_BreathingExerciseCard>
           AnimatedBuilder(
             animation: _animController,
             builder: (context, child) {
-              final scale = _isPlaying ? 1.0 + (_animController.value * 0.25) : 1.0;
+              final scale = _isPlaying
+                  ? 1.0 + (_animController.value * 0.25)
+                  : 1.0;
               return Transform.scale(
                 scale: scale,
                 child: Container(
@@ -198,12 +218,21 @@ class _BreathingExerciseCardState extends State<_BreathingExerciseCard>
               children: [
                 const Text(
                   'Cohérence cardiaque',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1E2432)),
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E2432),
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _isPlaying ? 'Inspirez... et expirez calmement' : '1 minute pour apaiser le stress',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                  _isPlaying
+                      ? 'Inspirez... et expirez calmement'
+                      : '1 minute pour apaiser le stress',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF6B7280),
+                  ),
                 ),
               ],
             ),
@@ -212,7 +241,9 @@ class _BreathingExerciseCardState extends State<_BreathingExerciseCard>
             onPressed: _toggle,
             style: TextButton.styleFrom(
               foregroundColor: widget.primaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: Text(
               _isPlaying ? 'Arrêter' : 'Démarrer',
@@ -260,11 +291,18 @@ class _HumeurCard extends StatelessWidget {
                   children: [
                     Text(
                       entry.emotionDominante,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1E2432)),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E2432),
+                      ),
                     ),
                     Text(
                       '${entry.date.day.toString().padLeft(2, '0')}/${entry.date.month.toString().padLeft(2, '0')}/${entry.date.year}',
-                      style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF9CA3AF),
+                      ),
                     ),
                   ],
                 ),
@@ -277,7 +315,11 @@ class _HumeurCard extends StatelessWidget {
                 ),
                 child: Text(
                   '${entry.noteHumeur}/5',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: primaryColor),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: primaryColor,
+                  ),
                 ),
               ),
             ],
@@ -286,7 +328,11 @@ class _HumeurCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               entry.noteText!,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563), height: 1.4),
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF4B5563),
+                height: 1.4,
+              ),
             ),
           ],
           if (entry.facteursDeclencheurs.isNotEmpty) ...[
@@ -296,7 +342,13 @@ class _HumeurCard extends StatelessWidget {
               children: entry.facteursDeclencheurs
                   .map(
                     (f) => Chip(
-                      label: Text(f, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                      label: Text(
+                        f,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ),
                       backgroundColor: const Color(0xFFF3F4F6),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       padding: EdgeInsets.zero,
@@ -328,7 +380,14 @@ class _AddHumeurSheetState extends State<_AddHumeurSheet> {
   String _selectedEmotion = 'Serein';
   final _noteController = TextEditingController();
 
-  final List<String> _emotions = ['Serein', 'Joyeux', 'Soulagé', 'Anxieux', 'Fatigué', 'Submergé'];
+  final List<String> _emotions = [
+    'Serein',
+    'Joyeux',
+    'Soulagé',
+    'Anxieux',
+    'Fatigué',
+    'Submergé',
+  ];
 
   @override
   void dispose() {
@@ -337,10 +396,14 @@ class _AddHumeurSheetState extends State<_AddHumeurSheet> {
   }
 
   Future<void> _submit() async {
-    final ok = await widget.ref.read(humeurHistoryProvider.notifier).addEntry(
+    final ok = await widget.ref
+        .read(humeurHistoryProvider.notifier)
+        .addEntry(
           noteHumeur: _selectedNote,
           emotionDominante: _selectedEmotion,
-          noteText: _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null,
+          noteText: _noteController.text.trim().isNotEmpty
+              ? _noteController.text.trim()
+              : null,
           facteurs: ['Personnel'],
         );
 
@@ -348,7 +411,11 @@ class _AddHumeurSheetState extends State<_AddHumeurSheet> {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(ok ? 'Entrée enregistrée dans votre journal.' : 'Erreur lors de l\'enregistrement'),
+          content: Text(
+            ok
+                ? 'Entrée enregistrée dans votre journal.'
+                : 'Erreur lors de l\'enregistrement',
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -362,19 +429,35 @@ class _AddHumeurSheetState extends State<_AddHumeurSheet> {
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 24),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        20,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Center(
-              child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             const Text(
               'Comment vous sentez-vous aujourd\'hui ?',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1E2432)),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1E2432),
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -391,7 +474,14 @@ class _AddHumeurSheetState extends State<_AddHumeurSheet> {
             ),
             const SizedBox(height: 20),
 
-            const Text('Émotion dominante', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF1E2432))),
+            const Text(
+              'Émotion dominante',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1E2432),
+              ),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -402,7 +492,9 @@ class _AddHumeurSheetState extends State<_AddHumeurSheet> {
                   selected: isSelected,
                   selectedColor: widget.primaryColor.withValues(alpha: 0.15),
                   labelStyle: TextStyle(
-                    color: isSelected ? widget.primaryColor : const Color(0xFF4B5563),
+                    color: isSelected
+                        ? widget.primaryColor
+                        : const Color(0xFF4B5563),
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   ),
                   onSelected: (_) => setState(() => _selectedEmotion = em),
@@ -415,8 +507,11 @@ class _AddHumeurSheetState extends State<_AddHumeurSheet> {
               controller: _noteController,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: 'Une réflexion, un événement particulier ? (confidentiel)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                hintText:
+                    'Une réflexion, un événement particulier ? (confidentiel)',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 contentPadding: const EdgeInsets.all(12),
               ),
             ),
@@ -429,9 +524,17 @@ class _AddHumeurSheetState extends State<_AddHumeurSheet> {
                 onPressed: _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: widget.primaryColor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
-                child: const Text('Enregistrer dans mon journal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                child: const Text(
+                  'Enregistrer dans mon journal',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
           ],
@@ -449,7 +552,9 @@ class _AddHumeurSheetState extends State<_AddHumeurSheet> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: isSelected ? widget.primaryColor.withValues(alpha: 0.15) : Colors.transparent,
+          color: isSelected
+              ? widget.primaryColor.withValues(alpha: 0.15)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected ? widget.primaryColor : Colors.transparent,
