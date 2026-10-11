@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/design_system.dart';
 import '../controllers/session_controller.dart';
 import '../utils/auth_navigation.dart';
+import '../../../../core/widgets/app_button.dart';
 
 /// « Accès refusé sur mobile » : affiché quand `GET /me` renvoie un rôle
 /// administrateur ou professionnel (ou un compte désactivé).
@@ -49,11 +50,11 @@ class AccessDeniedScreen extends ConsumerWidget {
                   style: AppTypography.texteSecondaire,
                 ),
                 AppSpacing.vGap32,
-                FilledButton(
+                AppButton(
+                  text: 'Continuer',
                   onPressed: () => ref
                       .read(sessionControllerProvider.notifier)
                       .acknowledgeDenied(),
-                  child: const Text('Retour à la connexion'),
                 ),
               ],
             ),

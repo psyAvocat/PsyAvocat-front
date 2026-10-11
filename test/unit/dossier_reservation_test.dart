@@ -28,18 +28,27 @@ void main() {
           'statut': 'ACCEPTEE',
           'tarifPropose': 250000,
         },
-        {'id': 's2', 'avocatId': 'a2', 'avocatNom': 'Traoré', 'avocatPrenom': 'Ali', 'statut': 'CADUQUE'},
+        {
+          'id': 's2',
+          'avocatId': 'a2',
+          'avocatNom': 'Traoré',
+          'avocatPrenom': 'Ali',
+          'statut': 'CADUQUE',
+        },
       ],
     };
 
-    test('lit les champs réels du backend (dateOuverture, tarifPropose, pièces)', () {
-      final d = DossierModel.fromJson(json);
-      expect(d.dateOuverture, DateTime(2026, 10, 1));
-      expect(d.domaineNom, 'Droit immobilier');
-      expect(d.piecesJointes.single.nom, 'bail.pdf');
-      expect(d.soumissions.first.tarifPropose, 250000);
-      expect(d.estPrisEnCharge, isTrue);
-    });
+    test(
+      'lit les champs réels du backend (dateOuverture, tarifPropose, pièces)',
+      () {
+        final d = DossierModel.fromJson(json);
+        expect(d.dateOuverture, DateTime(2026, 10, 1));
+        expect(d.domaineNom, 'Droit immobilier');
+        expect(d.piecesJointes.single.nom, 'bail.pdf');
+        expect(d.soumissions.first.tarifPropose, 250000);
+        expect(d.estPrisEnCharge, isTrue);
+      },
+    );
 
     test('la soumission retenue est celle acceptée, jamais une caduque', () {
       final d = DossierModel.fromJson(json);
@@ -49,7 +58,11 @@ void main() {
 
   group('Réservation et acompte simulé', () {
     final pro = ProfessionnelDetail(
-      summary: const ProfessionnelSummary(id: 'p1', fullName: 'Awa Diallo', type: 'PSYCHOLOGUE'),
+      summary: const ProfessionnelSummary(
+        id: 'p1',
+        fullName: 'Awa Diallo',
+        type: 'PSYCHOLOGUE',
+      ),
     );
     final creneau = Creneau(
       id: 'c1',
@@ -59,9 +72,17 @@ void main() {
     );
 
     test('psychologue : montant = tarif publié, acompte 20 %', () {
-      const tarif = Tarif(id: 't1', titre: 'Séance', montant: 25000, devise: 'XOF');
+      const tarif = Tarif(
+        id: 't1',
+        titre: 'Séance',
+        montant: 25000,
+        devise: 'XOF',
+      );
       final recap = ReservationRecap(
-        contexte: const ReservationContexte.psychologue(professionnelId: 'p1', tarif: tarif),
+        contexte: const ReservationContexte.psychologue(
+          professionnelId: 'p1',
+          tarif: tarif,
+        ),
         professionnel: pro,
         creneau: creneau,
         mode: 'VISIO',
@@ -92,7 +113,9 @@ void main() {
   test('type MIME déclaré pour les pièces jointes', () {
     expect(typeMimeDe('contrat.PDF'), 'application/pdf');
     expect(typeMimeDe('photo.jpeg'), 'image/jpeg');
-    expect(typeMimeDe('lettre.docx'),
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    expect(
+      typeMimeDe('lettre.docx'),
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    );
   });
 }

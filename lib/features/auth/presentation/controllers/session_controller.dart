@@ -102,7 +102,9 @@ class SessionController extends Notifier<SessionState> {
       state = const SessionState(SessionStatus.unauthenticated);
       return;
     }
-    state = const SessionState(SessionStatus.loading);
+    // Revérification d'une session déjà ouverte : l'écran courant reste affiché
+    // (jamais de retour au splash au milieu du parcours).
+    if (!state.isAuthorized) state = const SessionState(SessionStatus.loading);
     apiLog('Session : vérification du compte (GET /me)…');
     try {
       ref.invalidate(currentUserProvider);
@@ -124,6 +126,9 @@ class SessionController extends Notifier<SessionState> {
       }
     } catch (error) {
       apiLog('Session : /me en échec → ${error.runtimeType} : $error');
+      // Session déjà validée : une revérification en échec (réseau) ne déconnecte
+      // pas l'utilisateur ; les refus réels du serveur (403) passent par revalidate.
+      if (state.isAuthorized) return;
       // Échec sûr : sans réponse fiable de /me, aucun accès n'est accordé.
       state = SessionState(SessionStatus.error, message: userMessageFor(error));
     }
@@ -167,6 +172,7 @@ class SessionController extends Notifier<SessionState> {
 
   /// Déconnexion volontaire : Firebase + nettoyage des états locaux sensibles.
   /// La connexion temps réel se ferme d'elle-même sur ce changement d'état.
+  /// L'univers est oublié : il est choisi à nouveau après la prochaine connexion.
   Future<void> signOut() async {
     // Retrait de l'appareil tant que le jeton Firebase est encore valide.
     try {
@@ -190,9 +196,15 @@ class SessionController extends Notifier<SessionState> {
 
   void beginRegistration() => _registrationInProgress = true;
 
+  /// Fin de l'inscription : le compte créé est connecté immédiatement
+  /// (identité vérifiée via `GET /me`, puis choix de l'univers).
   void endRegistration() {
     _registrationInProgress = false;
-    state = const SessionState(SessionStatus.unauthenticated);
+    if (ref.read(authRepositoryProvider).currentUser != null) {
+      resolve();
+    } else {
+      state = const SessionState(SessionStatus.unauthenticated);
+    }
   }
 
   Future<void> _deny(String message) async {
@@ -210,3 +222,14 @@ class SessionController extends Notifier<SessionState> {
 
 final sessionControllerProvider =
     NotifierProvider<SessionController, SessionState>(SessionController.new);
+
+/// Compte connecté et autorisé, ou `null` en mode invité.
+///
+/// Les données personnelles (rendez-vous, notifications, profil…) le surveillent :
+/// elles restent vides en mode invité — aucun appel protégé n'est envoyé — et
+/// se rechargent à chaque connexion, déconnexion ou changement de compte.
+final signedInAccountProvider = Provider<String?>((ref) {
+  final session = ref.watch(sessionControllerProvider);
+  if (!session.isAuthorized) return null;
+  return session.user?.userId ?? session.user?.email;
+});

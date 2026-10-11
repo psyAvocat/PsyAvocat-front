@@ -14,7 +14,6 @@ export 'app_loading_indicator.dart';
 export 'app_error_view.dart';
 
 // Composants issus des maquettes (docs/figma) — basés sur Material 3
-export 'app_primary_button.dart';
 export 'navigation/psyavocat_navigation_bar.dart';
 export 'app_step_progress.dart';
 export 'app_choice_tile.dart';

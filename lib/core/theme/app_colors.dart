@@ -15,19 +15,20 @@ class AppColors {
   AppColors._();
 
   // ===========================================================================
-  // UNIVERS PSYCHOLOGUE (#522578)
+  // UNIVERS PSYCHOLOGUE (#4A148C)
   // ===========================================================================
-  /// Couleur officielle de l'univers Psychologue. Toutes les nuances
-  /// ci-dessous sont dérivées de cette teinte (même famille violet prune).
-  static const Color psychologist = Color(0xFF522578);
-  static const Color psychologistDark = Color(0xFF3A1A56);
-  static const Color psychologistLight = Color(0xFF6E3A9C);
-  static const Color psychologistSecondary = Color(0xFF8A5BB5);
+  /// Couleur officielle de l'univers Psychologue : violet des maquettes Figma
+  /// (#45088E), légèrement adouci pour rester confortable à l'œil.
+  /// Toutes les nuances ci-dessous en sont dérivées.
+  static const Color psychologist = Color(0xFF4A148C);
+  static const Color psychologistDark = Color(0xFF330A66);
+  static const Color psychologistLight = Color(0xFF6A3AAE);
+  static const Color psychologistSecondary = Color(0xFF8C6CC8);
 
   /// Nuances claires de l'univers Psychologue (fonds, cartes, surfaces d'accent)
-  static const Color psychologistSurface = Color(0xFFF6F1FA);
-  static const Color psychologistSurfaceSelected = Color(0xFFEADDF3);
-  static const Color psychologistBorder = Color(0xFFD4BFE6);
+  static const Color psychologistSurface = Color(0xFFF5F0FC);
+  static const Color psychologistSurfaceSelected = Color(0xFFE8DCF7);
+  static const Color psychologistBorder = Color(0xFFD2BFEF);
 
   // ===========================================================================
   // UNIVERS AVOCAT (#0C2659)
@@ -141,13 +142,6 @@ class AppColors {
 
   /// Couleur du mot « avocat » mis en avant sur l'onboarding.
   static const Color lawyerHighlight = Color(0xFF6B7AFF);
-
-  /// Dégradé des boutons principaux (gauche → droite).
-  static const LinearGradient brandGradient = LinearGradient(
-    begin: Alignment.centerLeft,
-    end: Alignment.centerRight,
-    colors: [brandPurple, brandBlue],
-  );
 
   /// Dégradé de l'en-tête arrondi des écrans d'authentification (haut → bas).
   static const LinearGradient authHeaderGradient = LinearGradient(

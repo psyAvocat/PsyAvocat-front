@@ -6,9 +6,10 @@ import '../../../auth/presentation/controllers/session_controller.dart';
 
 /// Écran de démarrage — maquette Figma « première page ».
 ///
-/// Affiché tant que la session est en cours de vérification (`GET /me`), avec
+/// Page blanche avec le logo, affichée UNE seule fois : à l'ouverture de l'app
+/// (durée minimale, puis tant que la session restaurée se vérifie), avec
 /// « Réessayer » si le serveur est injoignable. La page suivante est choisie
-/// par le routeur (voir route_guard.dart) dès que la session est connue.
+/// par le routeur (voir route_guard.dart).
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -54,7 +55,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -86,11 +87,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     style: AppTypography.texteSecondaire,
                   ),
                   AppSpacing.vGap16,
-                  FilledButton.icon(
+                  AppButton(
+                    text: 'Réessayer',
+                    isFullWidth: false,
                     onPressed: () =>
                         ref.read(sessionControllerProvider.notifier).resolve(),
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Réessayer'),
                   ),
                 ],
               ],

@@ -53,7 +53,9 @@ class _CreateDossierWizardScreenState
 
   void _showConfirmation(Color primaryColor) {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => StepConfirmationScreen(primaryColor: primaryColor)),
+      MaterialPageRoute(
+        builder: (_) => StepConfirmationScreen(primaryColor: primaryColor),
+      ),
     );
   }
 
@@ -74,12 +76,20 @@ class _CreateDossierWizardScreenState
           elevation: 0,
           centerTitle: true,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Color(0xFF111827)),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 20,
+              color: Color(0xFF111827),
+            ),
             onPressed: _previousStep,
           ),
           title: const Text(
             'Envoyer mon dossier',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
           ),
         ),
         body: SafeArea(
@@ -97,8 +107,16 @@ class _CreateDossierWizardScreenState
                   onPageChanged: (idx) => setState(() => _currentStep = idx),
                   children: [
                     StepAvocats(onNext: _nextStep, primaryColor: primaryColor),
-                    StepInformations(onNext: _nextStep, onBack: _previousStep, primaryColor: primaryColor),
-                    StepPiecesJointes(onNext: _nextStep, onBack: _previousStep, primaryColor: primaryColor),
+                    StepInformations(
+                      onNext: _nextStep,
+                      onBack: _previousStep,
+                      primaryColor: primaryColor,
+                    ),
+                    StepPiecesJointes(
+                      onNext: _nextStep,
+                      onBack: _previousStep,
+                      primaryColor: primaryColor,
+                    ),
                     StepValidation(
                       onSubmitted: () => _showConfirmation(primaryColor),
                       onBack: _previousStep,

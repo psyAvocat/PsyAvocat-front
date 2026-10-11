@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_universe.dart';
 import '../../../../core/theme/universe_provider.dart';
+import '../../../../core/widgets/app_button.dart';
 
 /// Demande confirmation puis bascule vers l'autre univers.
 ///
@@ -27,13 +28,15 @@ Future<void> confirmUniverseSwitch(BuildContext context, WidgetRef ref) async {
         'vos rappels restent conservés.',
       ),
       actions: [
-        TextButton(
+        AppButton.ghost(
+          text: 'Annuler',
           onPressed: () => Navigator.of(dialogContext).pop(false),
-          child: const Text('Annuler'),
         ),
-        FilledButton(
+        AppButton(
+          text: 'Continuer',
+          isFullWidth: false,
+          size: AppButtonSize.compact,
           onPressed: () => Navigator.of(dialogContext).pop(true),
-          child: const Text('Continuer'),
         ),
       ],
     ),

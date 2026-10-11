@@ -54,8 +54,10 @@ class _RendezVousConfirmationScreenState
       if (!mounted) return;
       setState(() {
         _erreur = userMessageFor(error);
-        _creneauPerdu = error is ConflictException ||
-            (error is ValidationException && (error.message.contains('créneau')));
+        _creneauPerdu =
+            error is ConflictException ||
+            (error is ValidationException &&
+                (error.message.contains('créneau')));
       });
     } finally {
       if (mounted) setState(() => _enCours = false);
@@ -73,7 +75,8 @@ class _RendezVousConfirmationScreenState
         appBar: AppBar(),
         body: const AppErrorStateView(
           title: 'Réservation indisponible',
-          message: 'Choisissez d’abord un créneau depuis la fiche du professionnel.',
+          message:
+              'Choisissez d’abord un créneau depuis la fiche du professionnel.',
         ),
       );
     }
@@ -88,8 +91,13 @@ class _RendezVousConfirmationScreenState
           elevation: 0,
           automaticallyImplyLeading: confirme == null && !_enCours,
           title: Text(
-            confirme == null ? 'Confirmer le rendez-vous' : 'Rendez-vous confirmé',
-            style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+            confirme == null
+                ? 'Confirmer le rendez-vous'
+                : 'Rendez-vous confirmé',
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
           ),
         ),
         body: confirme != null
@@ -99,7 +107,11 @@ class _RendezVousConfirmationScreenState
     );
   }
 
-  Widget _buildRecapitulatif(BuildContext context, ReservationRecap recap, Color primaryColor) {
+  Widget _buildRecapitulatif(
+    BuildContext context,
+    ReservationRecap recap,
+    Color primaryColor,
+  ) {
     final pro = recap.professionnel;
     return Column(
       children: [
@@ -109,9 +121,17 @@ class _RendezVousConfirmationScreenState
             children: [
               _Carte(
                 children: [
-                  _Ligne(icone: Icons.person_outline_rounded, libelle: 'Professionnel', valeur: pro.summary.displayName),
+                  _Ligne(
+                    icone: Icons.person_outline_rounded,
+                    libelle: 'Professionnel',
+                    valeur: pro.summary.displayName,
+                  ),
                   if (recap.contexte.viaDossier)
-                    _Ligne(icone: Icons.folder_outlined, libelle: 'Dossier', valeur: recap.contexte.dossierTitre ?? ''),
+                    _Ligne(
+                      icone: Icons.folder_outlined,
+                      libelle: 'Dossier',
+                      valeur: recap.contexte.dossierTitre ?? '',
+                    ),
                   _Ligne(
                     icone: Icons.calendar_today_rounded,
                     libelle: 'Date',
@@ -120,10 +140,13 @@ class _RendezVousConfirmationScreenState
                   _Ligne(
                     icone: Icons.schedule_rounded,
                     libelle: 'Heure',
-                    valeur: '${Formatters.formatHeure(recap.creneau.debut)} – ${Formatters.formatHeure(recap.creneau.fin)}',
+                    valeur:
+                        '${Formatters.formatHeure(recap.creneau.debut)} – ${Formatters.formatHeure(recap.creneau.fin)}',
                   ),
                   _Ligne(
-                    icone: recap.mode == 'VISIO' ? Icons.videocam_outlined : Icons.location_on_outlined,
+                    icone: recap.mode == 'VISIO'
+                        ? Icons.videocam_outlined
+                        : Icons.location_on_outlined,
                     libelle: 'Mode',
                     valeur: recap.mode == 'VISIO'
                         ? 'En visioconférence'
@@ -134,8 +157,11 @@ class _RendezVousConfirmationScreenState
               const SizedBox(height: 16),
               _Carte(
                 children: [
-                  _Ligne(icone: Icons.receipt_long_outlined, libelle: recap.contexte.libelleMontant,
-                      valeur: Formatters.formatFcfa(recap.montantTotal)),
+                  _Ligne(
+                    icone: Icons.receipt_long_outlined,
+                    libelle: recap.contexte.libelleMontant,
+                    valeur: Formatters.formatFcfa(recap.montantTotal),
+                  ),
                   _Ligne(
                     icone: Icons.account_balance_wallet_outlined,
                     libelle: 'Acompte à régler (20 %)',
@@ -145,7 +171,9 @@ class _RendezVousConfirmationScreenState
                   _Ligne(
                     icone: Icons.info_outline_rounded,
                     libelle: 'Reste à régler au professionnel',
-                    valeur: Formatters.formatFcfa(recap.montantTotal - recap.acompteEstime),
+                    valeur: Formatters.formatFcfa(
+                      recap.montantTotal - recap.acompteEstime,
+                    ),
                   ),
                 ],
               ),
@@ -153,7 +181,9 @@ class _RendezVousConfirmationScreenState
               _AvertissementSimulation(primaryColor: primaryColor),
               CheckboxListTile(
                 value: _simulationAcceptee,
-                onChanged: _enCours ? null : (v) => setState(() => _simulationAcceptee = v ?? false),
+                onChanged: _enCours
+                    ? null
+                    : (v) => setState(() => _simulationAcceptee = v ?? false),
                 activeColor: primaryColor,
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
@@ -166,10 +196,9 @@ class _RendezVousConfirmationScreenState
                 const SizedBox(height: 8),
                 _MessageErreur(message: _erreur!),
                 if (_creneauPerdu)
-                  TextButton.icon(
+                  AppButton.ghost(
+                    text: 'Choisir un autre créneau',
                     onPressed: () => context.pop(),
-                    icon: const Icon(Icons.event_available_rounded),
-                    label: const Text('Choisir un autre créneau'),
                   ),
               ],
             ],
@@ -183,7 +212,9 @@ class _RendezVousConfirmationScreenState
             child: AppButton(
               text: 'Simuler le paiement et confirmer',
               isLoading: _enCours,
-              onPressed: _simulationAcceptee && !_enCours ? () => _confirmer(recap) : null,
+              onPressed: _simulationAcceptee && !_enCours
+                  ? () => _confirmer(recap)
+                  : null,
               color: primaryColor,
             ),
           ),
@@ -216,7 +247,11 @@ class _AvertissementSimulation extends StatelessWidget {
             child: Text(
               'Paiement simulé : aucune transaction réelle n’est effectuée et aucune '
               'donnée bancaire n’est demandée. Le paiement en ligne sera disponible ultérieurement.',
-              style: TextStyle(fontSize: 13, color: Color(0xFF7C2D12), height: 1.4),
+              style: TextStyle(
+                fontSize: 13,
+                color: Color(0xFF7C2D12),
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -230,7 +265,11 @@ class _Succes extends StatelessWidget {
   final ReservationRecap recap;
   final Color primaryColor;
 
-  const _Succes({required this.rdv, required this.recap, required this.primaryColor});
+  const _Succes({
+    required this.rdv,
+    required this.recap,
+    required this.primaryColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -256,7 +295,11 @@ class _Succes extends StatelessWidget {
         const SizedBox(height: 24),
         _Carte(
           children: [
-            _Ligne(icone: Icons.receipt_long_outlined, libelle: 'Montant total', valeur: Formatters.formatFcfa(total)),
+            _Ligne(
+              icone: Icons.receipt_long_outlined,
+              libelle: 'Montant total',
+              valeur: Formatters.formatFcfa(total),
+            ),
             if (acompte != null)
               _Ligne(
                 icone: Icons.science_outlined,
@@ -308,7 +351,12 @@ class _Ligne extends StatelessWidget {
   final String valeur;
   final Color? accent;
 
-  const _Ligne({required this.icone, required this.libelle, required this.valeur, this.accent});
+  const _Ligne({
+    required this.icone,
+    required this.libelle,
+    required this.valeur,
+    this.accent,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -320,14 +368,21 @@ class _Ligne extends StatelessWidget {
           Icon(icone, size: 20, color: const Color(0xFF6B7280)),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(libelle, style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563))),
+            child: Text(
+              libelle,
+              style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563)),
+            ),
           ),
           const SizedBox(width: 12),
           Flexible(
             child: Text(
               valeur,
               textAlign: TextAlign.end,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: accent ?? const Color(0xFF111827)),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: accent ?? const Color(0xFF111827),
+              ),
             ),
           ),
         ],
@@ -352,7 +407,12 @@ class _MessageErreur extends StatelessWidget {
         children: [
           const Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626)),
           const SizedBox(width: 10),
-          Expanded(child: Text(message, style: const TextStyle(color: Color(0xFF991B1B)))),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Color(0xFF991B1B)),
+            ),
+          ),
         ],
       ),
     );

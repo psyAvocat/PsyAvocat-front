@@ -38,42 +38,66 @@ class StepConfirmationScreen extends ConsumerWidget {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: complet ? const Color(0xFFE8F5E9) : const Color(0xFFFFF7ED),
+                    color: complet
+                        ? const Color(0xFFE8F5E9)
+                        : const Color(0xFFFFF7ED),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     complet ? Icons.check_rounded : Icons.warning_amber_rounded,
                     size: 50,
-                    color: complet ? const Color(0xFF22C55E) : const Color(0xFFEA580C),
+                    color: complet
+                        ? const Color(0xFF22C55E)
+                        : const Color(0xFFEA580C),
                   ),
                 ),
               ),
               const SizedBox(height: 28),
               Text(
-                complet ? 'Votre dossier a été envoyé' : 'Dossier créé, envoi incomplet',
+                complet
+                    ? 'Votre dossier a été envoyé'
+                    : 'Dossier créé, envoi incomplet',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF111827),
+                ),
               ),
               const SizedBox(height: 12),
               Text(
                 complet
                     ? 'Les avocats sélectionnés ont été notifiés. Vous serez prévenu dès qu’un avocat '
-                        'accepte votre dossier ; vous pourrez alors prendre rendez-vous depuis « Mes dossiers ».'
+                          'accepte votre dossier ; vous pourrez alors prendre rendez-vous depuis « Mes dossiers ».'
                     : 'Votre dossier « ${resultat?.dossier.titre ?? ''} » est enregistré, mais certains éléments '
-                        'n’ont pas pu être transmis. Vous pouvez réessayer depuis « Mes dossiers ».',
+                          'n’ont pas pu être transmis. Vous pouvez réessayer depuis « Mes dossiers ».',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563), height: 1.5),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF4B5563),
+                  height: 1.5,
+                ),
               ),
               if (resultat != null && resultat.avocatsEnEchec.isNotEmpty) ...[
                 const SizedBox(height: 20),
-                _Liste(titre: 'Non transmis à', elements: resultat.avocatsEnEchec),
+                _Liste(
+                  titre: 'Non transmis à',
+                  elements: resultat.avocatsEnEchec,
+                ),
               ],
               if (resultat != null && resultat.piecesEnEchec.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                _Liste(titre: 'Pièces non enregistrées', elements: resultat.piecesEnEchec),
+                _Liste(
+                  titre: 'Pièces non enregistrées',
+                  elements: resultat.piecesEnEchec,
+                ),
               ],
               const SizedBox(height: 32),
-              AppButton(text: 'Voir mes dossiers', onPressed: terminer, color: primaryColor),
+              AppButton(
+                text: 'Voir mes dossiers',
+                onPressed: terminer,
+                color: primaryColor,
+              ),
             ],
           ),
         ),
@@ -91,13 +115,25 @@ class _Liste extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: const Color(0xFFFFF7ED), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(titre, style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF7C2D12))),
+          Text(
+            titre,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF7C2D12),
+            ),
+          ),
           const SizedBox(height: 6),
-          ...elements.map((e) => Text('• $e', style: const TextStyle(color: Color(0xFF7C2D12)))),
+          ...elements.map(
+            (e) =>
+                Text('• $e', style: const TextStyle(color: Color(0xFF7C2D12))),
+          ),
         ],
       ),
     );

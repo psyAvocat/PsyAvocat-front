@@ -116,33 +116,15 @@ class OrientationIntroScreen extends ConsumerWidget {
                       const Spacer(),
                       AppSpacing.vGap24,
                       // Action 1 : Oui, commencer
-                      AppPrimaryButton(
-                        label: 'Oui, commencer',
-                        trailingIcon: Icons.arrow_forward_rounded,
+                      AppButton(
+                        text: 'Oui, commencer',
                         onPressed: () => context.go(AppRoutes.orientation),
                       ),
                       AppSpacing.vGap12,
                       // Action 2 : Pas maintenant / Non
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: () => context.go(AppRoutes.home),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(
-                              color: scheme.outline.withValues(alpha: 0.5),
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppRadii.r12,
-                            ),
-                          ),
-                          child: Text(
-                            'Pas maintenant',
-                            style: AppTypography.texteMedium.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
+                      AppButton.outline(
+                        text: 'Pas maintenant',
+                        onPressed: () => context.go(AppRoutes.home),
                       ),
                       AppSpacing.vGap8,
                     ],

@@ -42,7 +42,6 @@ class PsychologistHomeView extends StatelessWidget {
             children: [
               Expanded(
                 child: HomeActionCard(
-                  icon: Icons.psychology_outlined,
                   title: 'Trouver un psychologue',
                   subtitle: 'Trouvez le professionnel qui vous correspond',
                   highlighted: true,
@@ -52,7 +51,6 @@ class PsychologistHomeView extends StatelessWidget {
               AppSpacing.hGap12,
               Expanded(
                 child: HomeActionCard(
-                  icon: Icons.assignment_turned_in_outlined,
                   title: 'Consulter les conseils',
                   subtitle: 'Des conseils d’experts pour mieux vivre',
                   onTap: () => context.go(AppRoutes.conseils),
@@ -72,8 +70,9 @@ class PsychologistHomeView extends StatelessWidget {
   }
 }
 
-/// Bannière « Prenez soin de votre santé mentale » : photo de l'onboarding
-/// assombrie par un voile de la couleur de l'univers.
+/// Bannière « Prenez soin de votre santé mentale » : fond illustré généré
+/// (formes douces dans la couleur de l'univers). Elle ouvre le questionnaire
+/// d'orientation (questions et réponses chargées depuis la base).
 class _WellbeingBanner extends StatelessWidget {
   const _WellbeingBanner();
 
@@ -83,43 +82,107 @@ class _WellbeingBanner extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: AppRadii.r16,
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/psychologist_1.jpg',
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-            ),
-          ),
-          Positioned.fill(
-            child: ColoredBox(color: scheme.primary.withValues(alpha: 0.72)),
-          ),
-          Padding(
-            padding: AppSpacing.cardPadding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppSpacing.vGap16,
-                Text(
-                  'Prenez soin\nde votre santé mentale',
-                  style: AppTypography.petitTitre.copyWith(
-                    color: scheme.onPrimary,
-                  ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.push(AppRoutes.orientationIntro),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: CustomPaint(painter: _BannerArtPainter(scheme.primary)),
+              ),
+              Padding(
+                padding: AppSpacing.cardPadding,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppSpacing.vGap16,
+                    Text(
+                      'Prenez soin\nde votre santé mentale',
+                      style: AppTypography.petitTitre.copyWith(
+                        color: scheme.onPrimary,
+                      ),
+                    ),
+                    AppSpacing.vGap8,
+                    Text(
+                      'Un accompagnement bienveillant pour avancer sereinement.',
+                      style: AppTypography.texteSecondaire.copyWith(
+                        color: scheme.onPrimary,
+                      ),
+                    ),
+                    AppSpacing.vGap16,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.s16,
+                        vertical: AppSpacing.s8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.onPrimary,
+                        borderRadius: AppRadii.pill,
+                      ),
+                      child: Text(
+                        'Faire le test d’orientation',
+                        style: AppTypography.texteSecondaire.copyWith(
+                          color: scheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    AppSpacing.vGap8,
+                  ],
                 ),
-                AppSpacing.vGap8,
-                Text(
-                  'Un accompagnement bienveillant pour avancer sereinement.',
-                  style: AppTypography.texteSecondaire.copyWith(
-                    color: scheme.onPrimary,
-                  ),
-                ),
-                AppSpacing.vGap16,
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
+}
+
+/// Illustration de fond de la bannière : aplat de la couleur de l'univers,
+/// halos lumineux et vague apaisante. Dessinée en vectoriel : nette sur tous
+/// les écrans, sans image à télécharger.
+class _BannerArtPainter extends CustomPainter {
+  final Color base;
+
+  const _BannerArtPainter(this.base);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    canvas.drawRect(Offset.zero & size, Paint()..color = base);
+
+    canvas.drawCircle(
+      Offset(w * 0.92, h * 0.12),
+      h * 0.62,
+      Paint()..color = Colors.white.withValues(alpha: 0.10),
+    );
+    canvas.drawCircle(
+      Offset(w * 0.80, h * 0.95),
+      h * 0.38,
+      Paint()..color = Colors.white.withValues(alpha: 0.07),
+    );
+    canvas.drawCircle(
+      Offset(w * 0.70, h * 0.30),
+      h * 0.16,
+      Paint()..color = Colors.white.withValues(alpha: 0.12),
+    );
+
+    final vague = Path()
+      ..moveTo(0, h * 0.78)
+      ..cubicTo(w * 0.25, h * 0.62, w * 0.45, h * 0.98, w * 0.70, h * 0.80)
+      ..cubicTo(w * 0.85, h * 0.70, w * 0.95, h * 0.74, w, h * 0.70)
+      ..lineTo(w, h)
+      ..lineTo(0, h)
+      ..close();
+    canvas.drawPath(
+      vague,
+      Paint()..color = Colors.white.withValues(alpha: 0.08),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_BannerArtPainter old) => old.base != base;
 }

@@ -10,9 +10,9 @@ enum AppButtonSize { compact, standard, large }
 /// Bouton principal et réutilisable de PsyAvocat.
 ///
 /// Respecte scrupuleusement les spécifications :
-/// - Hauteur cohérente sur toute l'application (52 px par défaut).
+/// - Forme pilule (bords entièrement arrondis), 58 px de haut par défaut :
+///   le même bouton partout dans l'application.
 /// - Texte toujours blanc (#FFFFFF) pour les boutons colorés.
-/// - Coins arrondis modernes (16 px).
 /// - États normal, pressed, disabled et loading.
 /// - Ombre légère uniquement lorsque demandée (`hasShadow`).
 /// - Support des univers (Psychologue, Avocat, Transition gradient).
@@ -121,7 +121,6 @@ class _AppButtonState extends State<AppButton> {
       case AppButtonSize.compact:
         return AppButtonSizes.heightCompact;
       case AppButtonSize.standard:
-        return AppButtonSizes.heightDefault;
       case AppButtonSize.large:
         return AppButtonSizes.heightLarge;
     }
@@ -145,7 +144,10 @@ class _AppButtonState extends State<AppButton> {
         );
       case AppButtonSize.standard:
       case AppButtonSize.large:
-        return AppTypography.buttonText.copyWith(color: effectiveTextColor);
+        return AppTypography.buttonText.copyWith(
+          color: effectiveTextColor,
+          fontSize: 17,
+        );
     }
   }
 
@@ -216,7 +218,7 @@ class _AppButtonState extends State<AppButton> {
       }
     }
 
-    final radius = widget.borderRadius ?? AppRadii.r16;
+    final radius = widget.borderRadius ?? AppRadii.pill;
 
     // Ombre légère uniquement lorsque nécessaire
     final List<BoxShadow> boxShadows =
@@ -234,7 +236,7 @@ class _AppButtonState extends State<AppButton> {
         boxShadow: boxShadows,
       ),
       padding: EdgeInsets.symmetric(
-        horizontal: widget.size == AppButtonSize.compact ? 16 : 24,
+        horizontal: widget.size == AppButtonSize.compact ? 20 : 28,
       ),
       child: Center(
         child: widget.isLoading

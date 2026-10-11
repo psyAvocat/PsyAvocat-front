@@ -1,29 +1,29 @@
+import 'dart:ui' show lerpDouble;
+
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 import 'nav_bar_painter.dart';
 import 'nav_destination.dart';
 
 export 'nav_destination.dart';
 
-/// Barre de navigation inférieure personnalisée et animée pour PsyAvocat.
+/// Barre de navigation inférieure animée de PsyAvocat.
 ///
-/// Reproduit fidèlement la maquette :
-/// - Barre blanche horizontale flottante aux bords fortement arrondis.
-/// - 4 destinations réparties de part et d'autre d'un bouton central surélevé.
-/// - Bouton central circulaire surélevé avec ombre portée douce (Univers Avocat / Psychologue).
-/// - Déplacement continu et fluide de l'indicateur/dôme blanc autour de l'élément actif.
-/// - Icône active teintée avec la couleur primaire de l'univers, libellé actif mis en valeur.
-/// - Synchronisation bidirectionnelle avec GoRouter via `currentIndex`.
+/// - Capsule blanche flottante, large, aux bords très arrondis.
+/// - L'onglet actif se soulève dans un rond de la couleur de l'univers, logé
+///   dans une encoche creusée dans la barre (un trou, pas un dôme posé dessus).
+/// - L'encoche glisse d'un onglet à l'autre ; le rond se forme autour du
+///   nouvel onglet pendant que l'ancien redescend.
+/// - Tous les onglets se comportent de la même façon, y compris celui du milieu.
 ///
-/// Réutilisable : les onglets ([destinations]) sont fournis par l'appelant
+/// Les onglets ([destinations]) sont fournis par l'appelant
 /// (voir `features/navigation/presentation/navigation_destinations.dart`).
 class PsyAvocatNavigationBar extends StatefulWidget {
-  /// Les 5 onglets, dans l'ordre. Celui du milieu (index [centralIndex])
-  /// est affiché comme bouton rond surélevé.
   final List<NavDestination> destinations;
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
 
-  /// Position du bouton central dans [destinations].
+  /// Position de l'onglet « Avocats / Psychologues » dans [destinations].
   static const int centralIndex = 2;
 
   const PsyAvocatNavigationBar({
@@ -39,288 +39,227 @@ class PsyAvocatNavigationBar extends StatefulWidget {
 
 class _PsyAvocatNavigationBarState extends State<PsyAvocatNavigationBar>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late Animation<double> _animation;
+  /// Hauteur de la capsule blanche.
+  static const double _barHeight = 74;
 
-  late double _previousIndex;
-  late double _targetIndex;
-  late double _previousDomeProgress;
-  late double _targetDomeProgress;
+  /// Diamètre du rond de l'onglet actif.
+  static const double _bubbleSize = 56;
+
+  /// Hauteur dont l'onglet actif se soulève au-dessus du bord de la barre.
+  static const double _lift = 26;
+
+  /// Espace entre le rond et le bord de l'encoche.
+  static const double _notchGap = 7;
+
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 480),
+  );
+  late final CurvedAnimation _curve = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOutCubic,
+  );
+
+  late int _from = widget.currentIndex;
+  late int _to = widget.currentIndex;
 
   @override
   void initState() {
     super.initState();
-    _previousIndex = widget.currentIndex.toDouble();
-    _targetIndex = widget.currentIndex.toDouble();
-    _previousDomeProgress = widget.currentIndex == 2 ? 0.0 : 1.0;
-    _targetDomeProgress = widget.currentIndex == 2 ? 0.0 : 1.0;
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 320),
-    );
-
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-    );
+    _controller.value = 1;
   }
 
   @override
   void didUpdateWidget(covariant PsyAvocatNavigationBar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentIndex != widget.currentIndex) {
-      _previousIndex = _currentAnimatedIndex;
-      _targetIndex = widget.currentIndex.toDouble();
-
-      _previousDomeProgress = _currentDomeProgress;
-      _targetDomeProgress = widget.currentIndex == 2 ? 0.0 : 1.0;
-
-      _controller.forward(from: 0.0);
+    if (widget.currentIndex != _to) {
+      _from = _to;
+      _to = widget.currentIndex;
+      _controller.forward(from: 0);
     }
   }
 
   @override
   void dispose() {
+    _curve.dispose();
     _controller.dispose();
     super.dispose();
   }
 
-  double get _currentAnimatedIndex {
-    return _previousIndex + (_targetIndex - _previousIndex) * _animation.value;
-  }
-
-  double get _currentDomeProgress {
-    return _previousDomeProgress +
-        (_targetDomeProgress - _previousDomeProgress) * _animation.value;
+  /// Degré de sélection (0 → 1) de l'onglet [index] à l'instant courant.
+  double _selection(int index) {
+    final t = _curve.value;
+    if (_from == _to) return index == _to ? 1 : 0;
+    if (index == _to) return t;
+    if (index == _from) return 1 - t;
+    return 0;
   }
 
   @override
   Widget build(BuildContext context) {
-    // Couleur de l'univers actif, fournie par le thème (jamais codée en dur).
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    final destinations = widget.destinations;
+    final primary = Theme.of(context).colorScheme.primary;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-
-    const double barHeight = 84.0;
-    const double baselineY = 16.0;
-
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        final animatedIndex = _currentAnimatedIndex;
-        final domeProgress = _currentDomeProgress;
-
-        return Container(
-          color: Colors.transparent,
-          padding: EdgeInsets.only(
-            left: 16.0,
-            right: 16.0,
-            bottom: bottomPadding > 0 ? bottomPadding : 12.0,
-            top: 2.0,
-          ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final totalWidth = constraints.maxWidth;
-              final itemWidth = totalWidth / 5.0;
-              final cx = totalWidth / 2.0;
-
-              return SizedBox(
-                width: totalWidth,
-                height: barHeight,
-                child: Stack(
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        12,
+        0,
+        12,
+        bottomInset > 0 ? bottomInset : 12,
+      ),
+      child: SizedBox(
+        height: _barHeight + _lift + 4,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final itemWidth = constraints.maxWidth / widget.destinations.length;
+            return AnimatedBuilder(
+              animation: _curve,
+              builder: (context, _) {
+                final position = lerpDouble(
+                  _from.toDouble(),
+                  _to.toDouble(),
+                  _curve.value,
+                )!;
+                return Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    // 1. Fond blanc sculpté avec dôme animé et encoche centrale
-                    Positioned.fill(
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: _barHeight,
                       child: CustomPaint(
                         painter: NavBarPainter(
-                          animatedIndex: animatedIndex,
-                          domeProgress: domeProgress,
-                          baselineY: baselineY,
-                          bottomY: barHeight,
-                          cornerRadius: 28.0,
+                          notchCenterX: itemWidth * (position + 0.5),
+                          // Centre du rond actif, rapporté au bord supérieur de la barre.
+                          notchCenterY: _bubbleSize / 2 - (_lift + 4),
+                          notchRadius: _bubbleSize / 2 + _notchGap,
+                          color: Colors.white,
+                          shadowColor: primary.withValues(alpha: 0.35),
                         ),
                       ),
                     ),
-
-                    // 2. Bouton central surélevé
-                    Positioned(
-                      left: cx - 27.0,
-                      top: baselineY - 14.0,
-                      width: 54.0,
-                      height: 54.0,
-                      child: _CentralButton(
-                        isSelected: widget.currentIndex == 2,
-                        primaryColor: primaryColor,
-                        icon: destinations[2].icon,
-                        label: destinations[2].label,
-                        onTap: () => widget.onDestinationSelected(2),
-                      ),
-                    ),
-
-                    // 3. Les 4 destinations régulières (0, 1, 3, 4)
                     Positioned.fill(
                       child: Row(
-                        children: List.generate(5, (index) {
-                          if (index == 2) {
-                            // Espace réservé au bouton central
-                            return SizedBox(width: itemWidth);
-                          }
-
-                          final item = destinations[index];
-                          final isSelected = widget.currentIndex == index;
-                          // Calcul du décalage d'élévation lié au dôme actif
-                          final distFromAnimated = (animatedIndex - index)
-                              .abs();
-                          final double lift = (distFromAnimated < 1.0)
-                              ? (1.0 - distFromAnimated) * 5.0
-                              : 0.0;
-
-                          return Expanded(
-                            child: _NavItem(
-                              item: item,
-                              isSelected: isSelected,
-                              primaryColor: primaryColor,
-                              lift: lift,
-                              onTap: () => widget.onDestinationSelected(index),
+                        children: [
+                          for (var i = 0; i < widget.destinations.length; i++)
+                            Expanded(
+                              child: _NavItem(
+                                destination: widget.destinations[i],
+                                selection: _selection(i),
+                                primary: primary,
+                                barHeight: _barHeight,
+                                bubbleSize: _bubbleSize,
+                                lift: _lift,
+                                onTap: () => widget.onDestinationSelected(i),
+                              ),
                             ),
-                          );
-                        }),
+                        ],
                       ),
                     ),
                   ],
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// Bouton central surélevé représentant l'univers (Avocats / Psychologues).
-class _CentralButton extends StatelessWidget {
-  final bool isSelected;
-  final Color primaryColor;
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _CentralButton({
-    required this.isSelected,
-    required this.primaryColor,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: label,
-      selected: isSelected,
-      button: true,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedScale(
-          scale: isSelected ? 1.08 : 1.0,
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeOutBack,
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: primaryColor,
-              boxShadow: [
-                BoxShadow(
-                  color: primaryColor.withValues(alpha: 0.38),
-                  blurRadius: 12.0,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-              border: isSelected
-                  ? Border.all(color: Colors.white, width: 2.5)
-                  : null,
-            ),
-            alignment: Alignment.center,
-            child: Icon(icon, color: Colors.white, size: 28.0),
-          ),
+                );
+              },
+            );
+          },
         ),
       ),
     );
   }
 }
 
-/// Destination standard (icône + libellé).
 class _NavItem extends StatelessWidget {
-  final NavDestination item;
-  final bool isSelected;
-  final Color primaryColor;
+  final NavDestination destination;
+
+  /// 0 : onglet au repos ; 1 : onglet actif (soulevé dans son rond).
+  final double selection;
+  final Color primary;
+  final double barHeight;
+  final double bubbleSize;
   final double lift;
   final VoidCallback onTap;
 
   const _NavItem({
-    required this.item,
-    required this.isSelected,
-    required this.primaryColor,
+    required this.destination,
+    required this.selection,
+    required this.primary,
+    required this.barHeight,
+    required this.bubbleSize,
     required this.lift,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final inactiveColor = scheme.onSurfaceVariant;
-    final activeTextColor = scheme.onSurface;
+    final s = selection;
+    final iconColor = Color.lerp(AppColors.textTertiary, Colors.white, s)!;
+    final labelColor = Color.lerp(AppColors.textTertiary, primary, s)!;
+    // Repos : icône posée dans la barre. Actif : centre du rond au-dessus du bord.
+    final restingTop = lift + 12;
+    final activeTop = 0.0;
+    final bubbleTop = lerpDouble(
+      restingTop - (bubbleSize - 26) / 2,
+      activeTop,
+      s,
+    )!;
 
     return Semantics(
-      label: item.label,
-      selected: isSelected,
       button: true,
-      child: InkResponse(
+      selected: s > 0.5,
+      label: destination.tooltip ?? destination.label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        radius: 36.0,
-        containedInkWell: true,
-        highlightShape: BoxShape.circle,
-        splashColor: primaryColor.withValues(alpha: 0.12),
-        child: Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.only(top: 14.0),
-          child: Transform.translate(
-            offset: Offset(0, -lift),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Icône avec transition de couleur et légère mise à l'échelle
-                AnimatedScale(
-                  scale: isSelected ? 1.06 : 1.0,
-                  duration: const Duration(milliseconds: 220),
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.topCenter,
+          children: [
+            Positioned(
+              top: bubbleTop,
+              child: Container(
+                width: bubbleSize,
+                height: bubbleSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  // Le rond se forme autour de l'icône au fur et à mesure.
+                  color: primary.withValues(alpha: s),
+                  boxShadow: s > 0
+                      ? [
+                          BoxShadow(
+                            color: primary.withValues(alpha: 0.35 * s),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Center(
                   child: Icon(
-                    isSelected ? item.selectedIcon : item.icon,
-                    size: 24.0,
-                    color: isSelected ? primaryColor : inactiveColor,
+                    s > 0.5 ? destination.selectedIcon : destination.icon,
+                    size: lerpDouble(25, 27, s),
+                    color: iconColor,
                   ),
                 ),
-                const SizedBox(height: 4.0),
-                // Libellé textuel
-                Text(
-                  item.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11.0,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? activeTextColor : inactiveColor,
-                    height: 1.1,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+            Positioned(
+              left: 2,
+              right: 2,
+              bottom: 12,
+              child: Text(
+                destination.label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  height: 1.1,
+                  color: labelColor,
+                  fontWeight: s > 0.5 ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -90,26 +90,26 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                   style: AppTypography.texteSecondaire,
                 ),
                 AppSpacing.vGap32,
-                AppGradientButton(
-                  label: "J'ai confirmé mon adresse",
+                AppButton(
+                  color: AppColors.lawyer,
+                  text: "J'ai confirmé mon adresse",
                   isLoading: _isChecking,
                   onPressed: busy ? null : _confirm,
                 ),
                 AppSpacing.vGap16,
-                TextButton(
+                AppButton.ghost(
+                  text: "Renvoyer l'email de confirmation",
+                  isFullWidth: true,
                   onPressed: busy ? null : _resend,
-                  child: Text(
-                    "Renvoyer l'email de confirmation",
-                    style: AppTypography.lien,
-                  ),
                 ),
-                TextButton(
+                AppButton.ghost(
+                  text: 'Se déconnecter',
+                  isFullWidth: true,
                   onPressed: busy
                       ? null
                       : () => ref
                             .read(sessionControllerProvider.notifier)
                             .signOut(),
-                  child: Text('Se déconnecter', style: AppTypography.lien),
                 ),
               ],
             ),

@@ -12,7 +12,7 @@ import '../../../../core/router/app_routes.dart';
 /// 1. Identité — 2. Coordonnées — 3. Mot de passe et conditions.
 ///
 /// À la fin : compte Firebase + profil client unique (valable dans les deux
-/// univers) + email de confirmation, puis retour à l'écran de connexion.
+/// univers), connecté immédiatement, puis choix de l'univers.
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
@@ -92,19 +92,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           password: _passwordController.text,
         );
     if (!mounted) return;
-    // Compte créé mais profil à compléter : la suite se fait à la connexion.
-    if (ref.read(authControllerProvider).error
-        is IncompleteRegistrationException) {
-      context.go(AppRoutes.login);
-      return;
-    }
+    // Compte créé : il est connecté immédiatement. Le routeur ouvre ensuite le
+    // choix de l'univers (ou « Compléter mon profil » si le serveur n'a pas
+    // confirmé la création du profil).
     if (isSuccess) {
-      AppNotification.showSuccess(
-        context,
-        'Inscription réussie ! Confirmez votre adresse via le lien reçu par '
-        'email, puis connectez-vous.',
-      );
-      context.go(AppRoutes.login);
+      AppNotification.showSuccess(context, 'Bienvenue sur PsyAvocat !');
     }
   }
 
@@ -119,55 +111,99 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: AppSpacing.screenPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              IconButton.outlined(
-                onPressed: _goBack,
-                tooltip: 'Retour',
-                icon: const Icon(Icons.chevron_left_rounded),
-              ),
-              AppSpacing.vGap24,
-              Text('Créer un compte', style: AppTypography.grandTitre),
-              AppSpacing.vGap16,
-              AppStepProgress(
-                currentStep: _currentStep + 1,
-                totalSteps: _stepTitles.length,
-              ),
-              AppSpacing.vGap24,
-              Text(_stepTitles[_currentStep], style: AppTypography.petitTitre),
-              AppSpacing.vGap20,
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                child: KeyedSubtree(
-                  key: ValueKey(_currentStep),
-                  child: Form(
-                    key: _formKeys[_currentStep],
-                    child: _buildStepFields(),
+      backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
+      body: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                const AppCurvedHeader(height: 210),
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.s8),
+                    child: IconButton(
+                      onPressed: isLoading ? null : _goBack,
+                      tooltip: 'Retour',
+                      color: AppColors.textOnColor,
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                    ),
                   ),
                 ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.s24,
+                AppSpacing.s8,
+                AppSpacing.s24,
+                AppSpacing.s32,
               ),
-              AppSpacing.vGap32,
-              AppGradientButton(
-                label: _isLastStep ? "S'inscrire" : 'Continuer',
-                isLoading: isLoading,
-                // Dernière étape : bouton actif seulement si les CGU sont acceptées.
-                onPressed: (_isLastStep && !_hasAcceptedTerms)
-                    ? null
-                    : _onContinuePressed,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Créer un compte', style: AppTypography.grandTitre),
+                  AppSpacing.vGap8,
+                  Text(
+                    'Rejoignez PsyAvocat en quelques secondes.',
+                    style: AppTypography.texteSecondaire,
+                  ),
+                  AppSpacing.vGap24,
+                  _StepIndicator(
+                    labels: const ['Identité', 'Contact', 'Sécurité'],
+                    current: _currentStep,
+                  ),
+                  AppSpacing.vGap24,
+                  Text(
+                    _stepTitles[_currentStep],
+                    style: AppTypography.petitTitre,
+                  ),
+                  AppSpacing.vGap16,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 280),
+                    switchInCurve: Curves.easeOutCubic,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.06, 0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    ),
+                    child: KeyedSubtree(
+                      key: ValueKey(_currentStep),
+                      child: Form(
+                        key: _formKeys[_currentStep],
+                        child: _buildStepFields(),
+                      ),
+                    ),
+                  ),
+                  AppSpacing.vGap32,
+                  AppButton(
+                    text: _isLastStep ? 'Créer mon compte' : 'Continuer',
+                    color: AppColors.lawyer,
+                    isLoading: isLoading,
+                    // Dernière étape : bouton actif seulement si les CGU sont acceptées.
+                    onPressed: (_isLastStep && !_hasAcceptedTerms)
+                        ? null
+                        : _onContinuePressed,
+                  ),
+                  AppSpacing.vGap24,
+                  Center(
+                    child: AppInlineLink(
+                      text: 'Vous avez déjà un compte ?',
+                      linkText: 'Se connecter',
+                      onTap: () => context.go(AppRoutes.login),
+                    ),
+                  ),
+                ],
               ),
-              AppSpacing.vGap16,
-              AppInlineLink(
-                text: 'Vous avez un compte ?',
-                linkText: 'Connexion',
-                onTap: () => context.go(AppRoutes.login),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -181,6 +217,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             AppTextField(
               controller: _prenomController,
               label: 'Prénom',
+              prefixIcon: const Icon(Icons.person_outline_rounded),
               hint: 'Ex: Ramla',
               keyboardType: TextInputType.name,
               textInputAction: TextInputAction.next,
@@ -191,6 +228,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             AppTextField(
               controller: _nomController,
               label: 'Nom',
+              prefixIcon: const Icon(Icons.badge_outlined),
               hint: 'Ex: Diarra',
               keyboardType: TextInputType.name,
               textInputAction: TextInputAction.done,
@@ -206,6 +244,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             AppTextField(
               controller: _emailController,
               label: 'Email',
+              prefixIcon: const Icon(Icons.alternate_email_rounded),
               hint: 'Ex: ramla@gmail.com',
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
@@ -215,6 +254,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             AppTextField(
               controller: _phoneController,
               label: 'Téléphone',
+              prefixIcon: const Icon(Icons.phone_outlined),
               hint: 'Ex: +223 76 12 34 56',
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.done,
@@ -229,6 +269,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             AppTextField(
               controller: _passwordController,
               label: 'Mot de passe',
+              prefixIcon: const Icon(Icons.lock_outline_rounded),
               hint: '••••••••',
               helperText: 'Au moins 6 caractères',
               obscureText: true,
@@ -239,6 +280,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             AppTextField(
               controller: _confirmPasswordController,
               label: 'Confirmer le mot de passe',
+              prefixIcon: const Icon(Icons.lock_reset_rounded),
               hint: '••••••••',
               obscureText: true,
               textInputAction: TextInputAction.done,
@@ -279,6 +321,76 @@ class _TermsText extends StatelessWidget {
           TextSpan(text: 'politique de confidentialité', style: highlighted),
         ],
       ),
+    );
+  }
+}
+
+/// Étapes nommées de l'inscription : pastille numérotée, coche une fois franchie.
+class _StepIndicator extends StatelessWidget {
+  final List<String> labels;
+  final int current;
+
+  const _StepIndicator({required this.labels, required this.current});
+
+  @override
+  Widget build(BuildContext context) {
+    const actif = AppColors.lawyer;
+    return Row(
+      children: [
+        for (var i = 0; i < labels.length; i++) ...[
+          if (i > 0)
+            Expanded(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 280),
+                height: 2,
+                margin: const EdgeInsets.only(bottom: 20),
+                color: i <= current ? actif : AppColors.border,
+              ),
+            ),
+          Column(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 280),
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: i <= current ? actif : Colors.white,
+                  border: Border.all(
+                    color: i <= current ? actif : AppColors.border,
+                    width: 1.5,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: i < current
+                    ? const Icon(
+                        Icons.check_rounded,
+                        size: 18,
+                        color: Colors.white,
+                      )
+                    : Text(
+                        '${i + 1}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: i == current
+                              ? Colors.white
+                              : AppColors.textTertiary,
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                labels[i],
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: i == current ? FontWeight.w700 : FontWeight.w500,
+                  color: i <= current ? actif : AppColors.textTertiary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 }

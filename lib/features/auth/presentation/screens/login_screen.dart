@@ -47,7 +47,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(authControllerProvider).isLoading;
+    // Chargement : connexion Firebase, puis vérification du compte (GET /me).
+    // L'écran de connexion reste affiché pendant ce temps (pas de splash).
+    final isLoading =
+        ref.watch(authControllerProvider).isLoading ||
+        ref.watch(sessionControllerProvider).status == SessionStatus.loading;
 
     // Erreurs Firebase (identifiants incorrects, réseau…).
     ref.listen<AsyncValue<void>>(authControllerProvider, (_, next) {
@@ -56,10 +60,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     });
 
-    // Succès confirmé seulement quand le backend a validé le compte (GET /me).
     ref.listen<SessionState>(sessionControllerProvider, (previous, next) {
+      // Succès confirmé seulement quand le backend a validé le compte (GET /me).
       if (next.isAuthorized && previous?.isAuthorized != true) {
         AppNotification.showSuccess(context, 'Connexion réussie');
+      }
+      // Serveur injoignable pendant la vérification du compte : message clair.
+      if (next.status == SessionStatus.error &&
+          previous?.status != SessionStatus.error) {
+        AppNotification.showError(
+          context,
+          next.message ?? 'Connexion au serveur impossible. Réessayez.',
+        );
       }
     });
 
@@ -112,13 +124,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               Align(
                                 alignment: Alignment.centerRight,
-                                child: TextButton(
+                                child: AppButton.ghost(
+                                  text: 'Mot de passe oublié ?',
+                                  color: AppColors.lawyer,
+                                  size: AppButtonSize.compact,
                                   onPressed: () =>
                                       context.push(AppRoutes.forgotPassword),
-                                  child: Text(
-                                    'Mot de passe oublié ?',
-                                    style: AppTypography.lien,
-                                  ),
                                 ),
                               ),
                               AppSpacing.vGap8,

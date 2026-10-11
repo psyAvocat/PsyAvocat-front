@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/user_message.dart';
+import '../../../auth/presentation/controllers/session_controller.dart';
 import '../../data/models/profil_model.dart';
 import '../../data/repositories/profil_repository.dart';
 
@@ -12,6 +13,8 @@ final currentProfilProvider =
 class ProfilNotifier extends AsyncNotifier<ProfilModel?> {
   @override
   Future<ProfilModel?> build() async {
+    // Mode invité : pas de profil. Rechargé à chaque connexion ou changement de compte.
+    if (ref.watch(signedInAccountProvider) == null) return null;
     return ref.read(profilRepositoryProvider).getCurrentProfile();
   }
 

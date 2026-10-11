@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/realtime/realtime_service.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../../../shared/enums/appointment_status.dart';
+import '../../../auth/presentation/controllers/session_controller.dart';
 import '../../data/models/rendez_vous_model.dart';
 import '../../data/models/reservation_contexte.dart';
 import '../../data/repositories/rendez_vous_repository.dart';
@@ -11,7 +12,9 @@ import '../../data/repositories/rendez_vous_repository.dart';
 /// action passe par le backend, puis la liste est rechargée.
 class RendezVousController extends AsyncNotifier<List<RendezVous>> {
   @override
-  Future<List<RendezVous>> build() {
+  Future<List<RendezVous>> build() async {
+    // Mode invité : aucun rendez-vous, aucun appel protégé. Rechargé à la connexion.
+    if (ref.watch(signedInAccountProvider) == null) return const [];
     listenRealtime(ref, {RealtimeEventType.notification}, (event) {
       if (event.payload['ressourceType'] == 'RENDEZ_VOUS') reload();
     });

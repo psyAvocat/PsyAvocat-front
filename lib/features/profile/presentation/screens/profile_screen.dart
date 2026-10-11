@@ -8,6 +8,9 @@ import '../../../../core/utils/validators.dart';
 import '../../../auth/presentation/controllers/session_controller.dart';
 import '../../data/models/profil_model.dart';
 import '../controllers/profil_controller.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/theme/design_system.dart';
+import '../../../selection_univers/presentation/widgets/universe_switch_dialog.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -165,7 +168,7 @@ class ProfileScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
                   const Text(
-                    'Général',
+                    'Paramètres',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -174,34 +177,21 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   _buildListTile(
-                    icon: Icons.dark_mode_outlined,
-                    title: 'Changer de mode',
-                    trailing: Switch(
-                      value: false,
-                      onChanged: (val) {},
-                      activeTrackColor: primaryColor.withValues(alpha: 0.5),
-                      activeColor: primaryColor,
-                    ),
+                    icon: Icons.swap_horiz_rounded,
+                    title: universe.isPsychologist
+                        ? 'Passer à l’espace Avocat'
+                        : 'Passer à l’espace Psychologue',
+                    onTap: () => confirmUniverseSwitch(context, ref),
                   ),
                   _buildListTile(
-                    icon: Icons.language_rounded,
-                    title: 'Langue de l\'app',
-                    trailing: const Text(
-                      'Français',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
+                    icon: Icons.chat_bubble_outline_rounded,
+                    title: 'Messagerie',
+                    onTap: () => context.push(AppRoutes.messagerie),
                   ),
                   _buildListTile(
-                    icon: Icons.description_outlined,
-                    title: 'Condition d\'utilisation',
-                  ),
-                  _buildListTile(
-                    icon: Icons.privacy_tip_outlined,
-                    title: 'Politique de confidentialité',
+                    icon: Icons.receipt_long_outlined,
+                    title: 'Mes paiements',
+                    onTap: () => context.push(AppRoutes.paiements),
                   ),
                   const SizedBox(height: 24),
                   const Text(
@@ -220,13 +210,6 @@ class ProfileScreen extends ConsumerWidget {
                     iconColor: const Color(0xFFEF4444),
                     showTrailing: false,
                     onTap: () => _confirmSignOut(context, ref),
-                  ),
-                  _buildListTile(
-                    icon: Icons.person_off_outlined,
-                    title: 'Suppression de compte',
-                    titleColor: const Color(0xFFEF4444),
-                    iconColor: const Color(0xFFEF4444),
-                    showTrailing: false,
                   ),
                 ],
               ),
@@ -314,25 +297,17 @@ class ProfileScreen extends ConsumerWidget {
           'Êtes-vous sûr de vouloir vous déconnecter de votre compte PsyAvocat ?',
         ),
         actions: [
-          TextButton(
+          AppButton.ghost(
+            text: 'Annuler',
+            color: AppColors.textSecondary,
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text(
-              'Annuler',
-              style: TextStyle(color: Color(0xFF6B7280)),
-            ),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+          AppButton(
+            text: 'Déconnexion',
+            color: AppColors.danger,
+            isFullWidth: false,
+            size: AppButtonSize.compact,
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text(
-              'Déconnexion',
-              style: TextStyle(color: Colors.white),
-            ),
           ),
         ],
       ),
@@ -491,35 +466,11 @@ class _EditProfilSheetState extends ConsumerState<_EditProfilSheet> {
                   validator: Validators.phone,
                 ),
                 const SizedBox(height: 32),
-                SizedBox(
-                  height: 54,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _save,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Text(
-                            'Enregistrer',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
+                AppButton(
+                  text: 'Enregistrer',
+                  color: widget.primaryColor,
+                  isLoading: _isLoading,
+                  onPressed: _isLoading ? null : _save,
                 ),
               ],
             ),

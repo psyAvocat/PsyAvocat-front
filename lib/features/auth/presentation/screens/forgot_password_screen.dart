@@ -96,16 +96,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             onFieldSubmitted: (_) => _submit(),
           ),
           AppSpacing.vGap32,
-          AppGradientButton(
-            label: 'Envoyer le lien',
+          AppButton(
+            color: AppColors.lawyer,
+            text: 'Envoyer le lien',
             isLoading: isLoading,
             onPressed: _submit,
           ),
           AppSpacing.vGap16,
           Center(
-            child: TextButton(
+            child: AppButton.ghost(
+              text: 'Retour à la connexion',
               onPressed: () => context.pop(),
-              child: Text('Retour à la connexion', style: AppTypography.lien),
             ),
           ),
         ],
@@ -132,8 +133,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           style: AppTypography.texteSecondaire,
         ),
         AppSpacing.vGap32,
-        AppGradientButton(
-          label: 'Retour à la connexion',
+        AppButton(
+          color: AppColors.lawyer,
+          text: 'Retour à la connexion',
           onPressed: () => context.go(AppRoutes.login),
         ),
       ],

@@ -145,10 +145,11 @@ class AppTheme {
           tertiary: AppColors.lawyerAccent,
         );
       case AppUniverse.neutral:
+        // Avant le choix de l'univers : bleu marine de la marque (boutons, champs).
         return _baseScheme.copyWith(
-          primary: AppColors.brandPurple,
-          primaryContainer: AppColors.psychologistSurfaceSelected,
-          onPrimaryContainer: AppColors.psychologistDark,
+          primary: AppColors.lawyer,
+          primaryContainer: AppColors.lawyerSurfaceSelected,
+          onPrimaryContainer: AppColors.lawyerDark,
           secondary: AppColors.brandBlue,
           secondaryContainer: AppColors.lawyerSurface,
           onSecondaryContainer: AppColors.lawyerDark,
@@ -263,14 +264,26 @@ class AppTheme {
       ],
       textTheme: textTheme,
 
+      // ---- Barre d'application : blanche, titre centré, fine séparation ------
       appBarTheme: AppBarTheme(
         elevation: 0,
-        scrolledUnderElevation: 0,
-        backgroundColor: scheme.surfaceContainerLow,
+        scrolledUnderElevation: 1.5,
+        backgroundColor: scheme.surface,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.black.withValues(alpha: 0.08),
         foregroundColor: scheme.onSurface,
-        centerTitle: false,
+        centerTitle: true,
+        toolbarHeight: 60,
+        iconTheme: IconThemeData(color: scheme.onSurface, size: 22),
+        shape: Border(
+          bottom: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+        ),
         titleTextStyle: AppTypography.petitTitre.copyWith(
           color: scheme.onSurface,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
         ),
       ),
 

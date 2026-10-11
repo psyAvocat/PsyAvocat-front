@@ -96,7 +96,9 @@ class _SignalementSheetState extends ConsumerState<_SignalementSheet> {
     final motifsAsync = ref.watch(motifsSignalementProvider);
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(
@@ -107,18 +109,29 @@ class _SignalementSheetState extends ConsumerState<_SignalementSheet> {
               child: Container(
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(color: const Color(0xFFD1D5DB), borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD1D5DB),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
             const SizedBox(height: 16),
             Text(
               'Signaler ${widget.professionnelNom}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF111827),
+              ),
             ),
             const SizedBox(height: 6),
             const Text(
               'Votre signalement est transmis à l’équipe PsyAvocat, qui l’examine en toute confidentialité.',
-              style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.4),
+              style: TextStyle(
+                fontSize: 13,
+                color: Color(0xFF6B7280),
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 16),
             motifsAsync.when(
@@ -128,10 +141,15 @@ class _SignalementSheetState extends ConsumerState<_SignalementSheet> {
               ),
               error: (e, _) => Row(
                 children: [
-                  Expanded(child: Text(userMessageFor(e), style: const TextStyle(color: Color(0xFFDC2626)))),
-                  TextButton(
+                  Expanded(
+                    child: Text(
+                      userMessageFor(e),
+                      style: const TextStyle(color: Color(0xFFDC2626)),
+                    ),
+                  ),
+                  AppButton.ghost(
+                    text: 'Réessayer',
                     onPressed: () => ref.invalidate(motifsSignalementProvider),
-                    child: const Text('Réessayer'),
                   ),
                 ],
               ),
@@ -168,7 +186,9 @@ class _SignalementSheetState extends ConsumerState<_SignalementSheet> {
                 helperText: _motif?.exigeDescription == true
                     ? '$_minDescriptionAutre caractères minimum'
                     : null,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             if (_erreur != null) ...[

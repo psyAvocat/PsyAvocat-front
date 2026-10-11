@@ -34,6 +34,6 @@ AccessDecision evaluateAccess(CurrentUser user) {
   if (!user.hasMetierProfile) return AccessDecision.profileIncomplete;
   // Rôle inconnu : on refuse plutôt que d'autoriser par défaut.
   if (!user.isClient) return AccessDecision.deniedProfessional;
-  if (!user.emailVerified) return AccessDecision.emailNotVerified;
+  // La confirmation de l'adresse e-mail n'est plus exigée : accès dès l'inscription.
   return AccessDecision.authorized;
 }

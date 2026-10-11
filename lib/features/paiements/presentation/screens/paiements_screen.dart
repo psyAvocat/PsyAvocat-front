@@ -26,7 +26,11 @@ class PaiementsScreen extends ConsumerWidget {
         centerTitle: false,
         title: const Text(
           'Mes paiements',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1E2432)),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF1E2432),
+          ),
         ),
       ),
       body: RefreshIndicator(
@@ -50,7 +54,11 @@ class PaiementsScreen extends ConsumerWidget {
                     child: Text(
                       'Paiements simulés : l’acompte de 20 % valide votre rendez-vous, mais aucune '
                       'somme n’est réellement débitée. Le paiement en ligne sera disponible ultérieurement.',
-                      style: TextStyle(fontSize: 13, color: Color(0xFF7C2D12), height: 1.4),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF7C2D12),
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],
@@ -59,13 +67,17 @@ class PaiementsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             ...paiementsAsync.when(
               loading: () => [
-                const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator())),
+                const Padding(
+                  padding: EdgeInsets.all(40),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
               ],
               error: (e, _) => [
                 AppErrorStateView(
                   title: 'Impossible de charger vos paiements',
                   message: userMessageFor(e),
-                  onRetry: () => ref.read(paiementsListProvider.notifier).refresh(),
+                  onRetry: () =>
+                      ref.read(paiementsListProvider.notifier).refresh(),
                 ),
               ],
               data: (paiements) => paiements.isEmpty
@@ -73,10 +85,18 @@ class PaiementsScreen extends ConsumerWidget {
                       const AppEmptyStateView(
                         icon: Icons.receipt_long_outlined,
                         title: 'Aucun paiement',
-                        message: 'Les acomptes de vos rendez-vous apparaîtront ici.',
+                        message:
+                            'Les acomptes de vos rendez-vous apparaîtront ici.',
                       ),
                     ]
-                  : paiements.map((p) => _PaiementCard(item: p, primaryColor: primaryColor)).toList(),
+                  : paiements
+                        .map(
+                          (p) => _PaiementCard(
+                            item: p,
+                            primaryColor: primaryColor,
+                          ),
+                        )
+                        .toList(),
             ),
           ],
         ),
@@ -93,7 +113,9 @@ class _PaiementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final couleurStatut = item.estAnnule ? const Color(0xFF6B7280) : const Color(0xFF059669);
+    final couleurStatut = item.estAnnule
+        ? const Color(0xFF6B7280)
+        : const Color(0xFF059669);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -109,21 +131,36 @@ class _PaiementCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  item.professionnel.isNotEmpty ? item.professionnel : 'Rendez-vous',
+                  item.professionnel.isNotEmpty
+                      ? item.professionnel
+                      : 'Rendez-vous',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: couleurStatut.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  item.estAnnule ? 'Annulé' : (item.simulation ? 'Acompte simulé' : 'Payé'),
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: couleurStatut),
+                  item.estAnnule
+                      ? 'Annulé'
+                      : (item.simulation ? 'Acompte simulé' : 'Payé'),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: couleurStatut,
+                  ),
                 ),
               ),
             ],
@@ -147,12 +184,19 @@ class _PaiementCard extends StatelessWidget {
                   item.montantTotalRendezVous != null
                       ? 'Total du rendez-vous : ${Formatters.formatFcfa(item.montantTotalRendezVous!)}'
                       : '',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF6B7280),
+                  ),
                 ),
               ),
               Text(
                 Formatters.formatFcfa(item.montant),
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: primaryColor),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: primaryColor,
+                ),
               ),
             ],
           ),

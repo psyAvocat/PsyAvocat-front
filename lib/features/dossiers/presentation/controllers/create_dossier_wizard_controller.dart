@@ -19,7 +19,13 @@ class PieceAJoindre {
 }
 
 /// Étapes de l'envoi réel au backend (affichées pendant la validation).
-enum EnvoiDossierEtape { inactif, creation, piecesJointes, soumissions, termine }
+enum EnvoiDossierEtape {
+  inactif,
+  creation,
+  piecesJointes,
+  soumissions,
+  termine,
+}
 
 /// Résultat de l'envoi : le dossier créé et les éventuels échecs partiels.
 class EnvoiDossierResultat {

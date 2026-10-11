@@ -33,8 +33,10 @@ import '../../features/rendez_vous/presentation/screens/rendez_vous_screen.dart'
 import '../../features/selection_univers/presentation/screens/selection_univers_screen.dart';
 import '../services/app_preferences_service.dart';
 import '../theme/universe_provider.dart';
+import '../widgets/app_button.dart';
 import 'app_routes.dart';
 import 'route_guard.dart';
+import 'startup_splash.dart';
 
 /// Configuration GoRouter de l'application PsyAvocat.
 ///
@@ -52,6 +54,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     (_, _) => refresh.value++,
   );
   ref.listen(currentUniverseProvider, (_, _) => refresh.value++);
+  ref.listen(startupSplashDoneProvider, (_, _) => refresh.value++);
   ref.onDispose(refresh.dispose);
 
   final router = GoRouter(
@@ -62,6 +65,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       session: ref.read(sessionControllerProvider).status,
       hasSeenOnboarding: prefs.hasSeenOnboarding(),
       universe: ref.read(currentUniverseProvider),
+      splashDone: ref.read(startupSplashDoneProvider),
     ),
     errorBuilder: (context, state) => const _NotFoundScreen(),
     routes: [
@@ -264,9 +268,9 @@ class _NotFoundScreen extends StatelessWidget {
               const SizedBox(height: 16),
               const Text('Page introuvable', textAlign: TextAlign.center),
               const SizedBox(height: 24),
-              FilledButton(
+              AppButton(
+                text: "Retour à l'accueil",
                 onPressed: () => context.go(AppRoutes.home),
-                child: const Text("Retour à l'accueil"),
               ),
             ],
           ),

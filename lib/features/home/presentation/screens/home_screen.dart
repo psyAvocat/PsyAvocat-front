@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/universe_provider.dart';
-import '../../../auth/data/repositories/session_repository.dart';
+import '../../../contenus/presentation/controllers/contenus_controller.dart';
 import '../../../notifications/presentation/controllers/notifications_controller.dart';
-import '../../../orientation/presentation/controllers/orientation_controller.dart';
-import '../../../professionnels/presentation/controllers/professionnels_controller.dart';
 import '../../../rendez_vous/presentation/controllers/rendez_vous_controller.dart';
 import '../widgets/lawyer_home_view.dart';
 import '../widgets/psychologist_home_view.dart';
@@ -15,15 +13,20 @@ import '../widgets/psychologist_home_view.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
+  /// Glisser vers le bas : recharge les données affichées sur l'accueil.
+  /// L'indicateur se ferme au plus tard après 15 s (jamais de blocage), même si
+  /// le réseau ne répond pas ; chaque section affiche ensuite son propre état.
   Future<void> _refresh(WidgetRef ref) async {
     ref
-      ..invalidate(currentUserProvider)
-      ..invalidate(rendezVousControllerProvider)
-      ..invalidate(mesResultatsProvider)
       ..invalidate(notificationsControllerProvider)
-      ..invalidate(professionnelsByUniverseProvider);
-    // L'indicateur de rafraîchissement reste affiché jusqu'au rechargement de la liste.
-    await ref.read(professionnelsByUniverseProvider.future);
+      ..invalidate(popularPublicationsProvider);
+    try {
+      await ref
+          .refresh(rendezVousControllerProvider.future)
+          .timeout(const Duration(seconds: 15));
+    } catch (_) {
+      // Erreur ou délai dépassé : affichés par la section concernée.
+    }
   }
 
   @override

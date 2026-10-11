@@ -41,7 +41,9 @@ class _ProfessionnelDetailScreenState
   Widget build(BuildContext context) {
     final universe = ref.watch(currentUniverseProvider);
     final primaryColor = universe.primaryColor;
-    final proAsync = ref.watch(professionnelDetailProvider(widget.professionnelId));
+    final proAsync = ref.watch(
+      professionnelDetailProvider(widget.professionnelId),
+    );
 
     return proAsync.when(
       loading: () => Scaffold(
@@ -55,7 +57,9 @@ class _ProfessionnelDetailScreenState
         body: AppErrorStateView(
           title: 'Professionnel indisponible',
           message: userMessageFor(e),
-          onRetry: () => ref.invalidate(professionnelDetailProvider(widget.professionnelId)),
+          onRetry: () => ref.invalidate(
+            professionnelDetailProvider(widget.professionnelId),
+          ),
         ),
       ),
       data: (pro) {
@@ -79,7 +83,11 @@ class _ProfessionnelDetailScreenState
     );
   }
 
-  Widget _buildFiche(BuildContext context, ProfessionnelDetail pro, Color primaryColor) {
+  Widget _buildFiche(
+    BuildContext context,
+    ProfessionnelDetail pro,
+    Color primaryColor,
+  ) {
     final tarifs = pro.tarifs;
     final tarifChoisi = _tarif != null && tarifs.any((t) => t.id == _tarif!.id)
         ? _tarif
@@ -102,7 +110,8 @@ class _ProfessionnelDetailScreenState
                   tooltip: 'Plus d’actions',
                   icon: const Icon(Icons.more_vert_rounded),
                   onSelected: (action) {
-                    if (action == 'signaler') _signaler(context, pro, primaryColor);
+                    if (action == 'signaler')
+                      _signaler(context, pro, primaryColor);
                   },
                   itemBuilder: (_) => const [
                     PopupMenuItem(
@@ -121,12 +130,15 @@ class _ProfessionnelDetailScreenState
                     ? Image.network(
                         photo,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => _PhotoParDefaut(pro: pro, color: primaryColor),
+                        errorBuilder: (_, _, _) =>
+                            _PhotoParDefaut(pro: pro, color: primaryColor),
                       )
                     : _PhotoParDefaut(pro: pro, color: primaryColor),
               ),
             ),
-            SliverToBoxAdapter(child: _Identite(pro: pro, primaryColor: primaryColor)),
+            SliverToBoxAdapter(
+              child: _Identite(pro: pro, primaryColor: primaryColor),
+            ),
             SliverPersistentHeader(
               pinned: true,
               delegate: _OngletsDelegate(primaryColor: primaryColor),
@@ -141,7 +153,10 @@ class _ProfessionnelDetailScreenState
                 choisi: tarifChoisi,
                 onChoisir: (t) => setState(() => _tarif = t),
               ),
-              _Disponibilites(professionnelId: pro.id, primaryColor: primaryColor),
+              _Disponibilites(
+                professionnelId: pro.id,
+                primaryColor: primaryColor,
+              ),
             ],
           ),
         ),
@@ -155,7 +170,11 @@ class _ProfessionnelDetailScreenState
     );
   }
 
-  Future<void> _signaler(BuildContext context, ProfessionnelDetail pro, Color primaryColor) async {
+  Future<void> _signaler(
+    BuildContext context,
+    ProfessionnelDetail pro,
+    Color primaryColor,
+  ) async {
     final envoye = await showSignalementSheet(
       context,
       professionnelId: pro.id,
@@ -165,7 +184,9 @@ class _ProfessionnelDetailScreenState
     if (envoye == true && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Signalement envoyé. L’équipe PsyAvocat va l’examiner.'),
+          content: Text(
+            'Signalement envoyé. L’équipe PsyAvocat va l’examiner.',
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -187,10 +208,15 @@ class _ProfessionnelDetailScreenState
           decoration: const InputDecoration(hintText: 'Votre message'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
-          FilledButton(
+          AppButton.ghost(
+            text: 'Annuler',
+            onPressed: () => Navigator.pop(context),
+          ),
+          AppButton(
+            text: 'Envoyer',
+            isFullWidth: false,
+            size: AppButtonSize.compact,
             onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Envoyer'),
           ),
         ],
       ),
@@ -209,7 +235,10 @@ class _ProfessionnelDetailScreenState
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(userMessageFor(error)), behavior: SnackBarBehavior.floating),
+        SnackBar(
+          content: Text(userMessageFor(error)),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -264,11 +293,16 @@ class _Identite extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               if (s.hasRating)
-                _Info(icone: Icons.star_rounded, couleur: const Color(0xFFF59E0B),
-                    texte: '${s.noteMoyenne!.toStringAsFixed(1)} (${s.nombreAvis} avis)'),
+                _Info(
+                  icone: Icons.star_rounded,
+                  couleur: const Color(0xFFF59E0B),
+                  texte:
+                      '${s.noteMoyenne!.toStringAsFixed(1)} (${s.nombreAvis} avis)',
+                ),
               if (s.ville != null && s.ville!.isNotEmpty)
                 _Info(icone: Icons.location_on_outlined, texte: s.ville!),
-              if (mode != null) _Info(icone: Icons.video_call_outlined, texte: mode),
+              if (mode != null)
+                _Info(icone: Icons.video_call_outlined, texte: mode),
             ],
           ),
           if (pro.specialites.isNotEmpty) ...[
@@ -277,13 +311,21 @@ class _Identite extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: pro.specialites
-                  .map((sp) => Chip(
-                        label: Text(sp.nom),
-                        labelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: primaryColor),
-                        backgroundColor: primaryColor.withValues(alpha: 0.08),
-                        side: BorderSide(color: primaryColor.withValues(alpha: 0.2)),
-                        visualDensity: VisualDensity.compact,
-                      ))
+                  .map(
+                    (sp) => Chip(
+                      label: Text(sp.nom),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: primaryColor,
+                      ),
+                      backgroundColor: primaryColor.withValues(alpha: 0.08),
+                      side: BorderSide(
+                        color: primaryColor.withValues(alpha: 0.2),
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  )
                   .toList(),
             ),
           ],
@@ -297,7 +339,11 @@ class _Info extends StatelessWidget {
   final IconData icone;
   final String texte;
   final Color couleur;
-  const _Info({required this.icone, required this.texte, this.couleur = const Color(0xFF9CA3AF)});
+  const _Info({
+    required this.icone,
+    required this.texte,
+    this.couleur = const Color(0xFF9CA3AF),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -306,7 +352,12 @@ class _Info extends StatelessWidget {
       children: [
         Icon(icone, size: 16, color: couleur),
         const SizedBox(width: 4),
-        Flexible(child: Text(texte, style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)))),
+        Flexible(
+          child: Text(
+            texte,
+            style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
+          ),
+        ),
       ],
     );
   }
@@ -322,27 +373,45 @@ class _OngletsDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => 52;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(
       color: const Color(0xFFF9FAFC),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
       child: Container(
-        decoration: BoxDecoration(color: const Color(0xFFEFF2F7), borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEFF2F7),
+          borderRadius: BorderRadius.circular(22),
+        ),
         child: TabBar(
-          indicator: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          indicator: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+          ),
           indicatorSize: TabBarIndicatorSize.tab,
           dividerColor: Colors.transparent,
           labelColor: const Color(0xFF111827),
           unselectedLabelColor: const Color(0xFF6B7280),
-          labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-          tabs: const [Tab(text: 'Présentation'), Tab(text: 'Tarifs'), Tab(text: 'Disponibilités')],
+          labelStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+          tabs: const [
+            Tab(text: 'Présentation'),
+            Tab(text: 'Tarifs'),
+            Tab(text: 'Disponibilités'),
+          ],
         ),
       ),
     );
   }
 
   @override
-  bool shouldRebuild(covariant _OngletsDelegate oldDelegate) => oldDelegate.primaryColor != primaryColor;
+  bool shouldRebuild(covariant _OngletsDelegate oldDelegate) =>
+      oldDelegate.primaryColor != primaryColor;
 }
 
 class _Presentation extends StatelessWidget {
@@ -352,24 +421,42 @@ class _Presentation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bio = pro.biographie?.trim() ?? '';
-    final langues = (pro.langues ?? '').split(',').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+    final langues = (pro.langues ?? '')
+        .split(',')
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty)
+        .toList();
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         const _Section('À propos'),
         Text(
-          bio.isNotEmpty ? bio : 'Ce professionnel n’a pas encore rédigé de présentation.',
-          style: TextStyle(fontSize: 14, height: 1.5, color: bio.isNotEmpty ? const Color(0xFF374151) : const Color(0xFF9CA3AF)),
+          bio.isNotEmpty
+              ? bio
+              : 'Ce professionnel n’a pas encore rédigé de présentation.',
+          style: TextStyle(
+            fontSize: 14,
+            height: 1.5,
+            color: bio.isNotEmpty
+                ? const Color(0xFF374151)
+                : const Color(0xFF9CA3AF),
+          ),
         ),
         if (pro.adresse != null && pro.adresse!.isNotEmpty) ...[
           const SizedBox(height: 20),
           const _Section('Adresse du cabinet'),
-          Text(pro.adresse!, style: const TextStyle(fontSize: 14, color: Color(0xFF374151))),
+          Text(
+            pro.adresse!,
+            style: const TextStyle(fontSize: 14, color: Color(0xFF374151)),
+          ),
         ],
         if (langues.isNotEmpty) ...[
           const SizedBox(height: 20),
           const _Section('Langues'),
-          Wrap(spacing: 8, children: langues.map((l) => Chip(label: Text(l))).toList()),
+          Wrap(
+            spacing: 8,
+            children: langues.map((l) => Chip(label: Text(l))).toList(),
+          ),
         ],
       ],
     );
@@ -381,7 +468,12 @@ class _Tarifs extends StatelessWidget {
   final Color primaryColor;
   final Tarif? choisi;
   final ValueChanged<Tarif> onChoisir;
-  const _Tarifs({required this.pro, required this.primaryColor, required this.choisi, required this.onChoisir});
+  const _Tarifs({
+    required this.pro,
+    required this.primaryColor,
+    required this.choisi,
+    required this.onChoisir,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -389,14 +481,16 @@ class _Tarifs extends StatelessWidget {
       return const AppEmptyStateView(
         icon: Icons.folder_shared_outlined,
         title: 'Honoraires sur dossier',
-        message: 'L’avocat vous communique ses honoraires lorsqu’il accepte votre dossier.',
+        message:
+            'L’avocat vous communique ses honoraires lorsqu’il accepte votre dossier.',
       );
     }
     if (pro.tarifs.isEmpty) {
       return const AppEmptyStateView(
         icon: Icons.sell_outlined,
         title: 'Aucun tarif publié',
-        message: 'Ce professionnel n’a pas encore publié de tarif : la réservation n’est pas encore possible.',
+        message:
+            'Ce professionnel n’a pas encore publié de tarif : la réservation n’est pas encore possible.',
       );
     }
     final avocat = pro.summary.isAvocat;
@@ -408,34 +502,49 @@ class _Tarifs extends StatelessWidget {
             padding: EdgeInsets.only(bottom: 12),
             child: Text(
               'Tarifs indicatifs. Les honoraires définitifs vous sont proposés lorsque l’avocat accepte votre dossier.',
-              style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.4),
+              style: TextStyle(
+                fontSize: 13,
+                color: Color(0xFF6B7280),
+                height: 1.4,
+              ),
             ),
           ),
         ...pro.tarifs.map((t) {
-        final actif = !avocat && choisi?.id == t.id;
-        return Card(
-          elevation: 0,
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: actif ? primaryColor : const Color(0xFFE5E7EB), width: actif ? 1.6 : 1),
-          ),
-          child: ListTile(
-            onTap: avocat ? null : () => onChoisir(t),
-            title: Text(t.titre, style: const TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: t.description != null || t.dureeMinutes != null
-                ? Text([
-                    if (t.dureeMinutes != null) '${t.dureeMinutes} min',
-                    if (t.description != null) t.description!,
-                  ].join(' • '))
-                : null,
-            trailing: Text(
-              Formatters.formatFcfa(t.montant),
-              style: TextStyle(fontWeight: FontWeight.w800, color: primaryColor),
+          final actif = !avocat && choisi?.id == t.id;
+          return Card(
+            elevation: 0,
+            margin: const EdgeInsets.only(bottom: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: BorderSide(
+                color: actif ? primaryColor : const Color(0xFFE5E7EB),
+                width: actif ? 1.6 : 1,
+              ),
             ),
-          ),
-        );
-      }),
+            child: ListTile(
+              onTap: avocat ? null : () => onChoisir(t),
+              title: Text(
+                t.titre,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              subtitle: t.description != null || t.dureeMinutes != null
+                  ? Text(
+                      [
+                        if (t.dureeMinutes != null) '${t.dureeMinutes} min',
+                        if (t.description != null) t.description!,
+                      ].join(' • '),
+                    )
+                  : null,
+              trailing: Text(
+                Formatters.formatFcfa(t.montant),
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: primaryColor,
+                ),
+              ),
+            ),
+          );
+        }),
       ],
     );
   }
@@ -444,7 +553,10 @@ class _Tarifs extends StatelessWidget {
 class _Disponibilites extends ConsumerWidget {
   final String professionnelId;
   final Color primaryColor;
-  const _Disponibilites({required this.professionnelId, required this.primaryColor});
+  const _Disponibilites({
+    required this.professionnelId,
+    required this.primaryColor,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -457,12 +569,18 @@ class _Disponibilites extends ConsumerWidget {
       ),
       data: (creneaux) {
         final maintenant = DateTime.now();
-        final libres = creneaux.where((c) => c.statut == SlotStatus.libre && c.debut.isAfter(maintenant)).toList();
+        final libres = creneaux
+            .where(
+              (c) =>
+                  c.statut == SlotStatus.libre && c.debut.isAfter(maintenant),
+            )
+            .toList();
         if (libres.isEmpty) {
           return const AppEmptyStateView(
             icon: Icons.event_busy_rounded,
             title: 'Aucun créneau disponible',
-            message: 'Les nouvelles disponibilités apparaîtront ici automatiquement.',
+            message:
+                'Les nouvelles disponibilités apparaîtront ici automatiquement.',
           );
         }
         final parJour = <DateTime, List<Creneau>>{};
@@ -483,10 +601,14 @@ class _Disponibilites extends ConsumerWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: parJour[jour]!
-                        .map((c) => Chip(
-                              label: Text(Formatters.formatHeure(c.debut)),
-                              backgroundColor: primaryColor.withValues(alpha: 0.08),
-                            ))
+                        .map(
+                          (c) => Chip(
+                            label: Text(Formatters.formatHeure(c.debut)),
+                            backgroundColor: primaryColor.withValues(
+                              alpha: 0.08,
+                            ),
+                          ),
+                        )
                         .toList(),
                   ),
                 ],
@@ -507,7 +629,14 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(titre, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF111827))),
+      child: Text(
+        titre,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF111827),
+        ),
+      ),
     );
   }
 }
@@ -518,7 +647,12 @@ class _BarreAction extends ConsumerWidget {
   final Tarif? tarif;
   final VoidCallback onEcrire;
 
-  const _BarreAction({required this.pro, required this.primaryColor, required this.tarif, required this.onEcrire});
+  const _BarreAction({
+    required this.pro,
+    required this.primaryColor,
+    required this.tarif,
+    required this.onEcrire,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -528,24 +662,43 @@ class _BarreAction extends ConsumerWidget {
     if (avocat) {
       libelle = 'Soumettre un dossier';
       action = () {
-        ref.read(createDossierWizardProvider.notifier).preselectionner(pro.summary);
-        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CreateDossierWizardScreen()));
+        ref
+            .read(createDossierWizardProvider.notifier)
+            .preselectionner(pro.summary);
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const CreateDossierWizardScreen()),
+        );
       };
     } else {
-      libelle = tarif != null ? 'Prendre rendez-vous' : (pro.tarifs.isEmpty ? 'Réservation indisponible' : 'Choisissez un tarif');
+      libelle = tarif != null
+          ? 'Prendre rendez-vous'
+          : (pro.tarifs.isEmpty
+                ? 'Réservation indisponible'
+                : 'Choisissez un tarif');
       action = tarif == null
           ? null
-          : () => context.push(
+          : () {
+              context.push(
                 AppRoutes.choixCreneau(pro.id),
-                extra: ReservationContexte.psychologue(professionnelId: pro.id, tarif: tarif!),
+                extra: ReservationContexte.psychologue(
+                  professionnelId: pro.id,
+                  tarif: tarif!,
+                ),
               );
+            };
     }
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, -4))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: SafeArea(
         top: false,
@@ -554,10 +707,19 @@ class _BarreAction extends ConsumerWidget {
             IconButton.outlined(
               onPressed: onEcrire,
               tooltip: 'Écrire',
-              icon: Icon(Icons.chat_bubble_outline_rounded, color: primaryColor),
+              icon: Icon(
+                Icons.chat_bubble_outline_rounded,
+                color: primaryColor,
+              ),
             ),
             const SizedBox(width: 12),
-            Expanded(child: AppButton(text: libelle, onPressed: action, color: primaryColor)),
+            Expanded(
+              child: AppButton(
+                text: libelle,
+                onPressed: action,
+                color: primaryColor,
+              ),
+            ),
           ],
         ),
       ),

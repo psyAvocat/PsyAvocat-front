@@ -68,18 +68,13 @@ class AuthController extends Notifier<AsyncValue<void>> {
           }
           profileCreated = await _hasBusinessProfile();
         }
-        // Lien de confirmation : exigé par le backend avant tout accès client.
-        // En cas d'échec, il pourra être renvoyé depuis l'écran de confirmation.
-        try {
-          await _authRepository.sendEmailVerification();
-        } catch (_) {}
+        // Profil non confirmé par le serveur (réseau coupé…) : le compte reste
+        // connecté et l'écran « Compléter mon profil » prend le relais.
         if (!profileCreated) {
           throw const IncompleteRegistrationException();
         }
       } finally {
-        if (_authRepository.currentUser != null) {
-          await _authRepository.signOut();
-        }
+        // Le compte créé reste connecté : accès immédiat, sans nouvelle saisie.
         session.endRegistration();
       }
     });

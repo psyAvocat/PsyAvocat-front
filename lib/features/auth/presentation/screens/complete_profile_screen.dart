@@ -118,20 +118,21 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                   onFieldSubmitted: (_) => _submit(),
                 ),
                 AppSpacing.vGap32,
-                AppGradientButton(
-                  label: 'Enregistrer mon profil',
+                AppButton(
+                  color: AppColors.lawyer,
+                  text: 'Enregistrer mon profil',
                   isLoading: _isLoading,
                   onPressed: _submit,
                 ),
                 AppSpacing.vGap16,
                 Center(
-                  child: TextButton(
+                  child: AppButton.ghost(
+                    text: 'Se déconnecter',
                     onPressed: _isLoading
                         ? null
                         : () => ref
                               .read(sessionControllerProvider.notifier)
                               .signOut(),
-                    child: Text('Se déconnecter', style: AppTypography.lien),
                   ),
                 ),
               ],

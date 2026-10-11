@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../shared/enums/appointment_status.dart';
 import '../../data/models/rendez_vous_model.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/theme/design_system.dart';
 
 class RendezVousDetailsSheet extends StatelessWidget {
   final RendezVous item;
@@ -118,30 +120,10 @@ class RendezVousDetailsSheet extends StatelessWidget {
           ),
           if (item.canBeChangedAt(DateTime.now())) ...[
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: OutlinedButton.icon(
-                onPressed: onCancel,
-                icon: const Icon(
-                  Icons.cancel_outlined,
-                  color: Color(0xFFEF4444),
-                  size: 18,
-                ),
-                label: const Text(
-                  'Annuler ce rendez-vous',
-                  style: TextStyle(
-                    color: Color(0xFFEF4444),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFFCA5A5), width: 1.4),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                ),
-              ),
+            AppButton.outline(
+              text: 'Annuler ce rendez-vous',
+              color: AppColors.danger,
+              onPressed: onCancel,
             ),
           ],
         ],

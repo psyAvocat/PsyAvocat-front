@@ -12,10 +12,11 @@ class MotifSignalement {
   /// « Autre » exige une description (règle revérifiée par le backend).
   bool get exigeDescription => code == 'AUTRE';
 
-  factory MotifSignalement.fromJson(Map<String, dynamic> json) => MotifSignalement(
-    code: json['code'] as String? ?? '',
-    libelle: json['libelle'] as String? ?? '',
-  );
+  factory MotifSignalement.fromJson(Map<String, dynamic> json) =>
+      MotifSignalement(
+        code: json['code'] as String? ?? '',
+        libelle: json['libelle'] as String? ?? '',
+      );
 }
 
 /// Signalement d'un professionnel par le client connecté.

@@ -49,13 +49,14 @@ class AppRoutes {
   /// Choix du créneau chez un professionnel.
   static String choixCreneau(String id) => '$professionnels/$id/creneau';
 
-  /// Routes accessibles sans être connecté.
-  static const publicRoutes = {onboarding, login, register, forgotPassword};
+  /// Connexion, inscription et mot de passe oublié : toujours accessibles.
+  static const authRoutes = {login, register, forgotPassword};
 
   /// Écrans d'entrée et de session : quittés pour l'accueil une fois autorisé.
   static const entryRoutes = {
     splash,
-    ...publicRoutes,
+    onboarding,
+    ...authRoutes,
     accessDenied,
     completeProfile,
     verifyEmail,

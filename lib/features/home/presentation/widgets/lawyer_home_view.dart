@@ -39,7 +39,6 @@ class LawyerHomeView extends StatelessWidget {
             children: [
               Expanded(
                 child: HomeActionCard(
-                  icon: Icons.balance_rounded,
                   title: 'Voir les professionnels',
                   highlighted: true,
                   onTap: () => context.go(AppRoutes.professionnels),
@@ -48,7 +47,6 @@ class LawyerHomeView extends StatelessWidget {
               AppSpacing.hGap12,
               Expanded(
                 child: HomeActionCard(
-                  icon: Icons.description_outlined,
                   title: 'Voir mes dossiers',
                   onTap: () => context.push(AppRoutes.dossiers),
                 ),

@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/realtime/realtime_service.dart';
 import '../../../../core/theme/app_universe.dart';
 import '../../../../core/theme/universe_provider.dart';
+import '../../../auth/presentation/controllers/session_controller.dart';
 import '../../data/models/notification_model.dart';
 import '../../data/repositories/notifications_repository.dart';
 
 /// Toutes les notifications du compte, rechargées à chaque nouvel événement.
 class NotificationsController extends AsyncNotifier<List<NotificationItem>> {
   @override
-  Future<List<NotificationItem>> build() {
+  Future<List<NotificationItem>> build() async {
+    // Mode invité : aucune notification, aucun appel protégé.
+    if (ref.watch(signedInAccountProvider) == null) return const [];
     listenRealtime(ref, {RealtimeEventType.notification}, (_) => _reload());
     return ref.read(notificationsRepositoryProvider).getNotifications();
   }

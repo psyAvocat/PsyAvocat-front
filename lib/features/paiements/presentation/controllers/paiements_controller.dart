@@ -29,7 +29,9 @@ class PaiementsNotifier extends AsyncNotifier<List<PaiementModel>> {
 }
 
 /// Paiements de l'univers courant uniquement.
-final paiementsUniversProvider = Provider<AsyncValue<List<PaiementModel>>>((ref) {
+final paiementsUniversProvider = Provider<AsyncValue<List<PaiementModel>>>((
+  ref,
+) {
   final universe = ref.watch(currentUniverseProvider);
   return ref
       .watch(paiementsListProvider)

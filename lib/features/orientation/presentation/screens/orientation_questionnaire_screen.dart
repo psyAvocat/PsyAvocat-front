@@ -48,15 +48,11 @@ class OrientationQuestionnaireScreen extends ConsumerWidget {
                     icon: const Icon(Icons.chevron_left_rounded),
                   ),
                   const Spacer(),
-                  OutlinedButton(
+                  AppButton.outline(
+                    text: 'Ignorer',
+                    size: AppButtonSize.compact,
+                    isFullWidth: false,
                     onPressed: () => context.go(AppRoutes.home),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(48, 44),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.s20,
-                      ),
-                    ),
-                    child: const Text('Ignorer'),
                   ),
                 ],
               ),
@@ -136,8 +132,8 @@ class _QuestionnaireContent extends ConsumerWidget {
           ),
         ),
         AppSpacing.vGap16,
-        AppPrimaryButton(
-          label: state.isLastQuestion ? 'Voir mon orientation' : 'Suivant',
+        AppButton(
+          text: state.isLastQuestion ? 'Voir mon orientation' : 'Suivant',
           isLoading: state.isSubmitting,
           onPressed: state.canGoNext
               ? () => _onNextPressed(context, ref)

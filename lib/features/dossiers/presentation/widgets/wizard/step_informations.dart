@@ -74,14 +74,19 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
               children: [
                 const Text(
                   'Informations du dossier',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 const _Libelle('Titre du dossier *'),
                 TextFormField(
                   controller: _titreController,
                   maxLength: 150,
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Champ requis' : null,
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Champ requis' : null,
                   decoration: _inputDeco('Ex : Litige concernant un terrain'),
                 ),
                 const SizedBox(height: 12),
@@ -93,26 +98,38 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
                       Expanded(
                         child: Text(
                           userMessageFor(e),
-                          style: const TextStyle(fontSize: 13, color: Color(0xFFDC2626)),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFFDC2626),
+                          ),
                         ),
                       ),
-                      TextButton(
-                        onPressed: () => ref.invalidate(specialitesOfUniverseProvider),
-                        child: const Text('Réessayer'),
+                      AppButton.ghost(
+                        text: 'Réessayer',
+                        onPressed: () =>
+                            ref.invalidate(specialitesOfUniverseProvider),
                       ),
                     ],
                   ),
                   data: (domaines) {
                     final selection = _domaine != null
-                        ? domaines.where((d) => d.id == _domaine!.id).firstOrNull
+                        ? domaines
+                              .where((d) => d.id == _domaine!.id)
+                              .firstOrNull
                         : null;
                     return DropdownButtonFormField<SpecialiteOption?>(
                       initialValue: selection,
                       isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF111827)),
+                      icon: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: Color(0xFF111827),
+                      ),
                       decoration: _inputDeco('Sélectionner un domaine'),
                       items: [
-                        const DropdownMenuItem<SpecialiteOption?>(value: null, child: Text('Je ne sais pas')),
+                        const DropdownMenuItem<SpecialiteOption?>(
+                          value: null,
+                          child: Text('Je ne sais pas'),
+                        ),
                         ...domaines.map(
                           (d) => DropdownMenuItem<SpecialiteOption?>(
                             value: d,
@@ -133,7 +150,9 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
                   validator: (v) => (v == null || v.trim().length < 20)
                       ? 'Décrivez votre situation (20 caractères minimum)'
                       : null,
-                  decoration: _inputDeco('Décrivez les faits, les parties concernées et votre demande…'),
+                  decoration: _inputDeco(
+                    'Décrivez les faits, les parties concernées et votre demande…',
+                  ),
                 ),
                 const SizedBox(height: 24),
               ],
@@ -143,7 +162,13 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
               color: Colors.white,
-              boxShadow: [BoxShadow(color: Color(0x0A000000), offset: Offset(0, -4), blurRadius: 10)],
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x0A000000),
+                  offset: Offset(0, -4),
+                  blurRadius: 10,
+                ),
+              ],
             ),
             child: SafeArea(
               top: false,
@@ -160,7 +185,11 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: AppButton(text: 'Suivant', onPressed: _saveAndNext, color: widget.primaryColor),
+                    child: AppButton(
+                      text: 'Suivant',
+                      onPressed: _saveAndNext,
+                      color: widget.primaryColor,
+                    ),
                   ),
                 ],
               ),
@@ -202,7 +231,14 @@ class _Libelle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(texte, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1F2937))),
+      child: Text(
+        texte,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1F2937),
+        ),
+      ),
     );
   }
 }

@@ -10,34 +10,45 @@ String? redirect(
   required SessionStatus session,
   bool hasSeenOnboarding = true,
   AppUniverse universe = AppUniverse.neutral,
+  bool splashDone = true,
 }) {
   return resolveRedirect(
     location: location,
     session: session,
     hasSeenOnboarding: hasSeenOnboarding,
     universe: universe,
+    splashDone: splashDone,
   );
 }
 
 void main() {
-  group('Session en cours de vérification', () {
-    test('chargement ou erreur /me : splash, même avec un univers', () {
+  group('Splash : uniquement à l’ouverture de l’app', () {
+    test('affiché pendant sa durée minimale, quelle que soit la session', () {
+      for (final status in SessionStatus.values) {
+        expect(
+          redirect(AppRoutes.splash, session: status, splashDone: false),
+          isNull,
+          reason: status.name,
+        );
+      }
+    });
+
+    test('reste affiché tant que la session restaurée se vérifie', () {
       for (final status in [SessionStatus.loading, SessionStatus.error]) {
         expect(redirect(AppRoutes.splash, session: status), isNull);
-        expect(
-          redirect(
-            AppRoutes.home,
-            session: status,
-            universe: AppUniverse.lawyer,
-          ),
-          AppRoutes.splash,
-        );
+      }
+    });
+
+    test('jamais au milieu du parcours : vérification après connexion', () {
+      for (final status in [SessionStatus.loading, SessionStatus.error]) {
+        expect(redirect(AppRoutes.login, session: status), isNull);
+        expect(redirect(AppRoutes.register, session: status), isNull);
       }
     });
   });
 
-  group('Non connecté', () {
-    test('premier lancement : onboarding', () {
+  group('Non connecté : connexion obligatoire', () {
+    test('première ouverture : onboarding', () {
       expect(
         redirect(
           AppRoutes.splash,
@@ -59,19 +70,30 @@ void main() {
       );
     });
 
-    test('écrans publics accessibles, écrans privés refusés', () {
-      for (final route in [
-        AppRoutes.login,
-        AppRoutes.register,
-        AppRoutes.forgotPassword,
-      ]) {
-        expect(redirect(route, session: SessionStatus.unauthenticated), isNull);
-      }
-      expect(
-        redirect(AppRoutes.home, session: SessionStatus.unauthenticated),
-        AppRoutes.login,
-      );
-    });
+    test(
+      'seuls connexion, inscription et mot de passe oublié sont accessibles',
+      () {
+        for (final route in AppRoutes.authRoutes) {
+          expect(
+            redirect(route, session: SessionStatus.unauthenticated),
+            isNull,
+            reason: route,
+          );
+        }
+        for (final route in [
+          AppRoutes.home,
+          AppRoutes.professionnels,
+          AppRoutes.universeSelection,
+          AppRoutes.rendezVous,
+        ]) {
+          expect(
+            redirect(route, session: SessionStatus.unauthenticated),
+            AppRoutes.login,
+            reason: route,
+          );
+        }
+      },
+    );
   });
 
   group('Statut du compte renvoyé par /me', () {
@@ -102,36 +124,21 @@ void main() {
         isNull,
       );
     });
-
-    test('email non confirmé : confirmation, même avec un univers', () {
-      expect(
-        redirect(
-          AppRoutes.home,
-          session: SessionStatus.emailNotVerified,
-          universe: AppUniverse.psychologist,
-        ),
-        AppRoutes.verifyEmail,
-      );
-      expect(
-        redirect(
-          AppRoutes.verifyEmail,
-          session: SessionStatus.emailNotVerified,
-        ),
-        isNull,
-      );
-    });
   });
 
-  group('Client autorisé', () {
-    test('univers pas encore choisi : choix de l’univers obligatoire', () {
-      expect(
-        redirect(AppRoutes.splash, session: SessionStatus.authorized),
-        AppRoutes.universeSelection,
-      );
-      expect(
-        redirect(AppRoutes.home, session: SessionStatus.authorized),
-        AppRoutes.universeSelection,
-      );
+  group('Client connecté', () {
+    test('après la connexion : choix de l’univers', () {
+      for (final route in [
+        AppRoutes.login,
+        AppRoutes.register,
+        AppRoutes.home,
+      ]) {
+        expect(
+          redirect(route, session: SessionStatus.authorized),
+          AppRoutes.universeSelection,
+          reason: route,
+        );
+      }
     });
 
     test('univers choisi : écrans d’entrée → accueil', () {
@@ -148,15 +155,25 @@ void main() {
       }
     });
 
-    test('univers choisi : les écrans de l’app restent accessibles', () {
-      expect(
-        redirect(
-          AppRoutes.rendezVous,
-          session: SessionStatus.authorized,
-          universe: AppUniverse.psychologist,
-        ),
-        isNull,
-      );
+    test('univers choisi : toutes les fonctionnalités sont accessibles', () {
+      for (final route in [
+        AppRoutes.rendezVous,
+        AppRoutes.profil,
+        AppRoutes.notifications,
+        AppRoutes.messagerie,
+        AppRoutes.paiements,
+        AppRoutes.professionnel('pro-1'),
+      ]) {
+        expect(
+          redirect(
+            route,
+            session: SessionStatus.authorized,
+            universe: AppUniverse.psychologist,
+          ),
+          isNull,
+          reason: route,
+        );
+      }
     });
 
     test('orientation réservée à l’univers Psychologue', () {
@@ -170,7 +187,7 @@ void main() {
       );
       expect(
         redirect(
-          AppRoutes.orientationIntro,
+          AppRoutes.orientation,
           session: SessionStatus.authorized,
           universe: AppUniverse.psychologist,
         ),

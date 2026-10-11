@@ -61,12 +61,15 @@ void main() {
       expect(evaluateAccess(user()), AccessDecision.authorized);
     });
 
-    test('client à l’email non confirmé : confirmation exigée', () {
-      expect(
-        evaluateAccess(user(emailVerified: false)),
-        AccessDecision.emailNotVerified,
-      );
-    });
+    test(
+      'client à l’email non confirmé : accès immédiat après inscription',
+      () {
+        expect(
+          evaluateAccess(user(emailVerified: false)),
+          AccessDecision.authorized,
+        );
+      },
+    );
 
     test('sans profil métier : profil à compléter avant tout', () {
       expect(

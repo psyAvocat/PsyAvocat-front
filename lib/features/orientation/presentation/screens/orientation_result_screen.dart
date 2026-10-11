@@ -90,15 +90,15 @@ class _ResultContent extends ConsumerWidget {
               ),
             ),
         AppSpacing.vGap24,
-        AppPrimaryButton(
-          label: 'Voir les ${universe.professionalsLabel.toLowerCase()}',
+        AppButton(
+          text: 'Voir les ${universe.professionalsLabel.toLowerCase()}',
           onPressed: () => context.go(AppRoutes.professionnels),
         ),
         AppSpacing.vGap12,
         Center(
-          child: TextButton(
+          child: AppButton.ghost(
+            text: "Aller à l'accueil",
             onPressed: () => context.go(AppRoutes.home),
-            child: const Text("Aller à l'accueil"),
           ),
         ),
         AppSpacing.vGap24,

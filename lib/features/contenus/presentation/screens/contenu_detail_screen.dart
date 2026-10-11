@@ -72,14 +72,14 @@ class ContenuDetailScreen extends ConsumerWidget {
           );
         }
         return publication.isArticle
-          ? _ArticleView(
-              publication: publication,
-              onQuit: () => _leave(context),
-            )
-          : _ConseilView(
-              publication: publication,
-              onBack: () => _leave(context),
-            );
+            ? _ArticleView(
+                publication: publication,
+                onQuit: () => _leave(context),
+              )
+            : _ConseilView(
+                publication: publication,
+                onBack: () => _leave(context),
+              );
       },
     );
   }
@@ -151,7 +151,7 @@ class _ArticleView extends StatelessWidget {
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.all(AppSpacing.s16),
-        child: FilledButton(onPressed: onQuit, child: const Text('Quitter')),
+        child: AppButton(text: 'Quitter', onPressed: onQuit),
       ),
     );
   }

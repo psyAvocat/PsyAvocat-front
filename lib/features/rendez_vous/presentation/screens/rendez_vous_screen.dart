@@ -6,6 +6,7 @@ import '../../data/models/rendez_vous_model.dart';
 import '../controllers/rendez_vous_controller.dart';
 import '../widgets/rendez_vous_card.dart';
 import '../widgets/rendez_vous_details_sheet.dart';
+import '../../../../core/widgets/app_button.dart';
 
 /// Écran « Mes rendez-vous » conforme à la maquette Figma.
 /// Affiche les 3 onglets : À venir, Passés, Annulés avec badges de date et statuts de confirmation.
@@ -61,10 +62,11 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
               const SizedBox(height: 16),
               const Text('Impossible de charger vos rendez-vous'),
               const SizedBox(height: 12),
-              ElevatedButton(
+              AppButton(
+                text: 'Réessayer',
+                isFullWidth: false,
                 onPressed: () =>
                     ref.read(rendezVousControllerProvider.notifier).reload(),
-                child: const Text('Réessayer'),
               ),
             ],
           ),

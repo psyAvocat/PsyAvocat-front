@@ -2,23 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_routes.dart';
-import '../../../../core/theme/universe_provider.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/data/repositories/session_repository.dart';
+import '../../../auth/presentation/controllers/session_controller.dart';
 import '../../../notifications/presentation/controllers/notifications_controller.dart';
 import '../../../profile/presentation/controllers/profil_controller.dart';
-import '../../../selection_univers/presentation/widgets/universe_switch_dialog.dart';
 
 /// Haut de l'accueil (maquettes « Accueil ») : photo de l'utilisateur à gauche,
-/// changement d'univers et notifications à droite.
+/// notifications à droite. Le changement d'univers est dans le profil.
 class HomeTopBar extends ConsumerWidget {
   const HomeTopBar({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final universe = ref.watch(currentUniverseProvider);
     final unreadCount = ref.watch(unreadNotificationsBadgeProvider);
-    final user = ref.watch(currentUserProvider).value;
+    // Identité chargée uniquement pour une session ouverte.
+    final connecte = ref.watch(signedInAccountProvider) != null;
+    final user = connecte ? ref.watch(currentUserProvider).value : null;
     final photoUrl = ref.watch(currentProfilProvider).value?.photoUrl;
     final name = '${user?.prenom ?? ''} ${user?.nom ?? ''}'.trim();
 
@@ -34,13 +34,6 @@ class HomeTopBar extends ConsumerWidget {
           ),
         ),
         const Spacer(),
-        IconButton(
-          tooltip: universe.isPsychologist
-              ? 'Passer à l’espace Avocat'
-              : 'Passer à l’espace Psychologue',
-          onPressed: () => confirmUniverseSwitch(context, ref),
-          icon: const Icon(Icons.swap_horiz_rounded),
-        ),
         IconButton(
           tooltip: 'Notifications',
           onPressed: () => context.push(AppRoutes.notifications),

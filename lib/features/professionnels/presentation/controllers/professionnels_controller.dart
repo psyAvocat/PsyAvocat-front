@@ -62,14 +62,15 @@ final professionnelDetailProvider = FutureProvider.autoDispose
 /// (un créneau réservé par un autre client disparaît immédiatement).
 final creneauxProvider = FutureProvider.autoDispose
     .family<List<Creneau>, String>((ref, professionnelId) {
-      listenRealtime(ref, {
-        RealtimeEventType.creneauMisAJour,
-        RealtimeEventType.creneauxMisAJour,
-      }, (event) {
-        if (event.payload['professionnelId'] == professionnelId) {
-          ref.invalidateSelf();
-        }
-      });
+      listenRealtime(
+        ref,
+        {RealtimeEventType.creneauMisAJour, RealtimeEventType.creneauxMisAJour},
+        (event) {
+          if (event.payload['professionnelId'] == professionnelId) {
+            ref.invalidateSelf();
+          }
+        },
+      );
       return ref
           .read(professionnelsRepositoryProvider)
           .getCreneaux(professionnelId);

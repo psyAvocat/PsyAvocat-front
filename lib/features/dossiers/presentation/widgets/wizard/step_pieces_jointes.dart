@@ -38,7 +38,9 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
       final notifier = ref.read(createDossierWizardProvider.notifier);
       for (final f in fichiers) {
         final bytes = await f.readAsBytes();
-        final erreur = notifier.addPieceJointe(PieceAJoindre(nom: f.name, bytes: bytes));
+        final erreur = notifier.addPieceJointe(
+          PieceAJoindre(nom: f.name, bytes: bytes),
+        );
         if (erreur != null && mounted) _message(erreur);
       }
     } catch (_) {
@@ -55,7 +57,8 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
   }
 
   String _taille(int octets) {
-    if (octets >= 1024 * 1024) return '${(octets / (1024 * 1024)).toStringAsFixed(1)} Mo';
+    if (octets >= 1024 * 1024)
+      return '${(octets / (1024 * 1024)).toStringAsFixed(1)} Mo';
     return '${(octets / 1024).ceil()} Ko';
   }
 
@@ -72,7 +75,11 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
             children: [
               const Text(
                 'Ajouter les pièces du dossier',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827),
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -82,30 +89,53 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
               ),
               const SizedBox(height: 24),
               InkWell(
-                onTap: _selection || pieces.length >= maxPiecesJointes ? null : _choisir,
+                onTap: _selection || pieces.length >= maxPiecesJointes
+                    ? null
+                    : _choisir,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 28,
+                    horizontal: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: primaryColor.withValues(alpha: 0.5), width: 1.5),
+                    border: Border.all(
+                      color: primaryColor.withValues(alpha: 0.5),
+                      width: 1.5,
+                    ),
                   ),
                   child: Column(
                     children: [
                       _selection
-                          ? const SizedBox(width: 32, height: 32, child: CircularProgressIndicator(strokeWidth: 3))
-                          : Icon(Icons.cloud_upload_outlined, size: 40, color: primaryColor),
+                          ? const SizedBox(
+                              width: 32,
+                              height: 32,
+                              child: CircularProgressIndicator(strokeWidth: 3),
+                            )
+                          : Icon(
+                              Icons.cloud_upload_outlined,
+                              size: 40,
+                              color: primaryColor,
+                            ),
                       const SizedBox(height: 12),
                       Text(
                         'Choisir des fichiers',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: primaryColor),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: primaryColor,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       const Text(
                         'PDF, JPG, PNG, DOC, DOCX — 10 Mo maximum par fichier',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6B7280),
+                        ),
                       ),
                     ],
                   ),
@@ -114,7 +144,11 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
               const SizedBox(height: 24),
               Text(
                 'Documents ajoutés (${pieces.length}/$maxPiecesJointes)',
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827),
+                ),
               ),
               const SizedBox(height: 12),
               if (pieces.isEmpty)
@@ -125,7 +159,10 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
               ...pieces.map(
                 (p) => Container(
                   margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
@@ -133,22 +170,43 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.insert_drive_file_outlined, color: primaryColor),
+                      Icon(
+                        Icons.insert_drive_file_outlined,
+                        color: primaryColor,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(p.nom, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                            Text(_taille(p.taille), style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                            Text(
+                              p.nom,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              _taille(p.taille),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF6B7280),
+                              ),
+                            ),
                           ],
                         ),
                       ),
                       IconButton(
                         tooltip: 'Retirer',
-                        icon: const Icon(Icons.close_rounded, color: Color(0xFF6B7280)),
-                        onPressed: () => ref.read(createDossierWizardProvider.notifier).removePieceJointe(p),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: Color(0xFF6B7280),
+                        ),
+                        onPressed: () => ref
+                            .read(createDossierWizardProvider.notifier)
+                            .removePieceJointe(p),
                       ),
                     ],
                   ),
@@ -162,7 +220,13 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
           padding: const EdgeInsets.all(20),
           decoration: const BoxDecoration(
             color: Colors.white,
-            boxShadow: [BoxShadow(color: Color(0x0A000000), offset: Offset(0, -4), blurRadius: 10)],
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x0A000000),
+                offset: Offset(0, -4),
+                blurRadius: 10,
+              ),
+            ],
           ),
           child: SafeArea(
             top: false,
@@ -178,7 +242,13 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: AppButton(text: 'Suivant', onPressed: widget.onNext, color: primaryColor)),
+                Expanded(
+                  child: AppButton(
+                    text: 'Suivant',
+                    onPressed: widget.onNext,
+                    color: primaryColor,
+                  ),
+                ),
               ],
             ),
           ),

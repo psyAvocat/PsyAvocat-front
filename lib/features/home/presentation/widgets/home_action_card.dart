@@ -7,7 +7,6 @@ import '../../../../core/theme/design_system.dart';
 /// [highlighted] : fond plein couleur de l'univers (action principale) ;
 /// sinon fond clair teinté avec contour (action secondaire).
 class HomeActionCard extends StatelessWidget {
-  final IconData icon;
   final String title;
   final String? subtitle;
   final bool highlighted;
@@ -15,7 +14,6 @@ class HomeActionCard extends StatelessWidget {
 
   const HomeActionCard({
     super.key,
-    required this.icon,
     required this.title,
     required this.onTap,
     this.subtitle,
@@ -43,9 +41,8 @@ class HomeActionCard extends StatelessWidget {
             padding: AppSpacing.cardPaddingCompact,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Icon(icon, color: foreground, size: AppIcons.sizeLg),
-                AppSpacing.vGap16,
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -57,11 +54,6 @@ class HomeActionCard extends StatelessWidget {
                           height: 1.25,
                         ),
                       ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      color: foreground,
-                      size: 20,
                     ),
                   ],
                 ),

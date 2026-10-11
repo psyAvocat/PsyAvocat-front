@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/app_button.dart';
 
 class MessagerieErrorState extends StatelessWidget {
   final VoidCallback onRetry;
@@ -19,7 +20,7 @@ class MessagerieErrorState extends StatelessWidget {
           const SizedBox(height: 16),
           const Text('Impossible de charger les messages'),
           const SizedBox(height: 12),
-          ElevatedButton(onPressed: onRetry, child: const Text('Réessayer')),
+          AppButton(text: 'Réessayer', isFullWidth: false, onPressed: onRetry),
         ],
       ),
     );

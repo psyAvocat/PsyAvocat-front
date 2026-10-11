@@ -44,7 +44,8 @@ class Formatters {
   ];
 
   /// « Mar » (jour abrégé).
-  static String formatJourCourt(DateTime date) => _joursCourts[date.weekday - 1];
+  static String formatJourCourt(DateTime date) =>
+      _joursCourts[date.weekday - 1];
 
   /// « mardi 15 octobre 2026 ».
   static String formatJourLong(DateTime date) =>

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../data/models/notification_model.dart';
 import '../controllers/notifications_controller.dart';
+import '../../../../core/widgets/app_button.dart';
 
 /// Centre de notifications PsyAvocat — liste des rappels, alertes et messages récents.
 class NotificationsScreen extends ConsumerStatefulWidget {
@@ -106,10 +107,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               const SizedBox(height: 12),
               const Text('Impossible de charger les notifications'),
               const SizedBox(height: 12),
-              ElevatedButton(
+              AppButton(
+                text: 'Réessayer',
+                isFullWidth: false,
                 onPressed: () =>
                     ref.read(notificationsListProvider.notifier).refresh(),
-                child: const Text('Réessayer'),
               ),
             ],
           ),

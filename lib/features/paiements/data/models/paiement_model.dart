@@ -59,8 +59,11 @@ class PaiementModel {
       statut: json['statut'] as String? ?? '',
       simulation: json['simulation'] as bool? ?? false,
       rendezVousId: json['rendezVousId'] as String?,
-      rendezVousDate: DateTime.tryParse(json['rendezVousDate'] as String? ?? ''),
-      montantTotalRendezVous: (json['montantTotalRendezVous'] as num?)?.toDouble(),
+      rendezVousDate: DateTime.tryParse(
+        json['rendezVousDate'] as String? ?? '',
+      ),
+      montantTotalRendezVous: (json['montantTotalRendezVous'] as num?)
+          ?.toDouble(),
       professionnelNom: json['professionnelNom'] as String? ?? '',
       professionnelPrenom: json['professionnelPrenom'] as String? ?? '',
       typeProfessionnel: json['typeProfessionnel'] as String?,
