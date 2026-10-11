@@ -4,6 +4,7 @@ import '../../../../core/realtime/realtime_service.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../../../shared/enums/appointment_status.dart';
 import '../../data/models/rendez_vous_model.dart';
+import '../../data/models/reservation_contexte.dart';
 import '../../data/repositories/rendez_vous_repository.dart';
 
 /// Rendez-vous du compte. Aucune donnée n'est créée localement : chaque
@@ -24,25 +25,24 @@ class RendezVousController extends AsyncNotifier<List<RendezVous>> {
     if (result.hasValue || !state.hasValue) state = result;
   }
 
-  /// Lève une ConflictException si le créneau vient d'être pris.
-  Future<RendezVous> reserver({
-    required String typeProfessionnel,
-    required String professionnelId,
-    required String disponibiliteId,
-    required String mode,
-    required double montantTotal,
-    String? motif,
-  }) async {
-    final rdv = await ref
-        .read(rendezVousRepositoryProvider)
-        .reserver(
-          typeProfessionnel: typeProfessionnel,
-          professionnelId: professionnelId,
-          disponibiliteId: disponibiliteId,
-          mode: mode,
-          montantTotal: montantTotal,
-          motif: motif,
-        );
+  /// Réservation (psychologue ou avocat via dossier accepté) après simulation
+  /// de l'acompte. Lève une ConflictException si le créneau vient d'être pris.
+  Future<RendezVous> reserver(ReservationRecap recap) async {
+    final repo = ref.read(rendezVousRepositoryProvider);
+    final contexte = recap.contexte;
+    final rdv = contexte.viaDossier
+        ? await repo.reserverAvocat(
+            soumissionId: contexte.soumissionId!,
+            disponibiliteId: recap.creneau.id,
+            mode: recap.mode,
+          )
+        : await repo.reserverPsychologue(
+            psychologueId: contexte.professionnelId,
+            disponibiliteId: recap.creneau.id,
+            mode: recap.mode,
+            montantTotal: contexte.montantTotal,
+            motif: recap.motif,
+          );
     await reload();
     return rdv;
   }

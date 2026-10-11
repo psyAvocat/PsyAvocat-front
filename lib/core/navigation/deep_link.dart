@@ -45,6 +45,10 @@ class DeepLinkTarget {
         return AppRoutes.contenu(id);
       case 'PROFESSIONNEL':
         return AppRoutes.professionnel(id);
+      case 'DOSSIER':
+      case 'SOUMISSION':
+        // Dossiers juridiques (univers Avocat) : la liste affiche le suivi des réponses.
+        return AppRoutes.dossiers;
       default:
         return AppRoutes.notifications;
     }

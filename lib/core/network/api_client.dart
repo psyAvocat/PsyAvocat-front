@@ -11,7 +11,11 @@ class ApiClient {
 
   /// [onAccountRefused] : le backend a refusé le compte (désactivé, email non
   /// confirmé) ; voir [AuthInterceptor].
-  ApiClient({Dio? customDio, void Function()? onAccountRefused}) {
+  ApiClient({
+    Dio? customDio,
+    void Function()? onAccountRefused,
+    void Function()? onSessionExpired,
+  }) {
     dio =
         customDio ??
         Dio(
@@ -29,7 +33,11 @@ class ApiClient {
 
     // Jeton Firebase sur chaque requête ; nouvel essai sur 401 avec ce même client.
     dio.interceptors.add(
-      AuthInterceptor(dio, onAccountRefused: onAccountRefused),
+      AuthInterceptor(
+        dio,
+        onAccountRefused: onAccountRefused,
+        onSessionExpired: onSessionExpired,
+      ),
     );
 
     // Journal des requêtes (mode debug) : placé avant l'ErrorInterceptor pour

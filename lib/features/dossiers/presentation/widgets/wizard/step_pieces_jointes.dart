@@ -1,9 +1,12 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/widgets/app_button.dart';
 import '../../controllers/create_dossier_wizard_controller.dart';
 
-class StepPiecesJointes extends ConsumerWidget {
+/// Étape 3 : pièces du dossier, choisies sur l'appareil puis déposées dans le
+/// stockage privé du backend lors de l'envoi (formats acceptés par le serveur).
+class StepPiecesJointes extends ConsumerStatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
   final Color primaryColor;
@@ -16,19 +19,50 @@ class StepPiecesJointes extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(createDossierWizardProvider);
-    final pieces = state.piecesJointes;
+  ConsumerState<StepPiecesJointes> createState() => _StepPiecesJointesState();
+}
 
-    final documentTypes = [
-      {'icon': Icons.description_outlined, 'label': 'Contrat'},
-      {'icon': Icons.workspace_premium_outlined, 'label': 'Certificat'},
-      {'icon': Icons.assignment_outlined, 'label': 'Procès-verbal'},
-      {'icon': Icons.mail_outline_rounded, 'label': 'Lettre / courrier'},
-      {'icon': Icons.gavel_rounded, 'label': 'Décision de justice'},
-      {'icon': Icons.camera_alt_outlined, 'label': 'Photo'},
-      {'icon': Icons.insert_drive_file_outlined, 'label': 'Autre document'},
-    ];
+class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
+  /// Extensions acceptées par le backend (PDF, images, Word).
+  static const _extensions = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
+
+  bool _selection = false;
+
+  Future<void> _choisir() async {
+    setState(() => _selection = true);
+    try {
+      final fichiers = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: _extensions,
+      );
+      final notifier = ref.read(createDossierWizardProvider.notifier);
+      for (final f in fichiers) {
+        final bytes = await f.readAsBytes();
+        final erreur = notifier.addPieceJointe(PieceAJoindre(nom: f.name, bytes: bytes));
+        if (erreur != null && mounted) _message(erreur);
+      }
+    } catch (_) {
+      if (mounted) _message('Impossible d’accéder à ce fichier. Réessayez.');
+    } finally {
+      if (mounted) setState(() => _selection = false);
+    }
+  }
+
+  void _message(String texte) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(texte), behavior: SnackBarBehavior.floating),
+    );
+  }
+
+  String _taille(int octets) {
+    if (octets >= 1024 * 1024) return '${(octets / (1024 * 1024)).toStringAsFixed(1)} Mo';
+    return '${(octets / 1024).ceil()} Ko';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pieces = ref.watch(createDossierWizardProvider).piecesJointes;
+    final primaryColor = widget.primaryColor;
 
     return Column(
       children: [
@@ -38,223 +72,89 @@ class StepPiecesJointes extends ConsumerWidget {
             children: [
               const Text(
                 'Ajouter les pièces du dossier',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
               ),
               const SizedBox(height: 8),
               const Text(
-                'Joignez les documents utiles pour aider les professionnels à mieux comprendre votre situation.',
+                'Joignez les documents utiles (contrat, courrier, décision, photo…). '
+                'Ils ne sont visibles que par vous et les avocats destinataires.',
                 style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
               ),
               const SizedBox(height: 24),
-
-              // Upload Box
-              GestureDetector(
-                onTap: () {
-                  // Simulate file picking
-                  ref
-                      .read(createDossierWizardProvider.notifier)
-                      .addPieceJointe('Contrat_terrain.pdf');
-                },
+              InkWell(
+                onTap: _selection || pieces.length >= maxPiecesJointes ? null : _choisir,
+                borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: primaryColor.withValues(alpha: 0.5),
-                      width: 1.5,
-                      style: BorderStyle.solid,
-                    ), // In reality dashed
+                    border: Border.all(color: primaryColor.withValues(alpha: 0.5), width: 1.5),
                   ),
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.cloud_upload_outlined,
-                        size: 40,
-                        color: primaryColor,
+                      _selection
+                          ? const SizedBox(width: 32, height: 32, child: CircularProgressIndicator(strokeWidth: 3))
+                          : Icon(Icons.cloud_upload_outlined, size: 40, color: primaryColor),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Choisir des fichiers',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: primaryColor),
                       ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: primaryColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.add, color: Colors.white, size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              'Ajouter une pièce jointe',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'PDF, JPG, PNG, DOC, DOCX — 10 Mo maximum par fichier',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                       ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 24),
-
-              Row(
-                children: [
-                  const Icon(
-                    Icons.file_copy_outlined,
-                    size: 16,
-                    color: Color(0xFF6B7280),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Types de documents acceptés',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
-                    ),
-                  ),
-                ],
+              Text(
+                'Documents ajoutés (${pieces.length}/$maxPiecesJointes)',
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
               ),
               const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: documentTypes.map((t) {
-                  return Container(
-                    width:
-                        (MediaQuery.of(context).size.width - 40 - 24) /
-                        3, // 3 columns roughly
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(t['icon'] as IconData, color: primaryColor),
-                        const SizedBox(height: 8),
-                        Text(
-                          t['label'] as String,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Color(0xFF4B5563),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 32),
-
-              if (pieces.isNotEmpty) ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Pièces jointes (${pieces.length})',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF111827),
-                      ),
-                    ),
-                    const Text(
-                      'Tout supprimer',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
+              if (pieces.isEmpty)
+                const Text(
+                  'Aucun document pour le moment. Cette étape est facultative.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
                 ),
-                const SizedBox(height: 16),
-                ...pieces.map((p) {
-                  final isPdf = p.endsWith('.pdf');
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Color(0xFFF3F4F6)),
+              ...pieces.map(
+                (p) => Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.insert_drive_file_outlined, color: primaryColor),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(p.nom, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                            Text(_taille(p.taille), style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                          ],
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: isPdf
-                                ? const Color(0xFFEF4444)
-                                : const Color(0xFF3B82F6),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.insert_drive_file,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                p,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF111827),
-                                ),
-                              ),
-                              const Text(
-                                '2,4 Mo',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF9CA3AF),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.remove_red_eye_outlined,
-                            color: Color(0xFF111827),
-                          ),
-                          onPressed: () {},
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline_rounded,
-                            color: Color(0xFF111827),
-                          ),
-                          onPressed: () => ref
-                              .read(createDossierWizardProvider.notifier)
-                              .removePieceJointe(p),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ],
-              const SizedBox(height: 40),
+                      IconButton(
+                        tooltip: 'Retirer',
+                        icon: const Icon(Icons.close_rounded, color: Color(0xFF6B7280)),
+                        onPressed: () => ref.read(createDossierWizardProvider.notifier).removePieceJointe(p),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -262,34 +162,25 @@ class StepPiecesJointes extends ConsumerWidget {
           padding: const EdgeInsets.all(20),
           decoration: const BoxDecoration(
             color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x0A000000),
-                offset: Offset(0, -4),
-                blurRadius: 10,
-              ),
-            ],
+            boxShadow: [BoxShadow(color: Color(0x0A000000), offset: Offset(0, -4), blurRadius: 10)],
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  text: 'Retour',
-                  onPressed: onBack,
-                  isOutlined: true,
-                  textColor: const Color(0xFF111827),
-                  color: const Color(0xFFE5E7EB),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    text: 'Retour',
+                    onPressed: widget.onBack,
+                    isOutlined: true,
+                    textColor: const Color(0xFF111827),
+                    color: const Color(0xFFE5E7EB),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: AppButton(
-                  text: 'Suivant',
-                  onPressed: onNext,
-                  color: primaryColor,
-                ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(child: AppButton(text: 'Suivant', onPressed: widget.onNext, color: primaryColor)),
+              ],
+            ),
           ),
         ),
       ],

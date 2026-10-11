@@ -5,6 +5,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/user_message.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/design_system.dart';
+import '../../../../core/theme/universe_provider.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../data/models/contenu_model.dart';
@@ -52,7 +53,25 @@ class ContenuDetailScreen extends ConsumerWidget {
                     ref.invalidate(publicationDetailProvider(contenuId)),
               ),
       ),
-      data: (publication) => publication.isArticle
+      data: (publication) {
+        // Cloisonnement : un article juridique ne s'ouvre pas depuis l'univers
+        // Psychologue (lien profond, notification), et inversement.
+        final universe = ref.watch(currentUniverseProvider);
+        if (publication.isArticle != universe.isLawyer) {
+          return Scaffold(
+            appBar: AppBar(),
+            body: AppEmptyStateView(
+              title: 'Publication d’un autre univers',
+              message: publication.isArticle
+                  ? 'Cet article appartient à l’univers Avocat. Changez d’univers pour le lire.'
+                  : 'Ce conseil appartient à l’univers Psychologue. Changez d’univers pour le lire.',
+              icon: Icons.swap_horiz_rounded,
+              actionText: 'Retour',
+              onAction: () => _leave(context),
+            ),
+          );
+        }
+        return publication.isArticle
           ? _ArticleView(
               publication: publication,
               onQuit: () => _leave(context),
@@ -60,7 +79,8 @@ class ContenuDetailScreen extends ConsumerWidget {
           : _ConseilView(
               publication: publication,
               onBack: () => _leave(context),
-            ),
+            );
+      },
     );
   }
 }

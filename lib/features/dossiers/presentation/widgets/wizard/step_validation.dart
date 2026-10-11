@@ -1,56 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../../../../../core/widgets/app_button.dart';
 import '../../controllers/create_dossier_wizard_controller.dart';
-import '../../controllers/dossiers_controller.dart';
 
-class StepValidation extends ConsumerStatefulWidget {
-  final VoidCallback onSubmit;
+/// Étape 4 : récapitulatif puis envoi réel (création, pièces, soumissions).
+class StepValidation extends ConsumerWidget {
+  final VoidCallback onSubmitted;
+  final VoidCallback onBack;
   final Color primaryColor;
 
   const StepValidation({
     super.key,
-    required this.onSubmit,
+    required this.onSubmitted,
+    required this.onBack,
     required this.primaryColor,
   });
 
-  @override
-  ConsumerState<StepValidation> createState() => _StepValidationState();
-}
+  Future<void> _envoyer(WidgetRef ref) async {
+    final resultat = await ref.read(createDossierWizardProvider.notifier).envoyer();
+    if (resultat != null) onSubmitted();
+  }
 
-class _StepValidationState extends ConsumerState<StepValidation> {
-  bool _isSubmitting = false;
-
-  Future<void> _submit() async {
-    setState(() => _isSubmitting = true);
-    final state = ref.read(createDossierWizardProvider);
-
-    final ok = await ref
-        .read(dossiersListProvider.notifier)
-        .createDossier(
-          titre: state.titre,
-          description: state.description,
-          domaine: state.domaine,
-        );
-
-    if (mounted) {
-      setState(() => _isSubmitting = false);
-      if (ok) {
-        widget.onSubmit();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Erreur lors de la création du dossier'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
+  String _etape(EnvoiDossierEtape etape) {
+    switch (etape) {
+      case EnvoiDossierEtape.creation:
+        return 'Création du dossier…';
+      case EnvoiDossierEtape.piecesJointes:
+        return 'Envoi des pièces jointes…';
+      case EnvoiDossierEtape.soumissions:
+        return 'Transmission aux avocats…';
+      case EnvoiDossierEtape.inactif:
+      case EnvoiDossierEtape.termine:
+        return '';
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(createDossierWizardProvider);
 
     return Column(
@@ -61,213 +47,58 @@ class _StepValidationState extends ConsumerState<StepValidation> {
             children: [
               const Text(
                 'Récapitulatif',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
               ),
               const SizedBox(height: 16),
-
-              // Informations du dossier
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Informations du dossier',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF111827),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildRow(
-                      Icons.description_outlined,
-                      'Titre :',
-                      state.titre,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildRow(Icons.work_outline, 'Domaine :', state.domaine),
-                    const SizedBox(height: 12),
-                    _buildRow(
-                      Icons.edit_outlined,
-                      'Description :',
-                      state.description,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildRow(
-                      Icons.calendar_today_outlined,
-                      'Date importante :',
-                      state.dateImportante != null
-                          ? DateFormat(
-                              'dd/MM/yyyy',
-                            ).format(state.dateImportante!)
-                          : 'Non spécifiée',
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Avocats sélectionnés
-              Text(
-                'Avocats sélectionnés (${state.selectedProfessionnels.length})',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF374151),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
-                ),
-                child: Column(
-                  children: state.selectedProfessionnels.map((p) {
-                    return Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundColor: widget.primaryColor.withValues(
-                              alpha: 0.1,
-                            ),
-                            backgroundImage: p.photoUrl != null
-                                ? NetworkImage(p.photoUrl!)
-                                : null,
-                            child: p.photoUrl == null
-                                ? Text(
-                                    p.fullName.isNotEmpty
-                                        ? p.fullName[0].toUpperCase()
-                                        : '?',
-                                    style: TextStyle(
-                                      color: widget.primaryColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  p.displayName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF111827),
-                                  ),
-                                ),
-                                Text(
-                                  p.specialites.isNotEmpty
-                                      ? p.specialites.first
-                                      : 'Généraliste',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF6B7280),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Pièces jointes
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              _Bloc(
+                titre: 'Informations du dossier',
                 children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.attach_file,
-                        size: 18,
-                        color: Color(0xFF6B7280),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Pièces jointes (${state.piecesJointes.length})',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF111827),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Text(
-                    'Voir les détails',
-                    style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
-                  ),
+                  _Ligne(icone: Icons.description_outlined, libelle: 'Titre', valeur: state.titre),
+                  _Ligne(icone: Icons.work_outline, libelle: 'Domaine', valeur: state.domaine?.nom ?? 'Non précisé'),
+                  _Ligne(icone: Icons.edit_outlined, libelle: 'Description', valeur: state.description),
                 ],
               ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: state.piecesJointes.map((p) {
-                  final isPdf = p.endsWith('.pdf');
-                  return Container(
-                    width: (MediaQuery.of(context).size.width - 40 - 24) / 3,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 24,
-                      horizontal: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: isPdf
-                                ? const Color(0xFFEF4444)
-                                : const Color(0xFF3B82F6),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Icon(
-                            Icons.insert_drive_file,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          p,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 9,
-                            color: Color(0xFF111827),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
+              const SizedBox(height: 16),
+              _Bloc(
+                titre: 'Avocats destinataires (${state.selectedProfessionnels.length})',
+                children: state.selectedProfessionnels
+                    .map((p) => _Ligne(icone: Icons.gavel_rounded, libelle: '', valeur: p.displayName))
+                    .toList(),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 16),
+              _Bloc(
+                titre: 'Pièces jointes (${state.piecesJointes.length})',
+                children: state.piecesJointes.isEmpty
+                    ? const [_Ligne(icone: Icons.attach_file_rounded, libelle: '', valeur: 'Aucune')]
+                    : state.piecesJointes
+                        .map((p) => _Ligne(icone: Icons.attach_file_rounded, libelle: '', valeur: p.nom))
+                        .toList(),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Chaque avocat pourra accepter ou décliner votre dossier. Dès qu’un avocat '
+                'l’accepte, il lui est confié et vous pourrez prendre rendez-vous avec lui.',
+                style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.4),
+              ),
+              if (state.envoiEnCours) ...[
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                    const SizedBox(width: 10),
+                    Text(_etape(state.etape), style: const TextStyle(fontSize: 13)),
+                  ],
+                ),
+              ],
+              if (state.erreur != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: const Color(0xFFFEF2F2), borderRadius: BorderRadius.circular(12)),
+                  child: Text(state.erreur!, style: const TextStyle(color: Color(0xFF991B1B))),
+                ),
+              ],
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -275,47 +106,91 @@ class _StepValidationState extends ConsumerState<StepValidation> {
           padding: const EdgeInsets.all(20),
           decoration: const BoxDecoration(
             color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x0A000000),
-                offset: Offset(0, -4),
-                blurRadius: 10,
-              ),
-            ],
+            boxShadow: [BoxShadow(color: Color(0x0A000000), offset: Offset(0, -4), blurRadius: 10)],
           ),
-          child: AppButton(
-            text: 'Envoyer le dossier',
-            onPressed: _submit,
-            isLoading: _isSubmitting,
-            color: const Color(
-              0xFF0C2659,
-            ), // It's very dark blue in the mockup, matching lawyer color usually
+          child: SafeArea(
+            top: false,
+            child: Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    text: 'Retour',
+                    onPressed: state.envoiEnCours ? null : onBack,
+                    isOutlined: true,
+                    textColor: const Color(0xFF111827),
+                    color: const Color(0xFFE5E7EB),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: AppButton(
+                    text: 'Envoyer le dossier',
+                    isLoading: state.envoiEnCours,
+                    onPressed: state.envoiEnCours ? null : () => _envoyer(ref),
+                    color: primaryColor,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildRow(IconData icon, String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: const Color(0xFF4B5563)),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 90,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+class _Bloc extends StatelessWidget {
+  final String titre;
+  final List<Widget> children;
+  const _Bloc({required this.titre, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(titre, style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF111827))),
+          const SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class _Ligne extends StatelessWidget {
+  final IconData icone;
+  final String libelle;
+  final String valeur;
+  const _Ligne({required this.icone, required this.libelle, required this.valeur});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icone, size: 18, color: const Color(0xFF6B7280)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  if (libelle.isNotEmpty)
+                    TextSpan(text: '$libelle : ', style: const TextStyle(fontWeight: FontWeight.w600)),
+                  TextSpan(text: valeur),
+                ],
+              ),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF374151), height: 1.4),
+            ),
           ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF374151)),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

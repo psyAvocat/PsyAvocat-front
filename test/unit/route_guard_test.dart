@@ -178,6 +178,25 @@ void main() {
       );
     });
 
+    test('dossiers juridiques réservés à l’univers Avocat', () {
+      expect(
+        redirect(
+          AppRoutes.dossiers,
+          session: SessionStatus.authorized,
+          universe: AppUniverse.psychologist,
+        ),
+        AppRoutes.home,
+      );
+      expect(
+        redirect(
+          AppRoutes.dossiers,
+          session: SessionStatus.authorized,
+          universe: AppUniverse.lawyer,
+        ),
+        isNull,
+      );
+    });
+
     test(
       'contenus de l’univers : articles (Avocat) / conseils (Psychologue)',
       () {

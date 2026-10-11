@@ -7,7 +7,8 @@ abstract class PaiementsRepository {
   Future<List<PaiementModel>> getMesPaiements();
 }
 
-/// Implémentation officielle connectée à l'API Spring Boot (GET /api/paiements)
+/// `GET /api/paiements` : paiements (simulés) du client connecté.
+/// Les erreurs sont propagées : jamais converties en liste vide.
 class ApiPaiementsRepository implements PaiementsRepository {
   final ApiClient _client;
 
@@ -15,16 +16,11 @@ class ApiPaiementsRepository implements PaiementsRepository {
 
   @override
   Future<List<PaiementModel>> getMesPaiements() async {
-    try {
-      final response = await _client.get('/paiements');
-      final list = response.data as List<dynamic>? ?? [];
-      return list
-          .map((item) => PaiementModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
-      // Retourne une liste vide propre si indisponible (pas de données métier fictives)
-      return [];
-    }
+    final response = await _client.get('/paiements');
+    final list = response.data as List<dynamic>? ?? [];
+    return list
+        .map((item) => PaiementModel.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 }
 

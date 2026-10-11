@@ -18,10 +18,15 @@ class AuthInterceptor extends Interceptor {
   /// confirmé) : la session doit être réévaluée, un nouveau jeton n'y changerait rien.
   final void Function()? onAccountRefused;
 
+  /// Appelé quand le backend refuse encore le jeton après rafraîchissement (401) :
+  /// la session n'est plus valide, l'accès aux écrans protégés doit être retiré.
+  final void Function()? onSessionExpired;
+
   AuthInterceptor(
     this._dio, {
     FirebaseAuth? firebaseAuth,
     this.onAccountRefused,
+    this.onSessionExpired,
   }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
 
   @override
@@ -73,9 +78,14 @@ class AuthInterceptor extends Interceptor {
         options.extra[_retriedKey] = true;
         return handler.resolve(await _dio.fetch(options));
       } on DioException catch (retryError) {
+        if (retryError.response?.statusCode == 401) {
+          apiLog('401 persistant après rafraîchissement : session expirée');
+          onSessionExpired?.call();
+        }
         return handler.next(retryError);
       } catch (error) {
         apiLog('Rafraîchissement du jeton en échec : $error');
+        onSessionExpired?.call();
       }
     }
     handler.next(err);

@@ -74,6 +74,7 @@ class NotificationItem {
       case 'CONTENU':
         return AppRoutes.contenu(ressourceId!);
       case 'DOSSIER':
+      case 'SOUMISSION':
         return AppRoutes.dossiers;
       default:
         return null;

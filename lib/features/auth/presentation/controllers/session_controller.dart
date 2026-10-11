@@ -137,6 +137,21 @@ class SessionController extends Notifier<SessionState> {
     resolve();
   }
 
+  /// Jeton refusé par le backend même après rafraîchissement : la session est
+  /// fermée (aucun écran protégé ne reste accessible), retour à la connexion.
+  Future<void> expireSession() async {
+    if (_expiring || state.status == SessionStatus.unauthenticated) return;
+    _expiring = true;
+    try {
+      await signOut();
+    } finally {
+      _expiring = false;
+    }
+  }
+
+  /// Plusieurs requêtes refusées en même temps ne ferment la session qu'une fois.
+  bool _expiring = false;
+
   /// Après création du profil manquant : l'accès est réévalué.
   Future<void> refreshAfterProfileCreation() => resolve();
 

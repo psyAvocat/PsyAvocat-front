@@ -66,6 +66,11 @@ String? _authorized(String location, AppUniverse universe) {
     return AppRoutes.home;
   }
 
+  // Les dossiers juridiques n'existent que dans l'univers Avocat.
+  if (universe.isPsychologist && location.startsWith(AppRoutes.dossiers)) {
+    return AppRoutes.home;
+  }
+
   // Les contenus suivent l'univers : articles (Avocat) / conseils (Psychologue).
   if (universe.isLawyer && location == AppRoutes.conseils) {
     return AppRoutes.articles;

@@ -12,14 +12,22 @@ abstract class RendezVousRepository {
 
   Future<RendezVous> getRendezVous(String id);
 
-  /// Réservation directe d'un créneau libre (le backend revérifie le créneau sous verrou).
-  Future<RendezVous> reserver({
-    required String typeProfessionnel,
-    required String professionnelId,
+  /// Psychologue : réservation directe d'un créneau libre, au prix d'un tarif publié
+  /// (le backend revérifie le créneau sous verrou et le montant).
+  Future<RendezVous> reserverPsychologue({
+    required String psychologueId,
     required String disponibiliteId,
     required String mode,
     required double montantTotal,
     String? motif,
+  });
+
+  /// Avocat : réservation après acceptation du dossier ; le montant est celui
+  /// des honoraires acceptés, fixé par le backend.
+  Future<RendezVous> reserverAvocat({
+    required String soumissionId,
+    required String disponibiliteId,
+    required String mode,
   });
 
   /// Déplace un rendez-vous sur un autre créneau libre du même professionnel.
@@ -52,23 +60,38 @@ class ApiRendezVousRepository implements RendezVousRepository {
   }
 
   @override
-  Future<RendezVous> reserver({
-    required String typeProfessionnel,
-    required String professionnelId,
+  Future<RendezVous> reserverPsychologue({
+    required String psychologueId,
     required String disponibiliteId,
     required String mode,
     required double montantTotal,
     String? motif,
   }) async {
-    final estAvocat = typeProfessionnel == 'AVOCAT';
     final response = await _client.post(
-      estAvocat ? '/rendez-vous/avocat/direct' : '/rendez-vous/psychologue',
+      '/rendez-vous/psychologue',
       data: {
-        estAvocat ? 'avocatId' : 'psychologueId': professionnelId,
+        'psychologueId': psychologueId,
         'disponibiliteId': disponibiliteId,
         'mode': mode,
         'montantTotal': montantTotal,
         if (motif != null && motif.trim().isNotEmpty) 'motif': motif.trim(),
+      },
+    );
+    return RendezVous.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<RendezVous> reserverAvocat({
+    required String soumissionId,
+    required String disponibiliteId,
+    required String mode,
+  }) async {
+    final response = await _client.post(
+      '/rendez-vous/avocat',
+      data: {
+        'soumissionId': soumissionId,
+        'disponibiliteId': disponibiliteId,
+        'mode': mode,
       },
     );
     return RendezVous.fromJson(response.data as Map<String, dynamic>);

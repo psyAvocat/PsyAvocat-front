@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import '../../../../../core/errors/user_message.dart';
 import '../../../../../core/widgets/app_button.dart';
+import '../../../../referentiels/data/models/specialite_option.dart';
+import '../../../../referentiels/presentation/controllers/specialites_provider.dart';
 import '../../controllers/create_dossier_wizard_controller.dart';
 
+/// Étape 2 : titre, domaine juridique (référentiel réel des spécialités Avocat)
+/// et description du dossier.
 class StepInformations extends ConsumerStatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
@@ -24,17 +28,7 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titreController;
   late TextEditingController _descController;
-  late String _domaine;
-  DateTime? _dateImportante;
-
-  static const _domaines = [
-    'Droit immobilier',
-    'Droit de la famille',
-    'Droit du travail',
-    'Droit pénal',
-    'Droit des affaires',
-    'Autre',
-  ];
+  SpecialiteOption? _domaine;
 
   @override
   void initState() {
@@ -42,10 +36,7 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
     final state = ref.read(createDossierWizardProvider);
     _titreController = TextEditingController(text: state.titre);
     _descController = TextEditingController(text: state.description);
-    _domaine = _domaines.contains(state.domaine)
-        ? state.domaine
-        : _domaines.first;
-    _dateImportante = state.dateImportante;
+    _domaine = state.domaine;
   }
 
   @override
@@ -57,40 +48,21 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
 
   void _saveAndNext() {
     if (!_formKey.currentState!.validate()) return;
-
     ref
         .read(createDossierWizardProvider.notifier)
         .updateInformations(
           titre: _titreController.text.trim(),
           domaine: _domaine,
           description: _descController.text.trim(),
-          dateImportante: _dateImportante,
         );
+    FocusScope.of(context).unfocus();
     widget.onNext();
-  }
-
-  Future<void> _pickDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _dateImportante ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: widget.primaryColor),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (date != null) {
-      setState(() => _dateImportante = date);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final domainesAsync = ref.watch(specialitesOfUniverseProvider);
+
     return Form(
       key: _formKey,
       child: Column(
@@ -98,125 +70,72 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               children: [
                 const Text(
                   'Informations du dossier',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF111827),
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
                 ),
                 const SizedBox(height: 24),
-
-                const Text(
-                  'Titre du dossier *',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F2937),
-                  ),
-                ),
-                const SizedBox(height: 8),
+                const _Libelle('Titre du dossier *'),
                 TextFormField(
                   controller: _titreController,
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Champ requis' : null,
-                  decoration: _inputDeco('Ex: Litige concernant un terrain'),
+                  maxLength: 150,
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Champ requis' : null,
+                  decoration: _inputDeco('Ex : Litige concernant un terrain'),
                 ),
-                const SizedBox(height: 20),
-
-                const Text(
-                  'Domaine juridique *',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F2937),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  value: _domaine,
-                  icon: const Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: Color(0xFF111827),
-                  ),
-                  decoration: _inputDeco(''),
-                  items: _domaines
-                      .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                      .toList(),
-                  onChanged: (v) {
-                    if (v != null) setState(() => _domaine = v);
-                  },
-                ),
-                const SizedBox(height: 20),
-
-                const Text(
-                  'Description du problème *',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F2937),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _descController,
-                  maxLines: 5,
-                  maxLength: 500,
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Champ requis' : null,
-                  decoration: _inputDeco('Décrivez votre situation...'),
-                ),
-                const SizedBox(height: 20),
-
-                const Text(
-                  'Date ou délai important (optionnel)',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F2937),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: _pickDate,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.calendar_today_outlined,
-                          color: Color(0xFF6B7280),
-                          size: 20,
+                const SizedBox(height: 12),
+                const _Libelle('Domaine juridique (facultatif)'),
+                domainesAsync.when(
+                  loading: () => const LinearProgressIndicator(),
+                  error: (e, _) => Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          userMessageFor(e),
+                          style: const TextStyle(fontSize: 13, color: Color(0xFFDC2626)),
                         ),
-                        const SizedBox(width: 12),
-                        Text(
-                          _dateImportante != null
-                              ? DateFormat(
-                                  'dd/MM/yyyy',
-                                ).format(_dateImportante!)
-                              : 'Sélectionner une date',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: _dateImportante != null
-                                ? const Color(0xFF111827)
-                                : const Color(0xFF9CA3AF),
+                      ),
+                      TextButton(
+                        onPressed: () => ref.invalidate(specialitesOfUniverseProvider),
+                        child: const Text('Réessayer'),
+                      ),
+                    ],
+                  ),
+                  data: (domaines) {
+                    final selection = _domaine != null
+                        ? domaines.where((d) => d.id == _domaine!.id).firstOrNull
+                        : null;
+                    return DropdownButtonFormField<SpecialiteOption?>(
+                      initialValue: selection,
+                      isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF111827)),
+                      decoration: _inputDeco('Sélectionner un domaine'),
+                      items: [
+                        const DropdownMenuItem<SpecialiteOption?>(value: null, child: Text('Je ne sais pas')),
+                        ...domaines.map(
+                          (d) => DropdownMenuItem<SpecialiteOption?>(
+                            value: d,
+                            child: Text(d.nom, overflow: TextOverflow.ellipsis),
                           ),
                         ),
                       ],
-                    ),
-                  ),
+                      onChanged: (v) => setState(() => _domaine = v),
+                    );
+                  },
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
+                const _Libelle('Description de la situation *'),
+                TextFormField(
+                  controller: _descController,
+                  maxLines: 6,
+                  maxLength: 2000,
+                  validator: (v) => (v == null || v.trim().length < 20)
+                      ? 'Décrivez votre situation (20 caractères minimum)'
+                      : null,
+                  decoration: _inputDeco('Décrivez les faits, les parties concernées et votre demande…'),
+                ),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -224,34 +143,27 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
               color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x0A000000),
-                  offset: Offset(0, -4),
-                  blurRadius: 10,
-                ),
-              ],
+              boxShadow: [BoxShadow(color: Color(0x0A000000), offset: Offset(0, -4), blurRadius: 10)],
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: AppButton(
-                    text: 'Retour',
-                    onPressed: widget.onBack,
-                    isOutlined: true,
-                    textColor: const Color(0xFF111827),
-                    color: const Color(0xFFE5E7EB),
+            child: SafeArea(
+              top: false,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      text: 'Retour',
+                      onPressed: widget.onBack,
+                      isOutlined: true,
+                      textColor: const Color(0xFF111827),
+                      color: const Color(0xFFE5E7EB),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AppButton(
-                    text: 'Suivant',
-                    onPressed: _saveAndNext,
-                    color: widget.primaryColor,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppButton(text: 'Suivant', onPressed: _saveAndNext, color: widget.primaryColor),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -278,6 +190,19 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide(color: widget.primaryColor),
       ),
+    );
+  }
+}
+
+class _Libelle extends StatelessWidget {
+  final String texte;
+  const _Libelle(this.texte);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(texte, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1F2937))),
     );
   }
 }

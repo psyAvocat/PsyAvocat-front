@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/errors/user_message.dart';
 import '../../../../core/theme/universe_provider.dart';
+import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/app_state_views.dart';
 import '../../data/models/paiement_model.dart';
 import '../controllers/paiements_controller.dart';
 
-/// Écran « Historique des paiements & Factures » PsyAvocat
+/// Historique des acomptes de l'univers courant.
+/// V1 : paiements SIMULÉS, présentés comme tels (aucune transaction réelle).
 class PaiementsScreen extends ConsumerWidget {
   const PaiementsScreen({super.key});
 
@@ -12,7 +16,7 @@ class PaiementsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final universe = ref.watch(currentUniverseProvider);
     final primaryColor = universe.primaryColor;
-    final paiementsAsync = ref.watch(paiementsListProvider);
+    final paiementsAsync = ref.watch(paiementsUniversProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFC),
@@ -21,153 +25,61 @@ class PaiementsScreen extends ConsumerWidget {
         elevation: 0,
         centerTitle: false,
         title: const Text(
-          'Mes paiements & Reçus',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF1E2432),
-          ),
+          'Mes paiements',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1E2432)),
         ),
       ),
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // Bannière récapitulative
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [const Color(0xFF1E293B), const Color(0xFF334155)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(paiementsListProvider.notifier).refresh(),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFFED7AA)),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.science_outlined, color: Color(0xFFC2410C)),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Paiements simulés : l’acompte de 20 % valide votre rendez-vous, mais aucune '
+                      'somme n’est réellement débitée. Le paiement en ligne sera disponible ultérieurement.',
+                      style: TextStyle(fontSize: 13, color: Color(0xFF7C2D12), height: 1.4),
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Paiements sécurisés',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(
-                                Icons.lock_rounded,
-                                size: 12,
-                                color: Colors.white,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                '100% Crypté',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Acomptes légaux de 20%',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Conformément aux règles déontologiques, l\'acompte garantit la réservation de votre créneau horaire.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white70,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
+                ],
               ),
             ),
-          ),
-
-          // Liste des transactions
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
-            sliver: paiementsAsync.when(
-              loading: () => const SliverToBoxAdapter(
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: CircularProgressIndicator(),
-                  ),
+            const SizedBox(height: 16),
+            ...paiementsAsync.when(
+              loading: () => [
+                const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator())),
+              ],
+              error: (e, _) => [
+                AppErrorStateView(
+                  title: 'Impossible de charger vos paiements',
+                  message: userMessageFor(e),
+                  onRetry: () => ref.read(paiementsListProvider.notifier).refresh(),
                 ),
-              ),
-              error: (err, stack) => const SliverToBoxAdapter(
-                child: Center(
-                  child: Text('Erreur lors du chargement des paiements'),
-                ),
-              ),
-              data: (transactions) {
-                if (transactions.isEmpty) {
-                  return const SliverToBoxAdapter(
-                    child: Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: Text(
-                          'Aucun paiement enregistré pour l\'instant.',
-                        ),
+              ],
+              data: (paiements) => paiements.isEmpty
+                  ? [
+                      const AppEmptyStateView(
+                        icon: Icons.receipt_long_outlined,
+                        title: 'Aucun paiement',
+                        message: 'Les acomptes de vos rendez-vous apparaîtront ici.',
                       ),
-                    ),
-                  );
-                }
-
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final item = transactions[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _PaiementCard(
-                        item: item,
-                        primaryColor: primaryColor,
-                      ),
-                    );
-                  }, childCount: transactions.length),
-                );
-              },
+                    ]
+                  : paiements.map((p) => _PaiementCard(item: p, primaryColor: primaryColor)).toList(),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -181,95 +93,66 @@ class _PaiementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final couleurStatut = item.estAnnule ? const Color(0xFF6B7280) : const Color(0xFF059669);
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                item.reference,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF6B7280),
+              Expanded(
+                child: Text(
+                  item.professionnel.isNotEmpty ? item.professionnel : 'Rendez-vous',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF059669).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: couleurStatut.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  'Payé',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF059669),
-                  ),
+                child: Text(
+                  item.estAnnule ? 'Annulé' : (item.simulation ? 'Acompte simulé' : 'Payé'),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: couleurStatut),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            item.description,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1E2432),
+          if (item.rendezVousDate != null)
+            Text(
+              'Rendez-vous du ${Formatters.formatJourLong(item.rendezVousDate!)} à ${Formatters.formatHeure(item.rendezVousDate!)}',
+              style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Bénéficiaire : ${item.proRole} ${item.proName}',
-            style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
-          ),
-          const SizedBox(height: 12),
-          const Divider(height: 1, color: Color(0xFFF3F4F6)),
-          const SizedBox(height: 12),
+          if (item.datePaiement != null)
+            Text(
+              'Enregistré le ${Formatters.formatLongDate(item.datePaiement)}',
+              style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+            ),
+          const SizedBox(height: 10),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Moyen de paiement',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    item.moyenPaiement.replaceAll('_', ' '),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1E2432),
-                    ),
-                  ),
-                ],
+              Expanded(
+                child: Text(
+                  item.montantTotalRendezVous != null
+                      ? 'Total du rendez-vous : ${Formatters.formatFcfa(item.montantTotalRendezVous!)}'
+                      : '',
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                ),
               ),
               Text(
-                item.formattedMontant,
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
-                  color: primaryColor,
-                ),
+                Formatters.formatFcfa(item.montant),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: primaryColor),
               ),
             ],
           ),

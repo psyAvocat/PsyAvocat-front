@@ -1,93 +1,117 @@
-/// Modèle représentant un dossier juridique dans PsyAvocat.
+/// Dossier juridique du justiciable (`DossierResponseDTO` du backend).
+///
+/// Statuts du dossier : `OUVERT` (soumis, en attente d'une prise en charge)
+/// puis `PRIS_EN_CHARGE` (un avocat a accepté : dossier confié en exclusivité).
 class DossierModel {
   final String id;
-  final String reference;
   final String titre;
   final String description;
-  final String statut; // EN_COURS | EN_ATTENTE | ACCEPTE | REJETE | CLOS
-  final DateTime dateCreation;
+  final String statut;
+  final DateTime? dateOuverture;
+  final String? domaineNom;
   final List<SoumissionModel> soumissions;
+  final List<PieceJointeModel> piecesJointes;
 
   const DossierModel({
     required this.id,
-    required this.reference,
     required this.titre,
     required this.description,
     required this.statut,
-    required this.dateCreation,
+    this.dateOuverture,
+    this.domaineNom,
     this.soumissions = const [],
+    this.piecesJointes = const [],
   });
 
-  factory DossierModel.fromJson(Map<String, dynamic> json) {
-    final soumissionsList =
-        (json['soumissions'] as List<dynamic>?)
-            ?.map((e) => SoumissionModel.fromJson(e as Map<String, dynamic>))
-            .toList() ??
-        [];
-    return DossierModel(
-      id: json['id'] as String? ?? '',
-      reference: json['reference'] as String? ?? '',
-      titre: json['titre'] as String? ?? 'Sans titre',
-      description: json['description'] as String? ?? '',
-      statut: json['statut'] as String? ?? 'EN_ATTENTE',
-      dateCreation:
-          DateTime.tryParse(json['dateCreation'] as String? ?? '') ??
-          DateTime.now(),
-      soumissions: soumissionsList,
-    );
+  bool get estPrisEnCharge => statut == 'PRIS_EN_CHARGE';
+
+  /// Soumission de l'avocat qui a accepté la prise en charge, s'il y en a une.
+  SoumissionModel? get soumissionRetenue {
+    for (final s in soumissions) {
+      if (s.estAcceptee) return s;
+    }
+    return null;
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'reference': reference,
-      'titre': titre,
-      'description': description,
-      'statut': statut,
-      'dateCreation': dateCreation.toIso8601String(),
-      'soumissions': soumissions.map((s) => s.toJson()).toList(),
-    };
+  factory DossierModel.fromJson(Map<String, dynamic> json) {
+    return DossierModel(
+      id: json['id'] as String? ?? '',
+      titre: json['titre'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      statut: json['statut'] as String? ?? 'OUVERT',
+      dateOuverture: DateTime.tryParse(json['dateOuverture'] as String? ?? ''),
+      domaineNom: json['specialiteNom'] as String?,
+      soumissions:
+          (json['soumissions'] as List<dynamic>?)
+              ?.map((e) => SoumissionModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      piecesJointes:
+          (json['piecesJointes'] as List<dynamic>?)
+              ?.map((e) => PieceJointeModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+    );
   }
 }
 
+/// Soumission du dossier à un avocat (`SoumissionDossierResponseDTO`).
+///
+/// Statuts : `EN_ATTENTE`, `ACCEPTEE` (honoraires proposés), `REFUSEE` (motif),
+/// `RETENUE` (rendez-vous pris), `CADUQUE` (dossier confié à un confrère).
 class SoumissionModel {
   final String id;
+  final String avocatId;
   final String avocatNom;
   final String avocatPrenom;
-  final String statut; // EN_ATTENTE | ACCEPTE | REJETE
+  final String statut;
   final String? reponse;
-  final double? montantPropose;
+  final double? tarifPropose;
+  final DateTime? dateReponse;
 
   const SoumissionModel({
     required this.id,
+    required this.avocatId,
     required this.avocatNom,
     required this.avocatPrenom,
     required this.statut,
     this.reponse,
-    this.montantPropose,
+    this.tarifPropose,
+    this.dateReponse,
   });
 
-  String get displayName => 'Maître $avocatPrenom $avocatNom'.trim();
+  String get displayName => 'Me $avocatPrenom $avocatNom'.trim();
+
+  /// Avocat ayant pris en charge le dossier : un rendez-vous peut être pris.
+  bool get estAcceptee => statut == 'ACCEPTEE' || statut == 'RETENUE';
 
   factory SoumissionModel.fromJson(Map<String, dynamic> json) {
     return SoumissionModel(
       id: json['id'] as String? ?? '',
+      avocatId: json['avocatId'] as String? ?? '',
       avocatNom: json['avocatNom'] as String? ?? '',
       avocatPrenom: json['avocatPrenom'] as String? ?? '',
       statut: json['statut'] as String? ?? 'EN_ATTENTE',
       reponse: json['reponse'] as String?,
-      montantPropose: (json['montantPropose'] as num?)?.toDouble(),
+      tarifPropose: (json['tarifPropose'] as num?)?.toDouble(),
+      dateReponse: DateTime.tryParse(json['dateReponse'] as String? ?? ''),
     );
   }
+}
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'avocatNom': avocatNom,
-      'avocatPrenom': avocatPrenom,
-      'statut': statut,
-      if (reponse != null) 'reponse': reponse,
-      if (montantPropose != null) 'montantPropose': montantPropose,
-    };
+/// Pièce jointe stockée dans le bucket privé ; [url] est un lien temporaire.
+class PieceJointeModel {
+  final String id;
+  final String nom;
+  final String? url;
+
+  const PieceJointeModel({required this.id, required this.nom, this.url});
+
+  factory PieceJointeModel.fromJson(Map<String, dynamic> json) {
+    return PieceJointeModel(
+      id: json['id'] as String? ?? '',
+      nom: json['nom'] as String? ?? '',
+      url: json['url'] as String?,
+    );
   }
 }

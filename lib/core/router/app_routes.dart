@@ -35,7 +35,6 @@ class AppRoutes {
   static const dossiers = '/dossiers';
   static const messagerie = '/messagerie';
   static const rendezVousConfirmation = '/rendez-vous/confirmation';
-  static const suiviPsychologique = '/suivi-psychologique';
   static const paiements = '/paiements';
 
   /// Détail d'un article ou d'un conseil.

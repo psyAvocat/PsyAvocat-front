@@ -21,6 +21,8 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(
     onAccountRefused: () =>
         ref.read(sessionControllerProvider.notifier).revalidate(),
+    onSessionExpired: () =>
+        ref.read(sessionControllerProvider.notifier).expireSession(),
   );
 });
 

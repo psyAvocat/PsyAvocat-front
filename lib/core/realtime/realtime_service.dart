@@ -18,6 +18,15 @@ class RealtimeEventType {
   static const message = 'MESSAGE';
   static const contenuMisAJour = 'CONTENU_MIS_A_JOUR';
   static const professionnelMisAJour = 'PROFESSIONNEL_MIS_A_JOUR';
+
+  /// Décision administrative sur le compte connecté (désactivation…).
+  static const compteMisAJour = 'COMPTE_MIS_A_JOUR';
+
+  /// Un créneau a changé d'état (réservation, annulation, déplacement).
+  static const creneauMisAJour = 'CRENEAU_MIS_A_JOUR';
+
+  /// Le planning d'un professionnel a changé (ajout / suppression de créneaux).
+  static const creneauxMisAJour = 'CRENEAUX_MIS_A_JOUR';
 }
 
 /// Événement reçu du serveur : `{ "type": ..., "payload": {...} }`.
@@ -166,6 +175,12 @@ final realtimeServiceProvider = Provider<RealtimeService>((ref) {
       service.stop();
     }
   }, fireImmediately: true);
+  // Décision administrative sur le compte en cours de session (désactivation…) :
+  // l'accès est réévalué immédiatement via /me.
+  final abonnement = service.events
+      .where((e) => e.type == RealtimeEventType.compteMisAJour)
+      .listen((_) => ref.read(sessionControllerProvider.notifier).revalidate());
+  ref.onDispose(abonnement.cancel);
   ref.onDispose(service.dispose);
   return service;
 });

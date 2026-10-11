@@ -22,16 +22,15 @@ import '../../features/orientation/presentation/screens/orientation_intro_screen
 import '../../features/orientation/presentation/screens/orientation_questionnaire_screen.dart';
 import '../../features/orientation/presentation/screens/orientation_result_screen.dart';
 import '../../features/paiements/presentation/screens/paiements_screen.dart';
-import '../../features/professionnels/data/models/professional_detail_model.dart';
 import '../../features/professionnels/presentation/screens/professionnel_detail_screen.dart';
 import '../../features/professionnels/presentation/screens/professionnels_list_screen.dart';
 import '../../features/professionnels/presentation/screens/recherche_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/rendez_vous/data/models/reservation_contexte.dart';
 import '../../features/rendez_vous/presentation/screens/choix_creneau_screen.dart';
 import '../../features/rendez_vous/presentation/screens/rendez_vous_confirmation_screen.dart';
 import '../../features/rendez_vous/presentation/screens/rendez_vous_screen.dart';
 import '../../features/selection_univers/presentation/screens/selection_univers_screen.dart';
-import '../../features/suivi_psychologique/presentation/screens/suivi_psychologique_screen.dart';
 import '../services/app_preferences_service.dart';
 import '../theme/universe_provider.dart';
 import 'app_routes.dart';
@@ -192,13 +191,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '${AppRoutes.professionnels}/:id/creneau',
         builder: (context, state) => ChoixCreneauScreen(
           professionnelId: state.pathParameters['id']!,
-          initialTarif: state.extra as ProfessionalTarif?,
+          contexte: state.extra is ReservationContexte
+              ? state.extra as ReservationContexte
+              : null,
         ),
       ),
       GoRoute(
         path: AppRoutes.rendezVousConfirmation,
         builder: (context, state) => RendezVousConfirmationScreen(
-          bookingData: state.extra as Map<String, dynamic>? ?? {},
+          recap: state.extra is ReservationRecap
+              ? state.extra as ReservationRecap
+              : null,
         ),
       ),
       GoRoute(
@@ -209,10 +212,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/contenus/:id',
         builder: (context, state) =>
             ContenuDetailScreen(contenuId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: AppRoutes.suiviPsychologique,
-        builder: (_, _) => const SuiviPsychologiqueScreen(),
       ),
       GoRoute(
         path: AppRoutes.paiements,

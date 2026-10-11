@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/universe_provider.dart';
-import '../../../professionnels/data/models/professional_detail_model.dart';
-import '../controllers/rendez_vous_controller.dart';
+
+import '../../../../core/errors/app_exception.dart';
+import '../../../../core/errors/user_message.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/theme/universe_provider.dart';
+import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_state_views.dart';
+import '../../data/models/rendez_vous_model.dart';
+import '../../data/models/reservation_contexte.dart';
+import '../controllers/rendez_vous_controller.dart';
 
-/// Écran de confirmation du rendez-vous (Étape 5).
-/// Enregistre le rendez-vous immédiatement en état 'Confirmé' avec son acompte de 20%,
-/// et permet la navigation fluide vers la liste des rendez-vous ou l'accueil.
+/// Étape 2 du tunnel : récapitulatif, paiement SIMULÉ de l'acompte (V1) et confirmation.
+///
+/// Aucune passerelle de paiement n'est intégrée : l'étape de paiement est
+/// présentée explicitement comme une simulation, aucune donnée bancaire n'est
+/// demandée ni stockée. Le rendez-vous n'est affiché comme confirmé qu'après la
+/// réponse du backend (créneau revérifié sous verrou, montant et acompte calculés
+/// côté serveur).
 class RendezVousConfirmationScreen extends ConsumerStatefulWidget {
-  final Map<String, dynamic> bookingData;
+  final ReservationRecap? recap;
 
-  const RendezVousConfirmationScreen({super.key, required this.bookingData});
+  const RendezVousConfirmationScreen({super.key, required this.recap});
 
   @override
   ConsumerState<RendezVousConfirmationScreen> createState() =>
@@ -21,41 +32,33 @@ class RendezVousConfirmationScreen extends ConsumerStatefulWidget {
 
 class _RendezVousConfirmationScreenState
     extends ConsumerState<RendezVousConfirmationScreen> {
-  bool _hasSaved = false;
+  bool _simulationAcceptee = false;
+  bool _enCours = false;
+  String? _erreur;
+  bool _creneauPerdu = false;
+  RendezVous? _confirme;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _saveAppointment();
+  Future<void> _confirmer(ReservationRecap recap) async {
+    setState(() {
+      _enCours = true;
+      _erreur = null;
+      _creneauPerdu = false;
     });
-  }
-
-  void _saveAppointment() {
-    if (_hasSaved) return;
-    _hasSaved = true;
-
-    final pro = widget.bookingData['pro'] as ProfessionalDetail?;
-    final jour = widget.bookingData['jour'] as DisponibiliteJour?;
-    final mode =
-        widget.bookingData['mode'] as String? ?? 'En ligne (visioconférence)';
-    final tarif = widget.bookingData['tarif'] as ProfessionalTarif?;
-
-    if (pro != null && jour != null) {
-      final total = tarif?.montantFcfa ?? 150000;
-      final dispoId = widget.bookingData['disponibiliteId'] as String?;
-      if (dispoId != null) {
-        ref
-            .read(rendezVousControllerProvider.notifier)
-            .reserver(
-              typeProfessionnel: pro.isAvocat ? 'AVOCAT' : 'PSYCHOLOGUE',
-              professionnelId: pro.id,
-              disponibiliteId: dispoId,
-              mode: mode,
-              montantTotal: total.toDouble(),
-              motif: tarif?.titre,
-            );
-      }
+    try {
+      final rdv = await ref
+          .read(rendezVousControllerProvider.notifier)
+          .reserver(recap);
+      if (!mounted) return;
+      setState(() => _confirme = rdv);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _erreur = userMessageFor(error);
+        _creneauPerdu = error is ConflictException ||
+            (error is ValidationException && (error.message.contains('créneau')));
+      });
+    } finally {
+      if (mounted) setState(() => _enCours = false);
     }
   }
 
@@ -63,305 +66,295 @@ class _RendezVousConfirmationScreenState
   Widget build(BuildContext context) {
     final universe = ref.watch(currentUniverseProvider);
     final primaryColor = universe.primaryColor;
+    final recap = widget.recap;
 
-    final pro = widget.bookingData['pro'] as ProfessionalDetail?;
-    final jour = widget.bookingData['jour'] as DisponibiliteJour?;
-    final creneau = widget.bookingData['creneau'] as String? ?? '10:00';
-    final mode =
-        widget.bookingData['mode'] as String? ?? 'En ligne (visioconférence)';
-    final tarif = widget.bookingData['tarif'] as ProfessionalTarif?;
-    final montantTotal = tarif?.montantFcfa ?? 150000;
-    final acompte = (montantTotal * 0.20).round();
+    if (recap == null) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const AppErrorStateView(
+          title: 'Réservation indisponible',
+          message: 'Choisissez d’abord un créneau depuis la fiche du professionnel.',
+        ),
+      );
+    }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFC),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-
-              // 1. Icône de succès animée avec pastille colorée
-              Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF86EFAC), width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF16A34A).withValues(alpha: 0.15),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.check_rounded,
-                  size: 50,
-                  color: Color(0xFF16A34A),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Titre de confirmation
-              const Text(
-                'Rendez-vous confirmé !',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF111827),
-                  fontFamily: 'Montserrat',
-                  letterSpacing: -0.5,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              const Text(
-                'Votre consultation a été enregistrée directement dans l\'agenda du praticien selon les disponibilités sélectionnées.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF6B7280),
-                  height: 1.4,
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // 2. Carte récapitulative
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: const Color(0xFFE5E7EB),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Professionnel
-                    Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.asset(
-                            pro?.imagePath ??
-                                'assets/images/onboarding_lawyer.png',
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  color: primaryColor.withValues(alpha: 0.1),
-                                  child: Icon(
-                                    Icons.person,
-                                    color: primaryColor,
-                                  ),
-                                ),
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                pro?.nom ?? 'Professionnel',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF111827),
-                                ),
-                              ),
-                              Text(
-                                pro?.specialitePrincipale ?? 'Consultation',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: primaryColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFDCFCE7),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'Confirmé',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF16A34A),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const Divider(height: 28),
-
-                    // Date & Heure
-                    _buildDetailRow(
-                      icon: Icons.calendar_today_rounded,
-                      label: 'Date & Heure',
-                      value:
-                          '${jour?.labelJour ?? ""} ${jour?.labelNumero ?? ""} ${jour?.labelMois ?? ""} à $creneau',
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Modalité
-                    _buildDetailRow(
-                      icon: Icons.location_on_outlined,
-                      label: 'Modalité',
-                      value: mode,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Tarification & Acompte 20%
-                    _buildDetailRow(
-                      icon: Icons.payments_outlined,
-                      label: 'Honoraires totaux',
-                      value: '${_formatPrice(montantTotal)} FCFA',
-                    ),
-                    const SizedBox(height: 12),
-
-                    _buildDetailRow(
-                      icon: Icons.check_circle_outline_rounded,
-                      label: 'Acompte légal (20%)',
-                      value: '${_formatPrice(acompte)} FCFA (Réglé)',
-                      valueColor: const Color(0xFF16A34A),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // 3. Bouton principal « Voir mes rendez-vous »
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: () => context.go(AppRoutes.rendezVous),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(26),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Voir mes rendez-vous',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // 4. Bouton secondaire « Retour à l'accueil »
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton(
-                  onPressed: () => context.go(AppRoutes.home),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(
-                      color: Color(0xFFE5E7EB),
-                      width: 1.4,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                  child: const Text(
-                    'Retour à l\'accueil',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF4B5563),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-            ],
+    final confirme = _confirme;
+    return PopScope(
+      canPop: !_enCours,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF9FAFC),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          automaticallyImplyLeading: confirme == null && !_enCours,
+          title: Text(
+            confirme == null ? 'Confirmer le rendez-vous' : 'Rendez-vous confirmé',
+            style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF111827)),
           ),
         ),
+        body: confirme != null
+            ? _Succes(rdv: confirme, recap: recap, primaryColor: primaryColor)
+            : _buildRecapitulatif(context, recap, primaryColor),
       ),
     );
   }
 
-  Widget _buildDetailRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    Color? valueColor,
-  }) {
-    return Row(
+  Widget _buildRecapitulatif(BuildContext context, ReservationRecap recap, Color primaryColor) {
+    final pro = recap.professionnel;
+    return Column(
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF9CA3AF)),
-        const SizedBox(width: 10),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+            children: [
+              _Carte(
+                children: [
+                  _Ligne(icone: Icons.person_outline_rounded, libelle: 'Professionnel', valeur: pro.summary.displayName),
+                  if (recap.contexte.viaDossier)
+                    _Ligne(icone: Icons.folder_outlined, libelle: 'Dossier', valeur: recap.contexte.dossierTitre ?? ''),
+                  _Ligne(
+                    icone: Icons.calendar_today_rounded,
+                    libelle: 'Date',
+                    valeur: Formatters.formatJourLong(recap.creneau.debut),
+                  ),
+                  _Ligne(
+                    icone: Icons.schedule_rounded,
+                    libelle: 'Heure',
+                    valeur: '${Formatters.formatHeure(recap.creneau.debut)} – ${Formatters.formatHeure(recap.creneau.fin)}',
+                  ),
+                  _Ligne(
+                    icone: recap.mode == 'VISIO' ? Icons.videocam_outlined : Icons.location_on_outlined,
+                    libelle: 'Mode',
+                    valeur: recap.mode == 'VISIO'
+                        ? 'En visioconférence'
+                        : 'Au cabinet${(pro.adresse?.isNotEmpty ?? false) ? ' — ${pro.adresse}' : ''}',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _Carte(
+                children: [
+                  _Ligne(icone: Icons.receipt_long_outlined, libelle: recap.contexte.libelleMontant,
+                      valeur: Formatters.formatFcfa(recap.montantTotal)),
+                  _Ligne(
+                    icone: Icons.account_balance_wallet_outlined,
+                    libelle: 'Acompte à régler (20 %)',
+                    valeur: Formatters.formatFcfa(recap.acompteEstime),
+                    accent: primaryColor,
+                  ),
+                  _Ligne(
+                    icone: Icons.info_outline_rounded,
+                    libelle: 'Reste à régler au professionnel',
+                    valeur: Formatters.formatFcfa(recap.montantTotal - recap.acompteEstime),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _AvertissementSimulation(primaryColor: primaryColor),
+              CheckboxListTile(
+                value: _simulationAcceptee,
+                onChanged: _enCours ? null : (v) => setState(() => _simulationAcceptee = v ?? false),
+                activeColor: primaryColor,
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: const Text(
+                  'Je comprends que ce paiement est une simulation et qu’aucune somme ne sera débitée.',
+                  style: TextStyle(fontSize: 13),
+                ),
+              ),
+              if (_erreur != null) ...[
+                const SizedBox(height: 8),
+                _MessageErreur(message: _erreur!),
+                if (_creneauPerdu)
+                  TextButton.icon(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(Icons.event_available_rounded),
+                    label: const Text('Choisir un autre créneau'),
+                  ),
+              ],
+            ],
+          ),
         ),
-        const Spacer(),
-        Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              color: valueColor ?? const Color(0xFF111827),
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+          color: Colors.white,
+          child: SafeArea(
+            top: false,
+            child: AppButton(
+              text: 'Simuler le paiement et confirmer',
+              isLoading: _enCours,
+              onPressed: _simulationAcceptee && !_enCours ? () => _confirmer(recap) : null,
+              color: primaryColor,
             ),
           ),
         ),
       ],
     );
   }
+}
 
-  String _formatPrice(int amount) {
-    final s = amount.toString();
-    final buffer = StringBuffer();
-    for (int i = 0; i < s.length; i++) {
-      if (i > 0 && (s.length - i) % 3 == 0) {
-        buffer.write(' ');
-      }
-      buffer.write(s[i]);
-    }
-    return buffer.toString();
+/// Mention explicite : V1 sans prestataire de paiement.
+class _AvertissementSimulation extends StatelessWidget {
+  final Color primaryColor;
+  const _AvertissementSimulation({required this.primaryColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFED7AA)),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.science_outlined, color: Color(0xFFC2410C)),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Paiement simulé : aucune transaction réelle n’est effectuée et aucune '
+              'donnée bancaire n’est demandée. Le paiement en ligne sera disponible ultérieurement.',
+              style: TextStyle(fontSize: 13, color: Color(0xFF7C2D12), height: 1.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Succes extends StatelessWidget {
+  final RendezVous rdv;
+  final ReservationRecap recap;
+  final Color primaryColor;
+
+  const _Succes({required this.rdv, required this.recap, required this.primaryColor});
+
+  @override
+  Widget build(BuildContext context) {
+    // Valeurs faisant foi : celles renvoyées par le backend.
+    final acompte = rdv.montantAcompte;
+    final total = rdv.montantTotal ?? recap.montantTotal;
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        Icon(Icons.check_circle_rounded, color: primaryColor, size: 72),
+        const SizedBox(height: 16),
+        const Text(
+          'Votre rendez-vous est confirmé',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '${recap.professionnel.summary.displayName} — ${Formatters.formatJourLong(rdv.dateHeure)} à ${Formatters.formatHeure(rdv.dateHeure)}',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Color(0xFF4B5563)),
+        ),
+        const SizedBox(height: 24),
+        _Carte(
+          children: [
+            _Ligne(icone: Icons.receipt_long_outlined, libelle: 'Montant total', valeur: Formatters.formatFcfa(total)),
+            if (acompte != null)
+              _Ligne(
+                icone: Icons.science_outlined,
+                libelle: 'Acompte (paiement simulé)',
+                valeur: Formatters.formatFcfa(acompte),
+                accent: primaryColor,
+              ),
+          ],
+        ),
+        const SizedBox(height: 28),
+        AppButton(
+          text: 'Voir mes rendez-vous',
+          color: primaryColor,
+          onPressed: () => context.go(AppRoutes.rendezVous),
+        ),
+        const SizedBox(height: 12),
+        AppButton(
+          text: 'Retour à l’accueil',
+          isOutlined: true,
+          color: primaryColor,
+          onPressed: () => context.go(AppRoutes.home),
+        ),
+      ],
+    );
+  }
+}
+
+class _Carte extends StatelessWidget {
+  final List<Widget> children;
+  const _Carte({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(children: children),
+    );
+  }
+}
+
+class _Ligne extends StatelessWidget {
+  final IconData icone;
+  final String libelle;
+  final String valeur;
+  final Color? accent;
+
+  const _Ligne({required this.icone, required this.libelle, required this.valeur, this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icone, size: 20, color: const Color(0xFF6B7280)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(libelle, style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563))),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              valeur,
+              textAlign: TextAlign.end,
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: accent ?? const Color(0xFF111827)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MessageErreur extends StatelessWidget {
+  final String message;
+  const _MessageErreur({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626)),
+          const SizedBox(width: 10),
+          Expanded(child: Text(message, style: const TextStyle(color: Color(0xFF991B1B)))),
+        ],
+      ),
+    );
   }
 }

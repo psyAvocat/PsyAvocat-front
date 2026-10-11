@@ -1,24 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../shared/enums/slot_status.dart';
-import '../../../../core/theme/universe_provider.dart';
-import '../../../professionnels/data/models/creneau.dart';
-import '../../../professionnels/data/models/professional_detail_model.dart';
-import '../../../professionnels/data/models/professionnel_detail.dart';
-import '../../../professionnels/data/repositories/professionnels_repository.dart';
-import '../../../../core/router/app_routes.dart';
 
-/// Écran « Choix du créneau » (Étape 4) conforme à la maquette Figma.
-/// Permet la sélection directe de la date, de la modalité (visio / cabinet) et du créneau horaire.
+import '../../../../core/errors/user_message.dart';
+import '../../../../core/router/app_routes.dart';
+import '../../../../core/theme/universe_provider.dart';
+import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_state_views.dart';
+import '../../../../shared/enums/slot_status.dart';
+import '../../../professionnels/data/models/creneau.dart';
+import '../../../professionnels/data/models/professionnel_detail.dart';
+import '../../../professionnels/presentation/controllers/professionnels_controller.dart';
+import '../../data/models/reservation_contexte.dart';
+
+/// Étape 1 du tunnel : choix d'un créneau réellement libre et du mode de consultation.
+///
+/// Les créneaux proviennent du backend et sont rafraîchis en temps réel ; aucun
+/// créneau ni prix n'est présélectionné ou inventé par l'application.
 class ChoixCreneauScreen extends ConsumerStatefulWidget {
   final String professionnelId;
-  final ProfessionalTarif? initialTarif;
+  final ReservationContexte? contexte;
 
   const ChoixCreneauScreen({
     super.key,
     required this.professionnelId,
-    this.initialTarif,
+    required this.contexte,
   });
 
   @override
@@ -26,726 +33,401 @@ class ChoixCreneauScreen extends ConsumerStatefulWidget {
 }
 
 class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
-  int _selectedDayIndex = 1; // Par défaut Mardi 15
-  String? _selectedCreneau = '10:00';
-  String _mode = 'En ligne (visioconférence)'; // ou 'Au cabinet'
-  late ProfessionalTarif? _tarif;
+  DateTime? _jour;
+  Creneau? _creneau;
+  String? _mode;
+  final _motifController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    _tarif = widget.initialTarif;
+  void dispose() {
+    _motifController.dispose();
+    super.dispose();
+  }
+
+  /// Modes proposés par le professionnel (codes backend : VISIO, CABINET).
+  List<String> _modesDe(ProfessionnelDetail pro) {
+    final code = pro.summary.modeConsultation?.toUpperCase() ?? '';
+    final modes = <String>[
+      if (code.contains('VISIO')) 'VISIO',
+      if (code.contains('CABINET')) 'CABINET',
+    ];
+    // Mode non renseigné par le professionnel : les deux modes acceptés par le backend.
+    return modes.isEmpty ? const ['VISIO', 'CABINET'] : modes;
   }
 
   @override
   Widget build(BuildContext context) {
     final universe = ref.watch(currentUniverseProvider);
     final primaryColor = universe.primaryColor;
-    final repo = ref.watch(professionnelsRepositoryProvider);
+    final contexte = widget.contexte;
+    final proAsync = ref.watch(professionnelDetailProvider(widget.professionnelId));
+    final creneauxAsync = ref.watch(creneauxProvider(widget.professionnelId));
 
-    return FutureBuilder<ProfessionalDetail?>(
-      future:
-          Future.wait([
-            repo.getProfessionnel(widget.professionnelId),
-            repo.getCreneaux(widget.professionnelId),
-          ]).then((results) {
-            final apiModel = results[0] as ProfessionnelDetail;
-            final creneauxList = results[1] as List<Creneau>;
-
-            final Map<String, List<String>> creneauxParJour = {};
-            final Map<String, DateTime> datesParJour = {};
-            for (final c in creneauxList) {
-              if (c.statut == SlotStatus.libre) {
-                final dateKey =
-                    '${c.debut.year}-${c.debut.month.toString().padLeft(2, '0')}-${c.debut.day.toString().padLeft(2, '0')}';
-                final heure =
-                    '${c.debut.hour.toString().padLeft(2, '0')}:${c.debut.minute.toString().padLeft(2, '0')}';
-                creneauxParJour.putIfAbsent(dateKey, () => []).add(heure);
-                datesParJour[dateKey] = c.debut;
-              }
-            }
-
-            const joursSemaine = [
-              'Lun',
-              'Mar',
-              'Mer',
-              'Jeu',
-              'Ven',
-              'Sam',
-              'Dim',
-            ];
-            const moisAnnee = [
-              'Jan',
-              'Fév',
-              'Mar',
-              'Avr',
-              'Mai',
-              'Juin',
-              'Juil',
-              'Août',
-              'Sep',
-              'Oct',
-              'Nov',
-              'Déc',
-            ];
-
-            final disponibilites = creneauxParJour.entries.map((e) {
-              final d = datesParJour[e.key]!;
-              return DisponibiliteJour(
-                date: e.key,
-                labelJour: joursSemaine[d.weekday - 1],
-                labelNumero: d.day.toString().padLeft(2, '0'),
-                labelMois: moisAnnee[d.month - 1],
-                creneaux: e.value..sort(),
-              );
-            }).toList();
-
-            return ProfessionalDetail(
-              id: apiModel.id,
-              nom: apiModel.summary.fullName,
-              titre: apiModel.summary.type ?? '',
-              specialitePrincipale: apiModel.specialites.isNotEmpty
-                  ? apiModel.specialites.first.nom
-                  : '',
-              specialites: apiModel.specialites.map((s) => s.nom).toList(),
-              ville: apiModel.summary.ville ?? '',
-              adresse: apiModel.adresse ?? '',
-              distance: '1.2 km',
-              imagePath:
-                  apiModel.summary.photoUrl ??
-                  'assets/images/default_avatar.png',
-              note: apiModel.summary.noteMoyenne ?? 0.0,
-              nombreAvis: apiModel.summary.nombreAvis,
-              biographie: apiModel.biographie ?? '',
-              tarifs: apiModel.tarifs
-                  .map(
-                    (t) => ProfessionalTarif(
-                      titre: t.titre,
-                      montantFcfa: t.montant.toInt(),
-                      description: t.description,
-                    ),
-                  )
-                  .toList(),
-              langues: apiModel.langues?.split(',') ?? ['Français'],
-              enLigne: true,
-              isAvocat: apiModel.summary.type == 'AVOCAT',
-              disponibilites: disponibilites,
-            );
-          }),
-      builder: (context, snapshot) {
-        final pro = snapshot.data;
-        if (pro == null) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final jours = pro.disponibilites;
-        final jourActif = (jours.isNotEmpty && _selectedDayIndex < jours.length)
-            ? jours[_selectedDayIndex]
-            : null;
-        final creneauxDisponibles = jourActif?.creneaux ?? <String>[];
-
-        final currentTarif =
-            _tarif ?? (pro.tarifs.isNotEmpty ? pro.tarifs.first : null);
-
-        return Scaffold(
-          backgroundColor: const Color(0xFFF9FAFC),
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFC),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Choisir un créneau',
+          style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => context.pop(),
+        ),
+      ),
+      body: contexte == null
+          ? const AppErrorStateView(
+              title: 'Réservation indisponible',
+              message: 'Ouvrez la fiche du professionnel pour choisir une consultation.',
+            )
+          : proAsync.when(
+              loading: () => AppLoadingView(universe: universe),
+              error: (e, _) => AppErrorStateView(
+                message: userMessageFor(e),
+                onRetry: () => ref.invalidate(professionnelDetailProvider(widget.professionnelId)),
+              ),
+              data: (pro) => creneauxAsync.when(
+                loading: () => AppLoadingView(
+                  universe: universe,
+                  message: 'Chargement des disponibilités…',
                 ),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-                  color: const Color(0xFF1F2937),
-                  onPressed: () => context.pop(),
+                error: (e, _) => AppErrorStateView(
+                  message: userMessageFor(e),
+                  onRetry: () => ref.invalidate(creneauxProvider(widget.professionnelId)),
                 ),
+                data: (creneaux) => _buildContenu(context, pro, creneaux, contexte, primaryColor),
               ),
             ),
-            centerTitle: true,
-            title: const Text(
-              'Choix du créneau',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF111827),
-                fontFamily: 'Montserrat',
+    );
+  }
+
+  Widget _buildContenu(
+    BuildContext context,
+    ProfessionnelDetail pro,
+    List<Creneau> creneaux,
+    ReservationContexte contexte,
+    Color primaryColor,
+  ) {
+    final maintenant = DateTime.now();
+    final libres = creneaux
+        .where((c) => c.statut == SlotStatus.libre && c.debut.isAfter(maintenant))
+        .toList();
+
+    if (libres.isEmpty) {
+      return AppEmptyStateView(
+        icon: Icons.event_busy_rounded,
+        title: 'Aucun créneau disponible',
+        message: '${pro.summary.displayName} n’a pas de créneau libre pour le moment. '
+            'Les nouvelles disponibilités apparaîtront ici automatiquement.',
+      );
+    }
+
+    final jours = <DateTime>{for (final c in libres) c.jour}.toList()..sort();
+    // Le créneau choisi a pu être pris entre-temps (mise à jour temps réel).
+    if (_creneau != null && !libres.any((c) => c.id == _creneau!.id)) {
+      _creneau = null;
+    }
+    final jourActif = _jour != null && jours.contains(_jour) ? _jour! : jours.first;
+    final creneauxDuJour = libres.where((c) => c.jour == jourActif).toList();
+    final modes = _modesDe(pro);
+    final modeChoisi = _mode != null && modes.contains(_mode) ? _mode : (modes.length == 1 ? modes.first : null);
+
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+            children: [
+              _EnTeteProfessionnel(pro: pro, contexte: contexte, primaryColor: primaryColor),
+              const SizedBox(height: 24),
+              const _Titre('Date'),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 76,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: jours.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 10),
+                  itemBuilder: (context, i) {
+                    final jour = jours[i];
+                    final actif = jour == jourActif;
+                    return _Puce(
+                      actif: actif,
+                      primaryColor: primaryColor,
+                      onTap: () => setState(() {
+                        _jour = jour;
+                        _creneau = null;
+                      }),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            Formatters.formatJourCourt(jour),
+                            style: TextStyle(fontSize: 12, color: actif ? Colors.white : const Color(0xFF6B7280)),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${jour.day}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: actif ? Colors.white : const Color(0xFF111827),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
+              const SizedBox(height: 24),
+              _Titre('Créneaux du ${Formatters.formatJourLong(jourActif)}'),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: creneauxDuJour.map((c) {
+                  final actif = _creneau?.id == c.id;
+                  return _Puce(
+                    actif: actif,
+                    primaryColor: primaryColor,
+                    largeur: 92,
+                    hauteur: 44,
+                    onTap: () => setState(() => _creneau = c),
+                    child: Text(
+                      Formatters.formatHeure(c.debut),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: actif ? Colors.white : const Color(0xFF111827),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+              const _Titre('Mode de consultation'),
+              const SizedBox(height: 12),
+              RadioGroup<String>(
+                groupValue: modeChoisi,
+                onChanged: (v) => setState(() => _mode = v),
+                child: Column(
+                  children: modes
+                      .map(
+                        (m) => RadioListTile<String>(
+                          value: m,
+                          activeColor: primaryColor,
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(m == 'VISIO' ? 'En visioconférence' : 'Au cabinet'),
+                          subtitle: m == 'CABINET' && (pro.adresse?.isNotEmpty ?? false)
+                              ? Text(pro.adresse!, maxLines: 2, overflow: TextOverflow.ellipsis)
+                              : null,
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+              if (!contexte.viaDossier) ...[
+                const SizedBox(height: 16),
+                const _Titre('Motif (facultatif)'),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _motifController,
+                  maxLines: 3,
+                  maxLength: 500,
+                  decoration: InputDecoration(
+                    hintText: 'Précisez en quelques mots l’objet de la consultation',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        _BarreAction(
+          primaryColor: primaryColor,
+          montant: contexte.montantTotal,
+          libelle: contexte.libelleMontant,
+          actif: _creneau != null && modeChoisi != null,
+          onPressed: () => context.push(
+            AppRoutes.rendezVousConfirmation,
+            extra: ReservationRecap(
+              contexte: contexte,
+              professionnel: pro,
+              creneau: _creneau!,
+              mode: modeChoisi!,
+              motif: _motifController.text,
             ),
           ),
-          body: SafeArea(
-            child: Stack(
+        ),
+      ],
+    );
+  }
+}
+
+class _EnTeteProfessionnel extends StatelessWidget {
+  final ProfessionnelDetail pro;
+  final ReservationContexte contexte;
+  final Color primaryColor;
+
+  const _EnTeteProfessionnel({required this.pro, required this.contexte, required this.primaryColor});
+
+  @override
+  Widget build(BuildContext context) {
+    final photo = pro.summary.photoUrl;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 26,
+            backgroundColor: primaryColor.withValues(alpha: 0.12),
+            backgroundImage: photo != null ? NetworkImage(photo) : null,
+            child: photo == null
+                ? Icon(pro.summary.isAvocat ? Icons.gavel_rounded : Icons.psychology_rounded, color: primaryColor)
+                : null,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 1. Carte résumé du professionnel
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color(0xFFE5E7EB),
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Stack(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Image.asset(
-                                    pro.imagePath,
-                                    width: 60,
-                                    height: 60,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            Container(
-                                              width: 60,
-                                              height: 60,
-                                              color: primaryColor.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                              child: Icon(
-                                                pro.isAvocat
-                                                    ? Icons.gavel_rounded
-                                                    : Icons.psychology_rounded,
-                                                color: primaryColor,
-                                              ),
-                                            ),
-                                  ),
-                                ),
-                                if (pro.enLigne)
-                                  Positioned(
-                                    bottom: 0,
-                                    right: 0,
-                                    child: Container(
-                                      width: 14,
-                                      height: 14,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF16A34A),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.white,
-                                          width: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          pro.nom,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w800,
-                                            color: Color(0xFF111827),
-                                          ),
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 3,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: primaryColor.withValues(
-                                            alpha: 0.08,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          pro.isAvocat
-                                              ? 'Avocat'
-                                              : 'Psychologue',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
-                                            color: primaryColor,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.star_rounded,
-                                        size: 16,
-                                        color: Color(0xFFF59E0B),
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        '${pro.note} (${pro.nombreAvis} avis)',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF4B5563),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    '${pro.ville} • ${pro.distance}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xFF6B7280),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // 2. Choix de la modalité (Visio vs Cabinet)
-                      const Text(
-                        'Modalité de consultation',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1F2937),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildModeOption(
-                              label: 'En ligne (Visio)',
-                              icon: Icons.videocam_rounded,
-                              isSelected: _mode.contains('ligne'),
-                              primaryColor: primaryColor,
-                              onTap: () => setState(
-                                () => _mode = 'En ligne (visioconférence)',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildModeOption(
-                              label: 'Au cabinet',
-                              icon: Icons.business_rounded,
-                              isSelected: _mode.contains('cabinet'),
-                              primaryColor: primaryColor,
-                              onTap: () => setState(
-                                () => _mode = 'Au cabinet (${pro.ville})',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 28),
-
-                      // 3. Section « Sélectionnez une date »
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Sélectionnez une date',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF1F2937),
-                            ),
-                          ),
-                          Text(
-                            'Avril 2025',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: primaryColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Carrousel horizontal des jours
-                      SizedBox(
-                        height: 90,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: jours.length,
-                          separatorBuilder: (_, _) => const SizedBox(width: 10),
-                          itemBuilder: (context, index) {
-                            final j = jours[index];
-                            final isSelected = index == _selectedDayIndex;
-
-                            return InkWell(
-                              onTap: () {
-                                setState(() {
-                                  _selectedDayIndex = index;
-                                  _selectedCreneau = j.creneaux.isNotEmpty
-                                      ? j.creneaux.first
-                                      : null;
-                                });
-                              },
-                              borderRadius: BorderRadius.circular(18),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                width: 64,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? primaryColor
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(18),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? primaryColor
-                                        : const Color(0xFFE5E7EB),
-                                    width: 1.2,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: isSelected
-                                          ? primaryColor.withValues(alpha: 0.3)
-                                          : Colors.black.withValues(
-                                              alpha: 0.02,
-                                            ),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      j.labelJour,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: isSelected
-                                            ? Colors.white70
-                                            : const Color(0xFF6B7280),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      j.labelNumero,
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w800,
-                                        color: isSelected
-                                            ? Colors.white
-                                            : const Color(0xFF111827),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      j.labelMois,
-                                      style: TextStyle(
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w500,
-                                        color: isSelected
-                                            ? Colors.white70
-                                            : const Color(0xFF9CA3AF),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-
-                      const SizedBox(height: 28),
-
-                      // 4. Section « Choisissez un créneau horaire »
-                      const Text(
-                        'Choisissez un créneau horaire',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1F2937),
-                        ),
-                      ),
-                      if (creneauxDisponibles.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12.0),
-                          child: Text(
-                            'Aucun créneau horaire disponible pour cette date.',
-                            style: TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: 13,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        )
-                      else
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: creneauxDisponibles.map((creneau) {
-                            final isSelected = creneau == _selectedCreneau;
-
-                            return InkWell(
-                              onTap: () {
-                                setState(() {
-                                  _selectedCreneau = creneau;
-                                });
-                              },
-                              borderRadius: BorderRadius.circular(14),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                width: 78,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? primaryColor
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? primaryColor
-                                        : const Color(0xFFE5E7EB),
-                                    width: 1.2,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: isSelected
-                                          ? primaryColor.withValues(alpha: 0.25)
-                                          : Colors.black.withValues(
-                                              alpha: 0.02,
-                                            ),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    creneau,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w800
-                                          : FontWeight.w600,
-                                      color: isSelected
-                                          ? Colors.white
-                                          : const Color(0xFF374151),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-
-                      const SizedBox(height: 24),
-
-                      // 5. Encadré Règle Métier & Acompte 20%
-                      if (currentTarif != null)
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: primaryColor.withValues(alpha: 0.15),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.shield_outlined,
-                                    size: 20,
-                                    color: primaryColor,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Réservation directe et sécurisée',
-                                    style: TextStyle(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: primaryColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Créneau confirmé immédiatement. Un acompte légal obligatoire de 20% (${((currentTarif.montantFcfa * 0.20).round()).toString()} FCFA) est validé pour bloquer définitivement le créneau.',
-                                style: const TextStyle(
-                                  fontSize: 12.5,
-                                  color: Color(0xFF4B5563),
-                                  height: 1.35,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
+                Text(
+                  pro.summary.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
-
-                // 6. Bouton d'action fixe en bas « Confirmer le rendez-vous »
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 20,
-                          offset: const Offset(0, -4),
-                        ),
-                      ],
-                    ),
-                    child: SizedBox(
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: _selectedCreneau == null || jourActif == null
-                            ? null
-                            : () {
-                                context.push(
-                                  AppRoutes.rendezVousConfirmation,
-                                  extra: {
-                                    'pro': pro,
-                                    'jour': jourActif,
-                                    'creneau': _selectedCreneau!,
-                                    'mode': _mode,
-                                    'tarif': currentTarif,
-                                  },
-                                );
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          disabledBackgroundColor: const Color(0xFFE5E7EB),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(26),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Confirmer le rendez-vous',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(
-                              Icons.arrow_forward_rounded,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 4),
+                Text(
+                  contexte.viaDossier
+                      ? 'Dossier : ${contexte.dossierTitre ?? ''}'
+                      : (pro.specialites.isNotEmpty ? pro.specialites.first.nom : pro.summary.type ?? ''),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
                 ),
               ],
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
+}
 
-  Widget _buildModeOption({
-    required String label,
-    required IconData icon,
-    required bool isSelected,
-    required Color primaryColor,
-    required VoidCallback onTap,
-  }) {
+class _Titre extends StatelessWidget {
+  final String texte;
+  const _Titre(this.texte);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      texte,
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+    );
+  }
+}
+
+class _Puce extends StatelessWidget {
+  final bool actif;
+  final Color primaryColor;
+  final VoidCallback onTap;
+  final Widget child;
+  final double largeur;
+  final double hauteur;
+
+  const _Puce({
+    required this.actif,
+    required this.primaryColor,
+    required this.onTap,
+    required this.child,
+    this.largeur = 60,
+    this.hauteur = 76,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+        duration: const Duration(milliseconds: 150),
+        width: largeur,
+        height: hauteur,
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected
-              ? primaryColor.withValues(alpha: 0.05)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? primaryColor : const Color(0xFFE5E7EB),
-            width: isSelected ? 1.8 : 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          color: actif ? primaryColor : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: actif ? primaryColor : const Color(0xFFE5E7EB)),
         ),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _BarreAction extends StatelessWidget {
+  final Color primaryColor;
+  final double montant;
+  final String libelle;
+  final bool actif;
+  final VoidCallback onPressed;
+
+  const _BarreAction({
+    required this.primaryColor,
+    required this.montant,
+    required this.libelle,
+    required this.actif,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, -4)),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected ? primaryColor : const Color(0xFF6B7280),
-            ),
-            const SizedBox(width: 8),
             Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                  color: isSelected ? primaryColor : const Color(0xFF374151),
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(libelle, maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      Formatters.formatFcfa(montant),
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: primaryColor),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 2,
+              child: AppButton(
+                text: 'Continuer',
+                onPressed: actif ? onPressed : null,
+                color: primaryColor,
               ),
             ),
           ],

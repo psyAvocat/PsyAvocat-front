@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/realtime/realtime_service.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../../../shared/models/specialite.dart';
+import '../../data/models/creneau.dart';
+import '../../data/models/professionnel_detail.dart';
 import '../../data/models/professionnel_summary.dart';
 import '../../data/repositories/professionnels_repository.dart';
 
@@ -45,6 +47,32 @@ final professionnelsProvider = FutureProvider.autoDispose
             ...list,
           ]..sort((a, b) => (b.noteMoyenne ?? 0).compareTo(a.noteMoyenne ?? 0));
       }
+    });
+
+/// Fiche d'un professionnel (rechargée si son statut change : suspension, retrait…).
+final professionnelDetailProvider = FutureProvider.autoDispose
+    .family<ProfessionnelDetail, String>((ref, id) {
+      listenRealtime(ref, {RealtimeEventType.professionnelMisAJour}, (event) {
+        if (event.payload['id'] == id) ref.invalidateSelf();
+      });
+      return ref.read(professionnelsRepositoryProvider).getProfessionnel(id);
+    });
+
+/// Créneaux à venir d'un professionnel, tenus à jour en temps réel
+/// (un créneau réservé par un autre client disparaît immédiatement).
+final creneauxProvider = FutureProvider.autoDispose
+    .family<List<Creneau>, String>((ref, professionnelId) {
+      listenRealtime(ref, {
+        RealtimeEventType.creneauMisAJour,
+        RealtimeEventType.creneauxMisAJour,
+      }, (event) {
+        if (event.payload['professionnelId'] == professionnelId) {
+          ref.invalidateSelf();
+        }
+      });
+      return ref
+          .read(professionnelsRepositoryProvider)
+          .getCreneaux(professionnelId);
     });
 
 /// Provider simplifié pour récupérer tous les professionnels de l'univers courant sans filtre.
