@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/user_message.dart';
 import '../../../auth/presentation/controllers/session_controller.dart';
@@ -29,6 +30,23 @@ class ProfilNotifier extends AsyncNotifier<ProfilModel?> {
       final updated = await ref
           .read(profilRepositoryProvider)
           .updateProfile(nom: nom, prenom: prenom, telephone: telephone);
+      state = AsyncData(updated);
+      return null;
+    } catch (error) {
+      return userMessageFor(error);
+    }
+  }
+
+  /// Remplace la photo de profil (stockée côté serveur).
+  /// Renvoie `null` en cas de succès, sinon le message d'erreur à afficher.
+  Future<String?> updatePhoto({
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    try {
+      final updated = await ref
+          .read(profilRepositoryProvider)
+          .uploadPhoto(bytes: bytes, fileName: fileName);
       state = AsyncData(updated);
       return null;
     } catch (error) {

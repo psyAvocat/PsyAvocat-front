@@ -10,6 +10,7 @@ import '../../../referentiels/presentation/widgets/specialite_filter_chips.dart'
 import '../../data/models/professionnel_summary.dart';
 import '../controllers/professionnels_controller.dart';
 import '../widgets/professionnel_card.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Onglet « Avocats » ou « Psychologues » — maquettes du même nom.
 ///
@@ -56,7 +57,7 @@ class _ProfessionnelsListScreenState
         title: Text(label),
         actions: [
           IconButton(
-            tooltip: 'Notifications',
+            tooltip: tr('Notifications'),
             onPressed: () => context.push(AppRoutes.notifications),
             icon: Badge(
               isLabelVisible: unreadCount > 0,
@@ -77,8 +78,8 @@ class _ProfessionnelsListScreenState
             ),
             child: SearchBar(
               hintText: universe.isPsychologist
-                  ? 'Rechercher un psychologue…'
-                  : 'Rechercher un avocat…',
+                  ? tr('Rechercher un psychologue…')
+                  : tr('Rechercher un avocat…'),
               leading: const Icon(Icons.search_rounded),
               elevation: const WidgetStatePropertyAll(0),
               onChanged: (value) => setState(() => _query = value),
@@ -95,17 +96,18 @@ class _ProfessionnelsListScreenState
             child: AppAsyncView<List<ProfessionnelSummary>>(
               value: professionnels,
               isEmpty: (list) => list.isEmpty,
-              emptyTitle: 'Aucun professionnel pour le moment',
-              emptyMessage:
-                  'Aucun ${label.toLowerCase()} n’est disponible actuellement.',
+              emptyTitle: tr('Aucun professionnel pour le moment'),
+              emptyMessage: universe.isLawyer
+                  ? tr('Aucun avocat n’est disponible actuellement.')
+                  : tr('Aucun psychologue n’est disponible actuellement.'),
               emptyIcon: Icons.person_search_outlined,
               onRetry: () => ref.invalidate(professionnelsByUniverseProvider),
               builder: (list) {
                 final filtered = _filter(list);
                 if (filtered.isEmpty) {
-                  return const AppEmptyStateView(
-                    title: 'Aucun résultat',
-                    message: 'Modifiez votre recherche ou la spécialité.',
+                  return AppEmptyStateView(
+                    title: tr('Aucun résultat'),
+                    message: tr('Modifiez votre recherche ou la spécialité.'),
                     icon: Icons.search_off_rounded,
                   );
                 }

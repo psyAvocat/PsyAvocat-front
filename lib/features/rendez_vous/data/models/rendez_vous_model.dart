@@ -1,5 +1,6 @@
 import '../../../../core/theme/app_universe.dart';
 import '../../../../shared/enums/appointment_status.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Rendez-vous de l'utilisateur, tel que renvoyé par Spring Boot (RendezVousResponseDTO).
 /// Aucune valeur n'est complétée côté Flutter : un champ absent n'est pas affiché.
@@ -82,6 +83,20 @@ class RendezVous {
   AppUniverse get universe => typeProfessionnel == 'AVOCAT'
       ? AppUniverse.lawyer
       : AppUniverse.psychologist;
+
+  /// Mode lisible (« En visioconférence », « Au cabinet »…) au lieu du code
+  /// renvoyé par le serveur (VISIO, CABINET…).
+  String? get modeLabel => switch (mode?.toUpperCase()) {
+    null => null,
+    'VISIO' => tr('En visioconférence'),
+    'CABINET' => tr('Au cabinet'),
+    'DOMICILE' => tr('À domicile'),
+    _ => mode,
+  };
+
+  /// « Avocat » ou « Psychologue ».
+  String get typeLabel =>
+      typeProfessionnel == 'AVOCAT' ? tr('Avocat') : tr('Psychologue');
 
   String get professionnelDisplayName {
     final nom = '$professionnelPrenom $professionnelNom'.trim();

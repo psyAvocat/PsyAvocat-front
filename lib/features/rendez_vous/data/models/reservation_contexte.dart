@@ -1,5 +1,6 @@
 import '../../../professionnels/data/models/creneau.dart';
 import '../../../professionnels/data/models/professionnel_detail.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Point d'entrée du tunnel de réservation.
 ///
@@ -34,7 +35,7 @@ class ReservationContexte {
   double get montantTotal => viaDossier ? montantDossier! : tarif!.montant;
 
   String get libelleMontant =>
-      viaDossier ? 'Honoraires proposés' : (tarif?.titre ?? 'Consultation');
+      viaDossier ? tr('Honoraires proposés') : (tarif?.titre ?? 'Consultation');
 }
 
 /// Récapitulatif transmis à l'écran de confirmation et de paiement simulé.

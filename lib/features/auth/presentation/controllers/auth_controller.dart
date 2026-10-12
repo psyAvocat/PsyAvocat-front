@@ -3,18 +3,9 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/network/network_providers.dart';
 import '../../../profile/data/repositories/profil_repository.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/pending_registration_store.dart';
 import '../../data/repositories/session_repository.dart';
 import 'session_controller.dart';
-
-/// Inscription incomplète : le compte Firebase existe mais le profil n'a pas
-/// pu être confirmé. Il sera complété à la prochaine connexion.
-class IncompleteRegistrationException extends AppException {
-  const IncompleteRegistrationException()
-    : super(
-        "Votre compte a été créé, mais votre profil n'a pas pu être "
-        'enregistré. Connectez-vous pour le compléter.',
-      );
-}
 
 /// Actions d'authentification déclenchées par les écrans.
 ///
@@ -26,20 +17,31 @@ class AuthController extends Notifier<AsyncValue<void>> {
 
   AuthRepository get _authRepository => ref.read(authRepositoryProvider);
 
-  /// Connexion Firebase. La suite (identité backend, accès) est gérée par la session.
+  /// Connexion Firebase, puis vérification du compte (`GET /me`) par la session.
+  ///
+  /// La vérification est lancée ici et non seulement sur l'événement Firebase :
+  /// se reconnecter au compte DÉJÀ connecté dans Firebase (par exemple après un
+  /// échec de `/me` à la fin de l'inscription) n'émet aucun `authStateChanges`,
+  /// et l'utilisateur resterait bloqué sur l'écran de connexion.
   Future<bool> signIn({required String email, required String password}) {
-    return _run(() => _authRepository.signIn(email: email, password: password));
+    return _run(() async {
+      await _authRepository.signIn(email: email, password: password);
+      await ref.read(sessionControllerProvider.notifier).resolve();
+    });
   }
 
-  /// Inscription : compte Firebase + profil client unique dans le backend,
-  /// envoi de l'email de confirmation, puis déconnexion : l'utilisateur revient
-  /// à l'écran de connexion.
+  /// Inscription : compte Firebase + profil client unique dans le backend.
+  /// Le compte reste connecté : la session vérifie `GET /me`, puis le routeur
+  /// ouvre le choix de l'univers. Aucune information n'est redemandée ensuite :
   ///
-  /// Si le backend REFUSE le profil (4xx : téléphone déjà utilisé, données
-  /// invalides…), rien n'a été créé côté serveur : le compte Firebase est
-  /// supprimé pour pouvoir recommencer proprement.
-  /// Si la réponse est perdue (réseau, délai dépassé, 5xx), le profil a pu être
-  /// créé : on vérifie via `GET /me` au lieu de supprimer le compte à l'aveugle.
+  /// - les informations saisies sont gardées sur l'appareil jusqu'à la
+  ///   confirmation du serveur ; si la réponse est perdue (réseau, délai
+  ///   dépassé, 5xx), la session crée le profil avec elles ;
+  /// - si le backend REFUSE le profil (4xx : téléphone déjà utilisé, données
+  ///   invalides…), rien n'a été créé côté serveur : le compte Firebase créé
+  ///   est supprimé pour pouvoir recommencer proprement ;
+  /// - si l'adresse a déjà un compte Firebase SANS profil (inscription
+  ///   interrompue ailleurs), ce compte est repris avec le même mot de passe.
   Future<bool> register({
     required String prenom,
     required String nom,
@@ -48,11 +50,16 @@ class AuthController extends Notifier<AsyncValue<void>> {
     required String password,
   }) {
     final session = ref.read(sessionControllerProvider.notifier);
+    final pendingStore = ref.read(pendingRegistrationStoreProvider);
     return _run(() async {
       session.beginRegistration();
       try {
-        await _authRepository.signUp(email: email, password: password);
-        var profileCreated = true;
+        final accountCreated = await _signUpOrResume(email, password);
+        final uid = _authRepository.currentUser!.uid;
+        await pendingStore.save(
+          uid,
+          PendingRegistration(nom: nom, prenom: prenom, telephone: telephone),
+        );
         try {
           await ref
               .read(profilRepositoryProvider)
@@ -61,23 +68,47 @@ class AuthController extends Notifier<AsyncValue<void>> {
                 prenom: prenom,
                 telephone: telephone,
               );
+          await pendingStore.clear(uid);
         } catch (error) {
-          if (_isRejectedByServer(error)) {
-            await _authRepository.deleteCurrentUser();
-            rethrow;
+          if (!_isRejectedByServer(error)) {
+            // Réponse perdue : la session vérifie /me et crée le profil si besoin.
+            return;
           }
-          profileCreated = await _hasBusinessProfile();
-        }
-        // Profil non confirmé par le serveur (réseau coupé…) : le compte reste
-        // connecté et l'écran « Compléter mon profil » prend le relais.
-        if (!profileCreated) {
-          throw const IncompleteRegistrationException();
+          await pendingStore.clear(uid);
+          if (accountCreated) {
+            await _authRepository.deleteCurrentUser();
+          } else {
+            await _authRepository.signOut();
+          }
+          rethrow;
         }
       } finally {
-        // Le compte créé reste connecté : accès immédiat, sans nouvelle saisie.
-        session.endRegistration();
+        await session.endRegistration();
       }
     });
+  }
+
+  /// Crée le compte Firebase (`true`), ou reprend un compte existant sans
+  /// profil métier (`false`) quand l'adresse est déjà utilisée.
+  Future<bool> _signUpOrResume(String email, String password) async {
+    try {
+      await _authRepository.signUp(email: email, password: password);
+      return true;
+    } on AuthException catch (error) {
+      if (error.code != 'email-already-in-use') rethrow;
+      try {
+        await _authRepository.signIn(email: email, password: password);
+      } catch (_) {
+        // Mot de passe différent : le compte appartient à quelqu'un d'autre.
+        throw error;
+      }
+      // Compte déjà complet : c'est une connexion, pas une inscription.
+      if (await _hasBusinessProfile()) {
+        await _authRepository.signOut();
+        rethrow;
+      }
+      return false;
+    }
   }
 
   Future<bool> sendPasswordResetEmail({required String email}) {

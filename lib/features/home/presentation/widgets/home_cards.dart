@@ -6,10 +6,9 @@ import '../../../../core/theme/design_system.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../rendez_vous/data/models/rendez_vous_model.dart';
-import '../../../rendez_vous/presentation/controllers/rendez_vous_controller.dart'
-    hide nextAppointmentProvider;
-import '../controllers/home_providers.dart';
+import '../../../rendez_vous/presentation/controllers/rendez_vous_controller.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Carte « Prochain rendez-vous » (GET /api/rendez-vous).
 class NextAppointmentCard extends ConsumerWidget {
@@ -52,14 +51,14 @@ class _NoAppointmentContent extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Aucun rendez-vous prévu',
+                      tr('Aucun rendez-vous prévu'),
                       style: AppTypography.texteSemiBold.copyWith(
                         color: scheme.primary,
                       ),
                     ),
                     AppSpacing.vGap4,
                     Text(
-                      'Vous n\'avez pas de rendez-vous pour le moment.',
+                      tr('Vous n\'avez pas de rendez-vous pour le moment.'),
                       style: AppTypography.miniTexte.copyWith(
                         color: scheme.primary.withValues(alpha: 0.8),
                       ),
@@ -105,12 +104,14 @@ class _NoAppointmentContent extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Aucun rendez-vous prévu',
+                      tr('Aucun rendez-vous prévu'),
                       style: AppTypography.texteSemiBold,
                     ),
                     AppSpacing.vGap4,
                     Text(
-                      'Prenez rendez-vous avec un professionnel pour être accompagné.',
+                      tr(
+                        'Prenez rendez-vous avec un professionnel pour être accompagné.',
+                      ),
                       style: AppTypography.miniTexte.copyWith(
                         color: scheme.primary,
                       ),
@@ -163,7 +164,6 @@ class _AppointmentContent extends StatelessWidget {
                     Text(
                       DateFormat(
                         'MMM',
-                        'fr_FR',
                       ).format(appointment.dateHeure).toUpperCase(),
                       style: AppTypography.miniTexte.copyWith(
                         color: scheme.primary,
@@ -187,7 +187,7 @@ class _AppointmentContent extends StatelessWidget {
                       style: AppTypography.texteSecondaire,
                     ),
                     Text(
-                      appointment.mode ?? 'Visio',
+                      appointment.modeLabel ?? '',
                       style: AppTypography.miniTexte,
                     ),
                     AppSpacing.vGap4,

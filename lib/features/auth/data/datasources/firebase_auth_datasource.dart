@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Source de données concrète utilisant Firebase Authentication.
 /// Règle stricte : mécanisme réel sans mock ni session indépendante.
@@ -33,10 +34,12 @@ class FirebaseAuthDatasource {
         password: password,
       );
     } on FirebaseAuthException catch (e) {
-      throw AuthException(_mapFirebaseError(e.code, e.message));
+      throw AuthException(_mapFirebaseError(e.code, e.message), code: e.code);
     } catch (_) {
-      throw const AuthException(
-        "Connexion impossible. Vérifiez votre connexion Internet et réessayez.",
+      throw AuthException(
+        tr(
+          "Connexion impossible. Vérifiez votre connexion Internet et réessayez.",
+        ),
       );
     }
   }
@@ -52,10 +55,12 @@ class FirebaseAuthDatasource {
         password: password,
       );
     } on FirebaseAuthException catch (e) {
-      throw AuthException(_mapFirebaseError(e.code, e.message));
+      throw AuthException(_mapFirebaseError(e.code, e.message), code: e.code);
     } catch (_) {
-      throw const AuthException(
-        "Inscription impossible. Vérifiez votre connexion Internet et réessayez.",
+      throw AuthException(
+        tr(
+          "Inscription impossible. Vérifiez votre connexion Internet et réessayez.",
+        ),
       );
     }
   }
@@ -70,10 +75,12 @@ class FirebaseAuthDatasource {
     try {
       await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
     } on FirebaseAuthException catch (e) {
-      throw AuthException(_mapFirebaseError(e.code, e.message));
+      throw AuthException(_mapFirebaseError(e.code, e.message), code: e.code);
     } catch (_) {
-      throw const AuthException(
-        "Impossible d'envoyer l'email de réinitialisation. Réessayez plus tard.",
+      throw AuthException(
+        tr(
+          "Impossible d'envoyer l'email de réinitialisation. Réessayez plus tard.",
+        ),
       );
     }
   }
@@ -83,10 +90,12 @@ class FirebaseAuthDatasource {
     try {
       await _firebaseAuth.currentUser?.sendEmailVerification();
     } on FirebaseAuthException catch (e) {
-      throw AuthException(_mapFirebaseError(e.code, e.message));
+      throw AuthException(_mapFirebaseError(e.code, e.message), code: e.code);
     } catch (_) {
-      throw const AuthException(
-        "Impossible d'envoyer l'email de confirmation. Réessayez plus tard.",
+      throw AuthException(
+        tr(
+          "Impossible d'envoyer l'email de confirmation. Réessayez plus tard.",
+        ),
       );
     }
   }
@@ -103,29 +112,33 @@ class FirebaseAuthDatasource {
   String _mapFirebaseError(String code, String? defaultMessage) {
     switch (code) {
       case 'user-not-found':
-        return 'Aucun utilisateur ne correspond à cette adresse email.';
+        return tr('Aucun utilisateur ne correspond à cette adresse email.');
       case 'wrong-password':
       case 'invalid-credential':
-        return 'Identifiants incorrects. Veuillez vérifier votre saisie.';
+        return tr('Identifiants incorrects. Veuillez vérifier votre saisie.');
       case 'email-already-in-use':
-        return 'Cette adresse email est déjà associée à un compte.';
+        return tr('Cette adresse email est déjà associée à un compte.');
       case 'invalid-email':
-        return 'L\'adresse email saisie est invalide.';
+        return tr('L\'adresse email saisie est invalide.');
       case 'weak-password':
-        return 'Le mot de passe choisi est trop faible.';
+        return tr('Le mot de passe choisi est trop faible.');
       case 'user-disabled':
-        return 'Ce compte utilisateur a été désactivé.';
+        return tr('Ce compte utilisateur a été désactivé.');
       case 'too-many-requests':
-        return 'Trop de tentatives. Patientez quelques minutes avant de réessayer.';
+        return tr(
+          'Trop de tentatives. Patientez quelques minutes avant de réessayer.',
+        );
       case 'network-request-failed':
-        return 'Connexion Internet indisponible. Vérifiez votre réseau.';
+        return tr('Connexion Internet indisponible. Vérifiez votre réseau.');
       case 'requires-recent-login':
-        return 'Par sécurité, reconnectez-vous puis réessayez.';
+        return tr('Par sécurité, reconnectez-vous puis réessayez.');
       case 'operation-not-allowed':
-        return "Ce mode de connexion n'est pas disponible pour le moment.";
+        return tr("Ce mode de connexion n'est pas disponible pour le moment.");
       default:
         // Jamais le message technique de Firebase.
-        return "Une erreur d'authentification est survenue. Veuillez réessayer.";
+        return tr(
+          "Une erreur d'authentification est survenue. Veuillez réessayer.",
+        );
     }
   }
 

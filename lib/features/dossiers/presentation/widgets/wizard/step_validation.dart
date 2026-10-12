@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/widgets/app_button.dart';
 import '../../controllers/create_dossier_wizard_controller.dart';
+import '../../../../../core/theme/app_palette.dart';
+import '../../../../../core/l10n/app_strings.dart';
 
 /// Étape 4 : récapitulatif puis envoi réel (création, pièces, soumissions).
 class StepValidation extends ConsumerWidget {
@@ -26,11 +28,11 @@ class StepValidation extends ConsumerWidget {
   String _etape(EnvoiDossierEtape etape) {
     switch (etape) {
       case EnvoiDossierEtape.creation:
-        return 'Création du dossier…';
+        return tr('Création du dossier…');
       case EnvoiDossierEtape.piecesJointes:
-        return 'Envoi des pièces jointes…';
+        return tr('Envoi des pièces jointes…');
       case EnvoiDossierEtape.soumissions:
-        return 'Transmission aux avocats…';
+        return tr('Transmission aux avocats…');
       case EnvoiDossierEtape.inactif:
       case EnvoiDossierEtape.termine:
         return '';
@@ -47,39 +49,40 @@ class StepValidation extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             children: [
-              const Text(
-                'Récapitulatif',
+              Text(
+                tr('Récapitulatif'),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
+                  color: context.palette.textStrong,
                 ),
               ),
               const SizedBox(height: 16),
               _Bloc(
-                titre: 'Informations du dossier',
+                titre: tr('Informations du dossier'),
                 children: [
                   _Ligne(
                     icone: Icons.description_outlined,
-                    libelle: 'Titre',
+                    libelle: tr('Titre'),
                     valeur: state.titre,
                   ),
                   _Ligne(
                     icone: Icons.work_outline,
-                    libelle: 'Domaine',
-                    valeur: state.domaine?.nom ?? 'Non précisé',
+                    libelle: tr('Domaine'),
+                    valeur: state.domaine?.nom ?? tr('Non précisé'),
                   ),
                   _Ligne(
                     icone: Icons.edit_outlined,
-                    libelle: 'Description',
+                    libelle: tr('Description'),
                     valeur: state.description,
                   ),
                 ],
               ),
               const SizedBox(height: 16),
               _Bloc(
-                titre:
-                    'Avocats destinataires (${state.selectedProfessionnels.length})',
+                titre: tr('Avocats destinataires ({n})', {
+                  'n': state.selectedProfessionnels.length,
+                }),
                 children: state.selectedProfessionnels
                     .map(
                       (p) => _Ligne(
@@ -92,7 +95,9 @@ class StepValidation extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               _Bloc(
-                titre: 'Pièces jointes (${state.piecesJointes.length})',
+                titre: tr('Pièces jointes ({n})', {
+                  'n': state.piecesJointes.length,
+                }),
                 children: state.piecesJointes.isEmpty
                     ? const [
                         _Ligne(
@@ -112,12 +117,14 @@ class StepValidation extends ConsumerWidget {
                           .toList(),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Chaque avocat pourra accepter ou décliner votre dossier. Dès qu’un avocat '
-                'l’accepte, il lui est confié et vous pourrez prendre rendez-vous avec lui.',
+              Text(
+                tr(
+                  'Chaque avocat pourra accepter ou décliner votre dossier. Dès qu’un avocat '
+                  'l’accepte, il lui est confié et vous pourrez prendre rendez-vous avec lui.',
+                ),
                 style: TextStyle(
                   fontSize: 13,
-                  color: Color(0xFF6B7280),
+                  color: context.palette.textMuted,
                   height: 1.4,
                 ),
               ),
@@ -158,8 +165,8 @@ class StepValidation extends ConsumerWidget {
         ),
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: context.palette.card,
             boxShadow: [
               BoxShadow(
                 color: Color(0x0A000000),
@@ -174,18 +181,18 @@ class StepValidation extends ConsumerWidget {
               children: [
                 Expanded(
                   child: AppButton(
-                    text: 'Retour',
+                    text: tr('Retour'),
                     onPressed: state.envoiEnCours ? null : onBack,
                     isOutlined: true,
-                    textColor: const Color(0xFF111827),
-                    color: const Color(0xFFE5E7EB),
+                    textColor: context.palette.textStrong,
+                    color: context.palette.border,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   flex: 2,
                   child: AppButton(
-                    text: 'Envoyer le dossier',
+                    text: tr('Envoyer le dossier'),
                     isLoading: state.envoiEnCours,
                     onPressed: state.envoiEnCours ? null : () => _envoyer(ref),
                     color: primaryColor,
@@ -210,7 +217,7 @@ class _Bloc extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
+        color: context.palette.muted,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -218,9 +225,9 @@ class _Bloc extends StatelessWidget {
         children: [
           Text(
             titre,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w700,
-              color: Color(0xFF111827),
+              color: context.palette.textStrong,
             ),
           ),
           const SizedBox(height: 12),
@@ -248,7 +255,7 @@ class _Ligne extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icone, size: 18, color: const Color(0xFF6B7280)),
+          Icon(icone, size: 18, color: context.palette.textMuted),
           const SizedBox(width: 10),
           Expanded(
             child: Text.rich(
@@ -256,15 +263,15 @@ class _Ligne extends StatelessWidget {
                 children: [
                   if (libelle.isNotEmpty)
                     TextSpan(
-                      text: '$libelle : ',
+                      text: '${tr(libelle)} : ',
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   TextSpan(text: valeur),
                 ],
               ),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFF374151),
+                color: context.palette.text,
                 height: 1.4,
               ),
             ),

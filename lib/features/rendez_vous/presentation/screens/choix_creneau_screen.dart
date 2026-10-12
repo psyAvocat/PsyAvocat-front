@@ -12,7 +12,10 @@ import '../../../../shared/enums/slot_status.dart';
 import '../../../professionnels/data/models/creneau.dart';
 import '../../../professionnels/data/models/professionnel_detail.dart';
 import '../../../professionnels/presentation/controllers/professionnels_controller.dart';
+import '../../../professionnels/presentation/widgets/availability_picker.dart';
 import '../../data/models/reservation_contexte.dart';
+import '../../../../core/theme/app_palette.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Étape 1 du tunnel : choix d'un créneau réellement libre et du mode de consultation.
 ///
@@ -33,7 +36,6 @@ class ChoixCreneauScreen extends ConsumerStatefulWidget {
 }
 
 class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
-  DateTime? _jour;
   Creneau? _creneau;
   String? _mode;
   final _motifController = TextEditingController();
@@ -58,7 +60,7 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
   @override
   Widget build(BuildContext context) {
     final universe = ref.watch(currentUniverseProvider);
-    final primaryColor = universe.primaryColor;
+    final primaryColor = Theme.of(context).colorScheme.primary;
     final contexte = widget.contexte;
     final proAsync = ref.watch(
       professionnelDetailProvider(widget.professionnelId),
@@ -66,15 +68,15 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
     final creneauxAsync = ref.watch(creneauxProvider(widget.professionnelId));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFC),
+      backgroundColor: context.palette.page,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Choisir un créneau',
+        title: Text(
+          tr('Choisir un créneau'),
           style: TextStyle(
             fontWeight: FontWeight.w700,
-            color: Color(0xFF111827),
+            color: context.palette.textStrong,
           ),
         ),
         leading: IconButton(
@@ -83,10 +85,11 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
         ),
       ),
       body: contexte == null
-          ? const AppErrorStateView(
-              title: 'Réservation indisponible',
-              message:
-                  'Ouvrez la fiche du professionnel pour choisir une consultation.',
+          ? AppErrorStateView(
+              title: tr('Réservation indisponible'),
+              message: tr(
+                'Ouvrez la fiche du professionnel pour choisir une consultation.',
+              ),
             )
           : proAsync.when(
               loading: () => AppLoadingView(universe: universe),
@@ -99,7 +102,7 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
               data: (pro) => creneauxAsync.when(
                 loading: () => AppLoadingView(
                   universe: universe,
-                  message: 'Chargement des disponibilités…',
+                  message: tr('Chargement des disponibilités…'),
                 ),
                 error: (e, _) => AppErrorStateView(
                   message: userMessageFor(e),
@@ -135,22 +138,19 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
     if (libres.isEmpty) {
       return AppEmptyStateView(
         icon: Icons.event_busy_rounded,
-        title: 'Aucun créneau disponible',
-        message:
-            '${pro.summary.displayName} n’a pas de créneau libre pour le moment. '
-            'Les nouvelles disponibilités apparaîtront ici automatiquement.',
+        title: tr('Aucun créneau disponible'),
+        message: tr(
+          '{pro} n’a pas de créneau libre pour le moment. '
+          'Les nouvelles disponibilités apparaîtront ici automatiquement.',
+          {'pro': pro.summary.displayName},
+        ),
       );
     }
 
-    final jours = <DateTime>{for (final c in libres) c.jour}.toList()..sort();
     // Le créneau choisi a pu être pris entre-temps (mise à jour temps réel).
     if (_creneau != null && !libres.any((c) => c.id == _creneau!.id)) {
       _creneau = null;
     }
-    final jourActif = _jour != null && jours.contains(_jour)
-        ? _jour!
-        : jours.first;
-    final creneauxDuJour = libres.where((c) => c.jour == jourActif).toList();
     final modes = _modesDe(pro);
     final modeChoisi = _mode != null && modes.contains(_mode)
         ? _mode
@@ -168,79 +168,20 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                 primaryColor: primaryColor,
               ),
               const SizedBox(height: 24),
-              const _Titre('Date'),
+              _Titre(tr('Date et heure')),
               const SizedBox(height: 12),
-              SizedBox(
-                height: 76,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: jours.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 10),
-                  itemBuilder: (context, i) {
-                    final jour = jours[i];
-                    final actif = jour == jourActif;
-                    return _Puce(
-                      actif: actif,
-                      primaryColor: primaryColor,
-                      onTap: () => setState(() {
-                        _jour = jour;
-                        _creneau = null;
-                      }),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            Formatters.formatJourCourt(jour),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: actif
-                                  ? Colors.white
-                                  : const Color(0xFF6B7280),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${jour.day}',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: actif
-                                  ? Colors.white
-                                  : const Color(0xFF111827),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+              AvailabilityPicker(
+                creneaux: creneaux,
+                primaryColor: primaryColor,
+                guide: tr(
+                  'Choisissez une date (les jours marqués d’un point ont des '
+                  'créneaux libres), puis touchez l’heure qui vous convient.',
                 ),
+                selected: _creneau,
+                onSelected: (c) => setState(() => _creneau = c),
               ),
               const SizedBox(height: 24),
-              _Titre('Créneaux du ${Formatters.formatJourLong(jourActif)}'),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: creneauxDuJour.map((c) {
-                  final actif = _creneau?.id == c.id;
-                  return _Puce(
-                    actif: actif,
-                    primaryColor: primaryColor,
-                    largeur: 92,
-                    hauteur: 44,
-                    onTap: () => setState(() => _creneau = c),
-                    child: Text(
-                      Formatters.formatHeure(c.debut),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: actif ? Colors.white : const Color(0xFF111827),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 24),
-              const _Titre('Mode de consultation'),
+              _Titre(tr('Mode de consultation')),
               const SizedBox(height: 12),
               RadioGroup<String>(
                 groupValue: modeChoisi,
@@ -253,7 +194,9 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                           activeColor: primaryColor,
                           contentPadding: EdgeInsets.zero,
                           title: Text(
-                            m == 'VISIO' ? 'En visioconférence' : 'Au cabinet',
+                            m == 'VISIO'
+                                ? tr('En visioconférence')
+                                : 'Au cabinet',
                           ),
                           subtitle:
                               m == 'CABINET' &&
@@ -271,17 +214,18 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
               ),
               if (!contexte.viaDossier) ...[
                 const SizedBox(height: 16),
-                const _Titre('Motif (facultatif)'),
+                _Titre(tr('Motif (facultatif)')),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _motifController,
                   maxLines: 3,
                   maxLength: 500,
                   decoration: InputDecoration(
-                    hintText:
-                        'Précisez en quelques mots l’objet de la consultation',
+                    hintText: tr(
+                      'Précisez en quelques mots l’objet de la consultation',
+                    ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: context.palette.card,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -329,9 +273,9 @@ class _EnTeteProfessionnel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.palette.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: context.palette.border),
       ),
       child: Row(
         children: [
@@ -365,15 +309,17 @@ class _EnTeteProfessionnel extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   contexte.viaDossier
-                      ? 'Dossier : ${contexte.dossierTitre ?? ''}'
+                      ? tr('Dossier : {titre}', {
+                          'titre': contexte.dossierTitre ?? '',
+                        })
                       : (pro.specialites.isNotEmpty
                             ? pro.specialites.first.nom
                             : pro.summary.type ?? ''),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: Color(0xFF6B7280),
+                    color: context.palette.textMuted,
                   ),
                 ),
               ],
@@ -393,50 +339,10 @@ class _Titre extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       texte,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.w700,
-        color: Color(0xFF111827),
-      ),
-    );
-  }
-}
-
-class _Puce extends StatelessWidget {
-  final bool actif;
-  final Color primaryColor;
-  final VoidCallback onTap;
-  final Widget child;
-  final double largeur;
-  final double hauteur;
-
-  const _Puce({
-    required this.actif,
-    required this.primaryColor,
-    required this.onTap,
-    required this.child,
-    this.largeur = 60,
-    this.hauteur = 76,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: largeur,
-        height: hauteur,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: actif ? primaryColor : Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: actif ? primaryColor : const Color(0xFFE5E7EB),
-          ),
-        ),
-        child: child,
+        color: context.palette.textStrong,
       ),
     );
   }
@@ -462,7 +368,7 @@ class _BarreAction extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.palette.card,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -484,9 +390,9 @@ class _BarreAction extends StatelessWidget {
                     libelle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF6B7280),
+                      color: context.palette.textMuted,
                     ),
                   ),
                   FittedBox(
@@ -507,7 +413,7 @@ class _BarreAction extends StatelessWidget {
             Expanded(
               flex: 2,
               child: AppButton(
-                text: 'Continuer',
+                text: tr('Continuer'),
                 onPressed: actif ? onPressed : null,
                 color: primaryColor,
               ),

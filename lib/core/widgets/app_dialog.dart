@@ -86,7 +86,7 @@ class AppDialog extends StatelessWidget {
             : effectiveIconColor.withValues(alpha: 0.1));
 
     return Dialog(
-      backgroundColor: AppColors.neutralSurface,
+      backgroundColor: context.palette.card,
       shape: const RoundedRectangleBorder(borderRadius: AppRadii.r20),
       elevation: 0,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),

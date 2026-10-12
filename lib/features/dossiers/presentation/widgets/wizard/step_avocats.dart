@@ -8,6 +8,8 @@ import '../../../../../core/widgets/app_state_views.dart';
 import '../../../../professionnels/data/models/professionnel_summary.dart';
 import '../../../../professionnels/presentation/controllers/professionnels_controller.dart';
 import '../../controllers/create_dossier_wizard_controller.dart';
+import '../../../../../core/theme/app_palette.dart';
+import '../../../../../core/l10n/app_strings.dart';
 
 /// Étape 1 : choix des avocats destinataires parmi les avocats validés
 /// (recherche réelle `GET /api/professionnels?type=AVOCAT`).
@@ -66,52 +68,54 @@ class _StepAvocatsState extends ConsumerState<StepAvocats> {
                 onChanged: _onSearch,
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
-                  hintText: 'Rechercher un avocat par nom, ville, spécialité…',
-                  hintStyle: const TextStyle(
-                    color: Color(0xFF9CA3AF),
+                  hintText: tr(
+                    'Rechercher un avocat par nom, ville, spécialité…',
+                  ),
+                  hintStyle: TextStyle(
+                    color: context.palette.textSubtle,
                     fontSize: 13,
                   ),
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.search_rounded,
-                    color: Color(0xFF6B7280),
+                    color: context.palette.textMuted,
                     size: 20,
                   ),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.palette.card,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                    borderSide: BorderSide(color: context.palette.border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                    borderSide: BorderSide(color: context.palette.border),
                   ),
                 ),
               ),
               const SizedBox(height: 24),
               if (selectedPros.isNotEmpty) ...[
                 Text(
-                  'Avocats sélectionnés (${selectedPros.length})',
-                  style: const TextStyle(
+                  tr('Avocats sélectionnés ({n})', {'n': selectedPros.length}),
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF111827),
+                    color: context.palette.textStrong,
                   ),
                 ),
                 const SizedBox(height: 12),
                 ...selectedPros.map((p) => _buildProCard(p, true)),
                 const SizedBox(height: 24),
               ],
-              const Text(
-                'Avocats disponibles',
+              Text(
+                tr('Avocats disponibles'),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
+                  color: context.palette.textStrong,
                 ),
               ),
               const SizedBox(height: 12),
@@ -132,11 +136,13 @@ class _StepAvocatsState extends ConsumerState<StepAvocats> {
                     return AppEmptyStateView(
                       icon: Icons.person_search_outlined,
                       title: _query.isEmpty
-                          ? 'Aucun autre avocat disponible'
-                          : 'Aucun avocat trouvé',
+                          ? tr('Aucun autre avocat disponible')
+                          : tr('Aucun avocat trouvé'),
                       message: _query.isEmpty
                           ? null
-                          : 'Essayez un autre nom, une ville ou une spécialité.',
+                          : tr(
+                              'Essayez un autre nom, une ville ou une spécialité.',
+                            ),
                     );
                   }
                   return Column(
@@ -152,8 +158,8 @@ class _StepAvocatsState extends ConsumerState<StepAvocats> {
         ),
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: context.palette.card,
             boxShadow: [
               BoxShadow(
                 color: Color(0x0A000000),
@@ -165,7 +171,7 @@ class _StepAvocatsState extends ConsumerState<StepAvocats> {
           child: SafeArea(
             top: false,
             child: AppButton(
-              text: 'Suivant',
+              text: tr('Suivant'),
               onPressed: selectedPros.isNotEmpty ? widget.onNext : null,
               color: widget.primaryColor,
             ),
@@ -183,11 +189,9 @@ class _StepAvocatsState extends ConsumerState<StepAvocats> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFF3F4F6) : Colors.white,
+          color: isSelected ? context.palette.muted : context.palette.card,
           borderRadius: BorderRadius.circular(12),
-          border: isSelected
-              ? null
-              : Border.all(color: const Color(0xFFE5E7EB)),
+          border: isSelected ? null : Border.all(color: context.palette.border),
         ),
         child: Row(
           children: [
@@ -217,10 +221,10 @@ class _StepAvocatsState extends ConsumerState<StepAvocats> {
                     p.displayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF111827),
+                      color: context.palette.textStrong,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -231,9 +235,9 @@ class _StepAvocatsState extends ConsumerState<StepAvocats> {
                     ].join(' • '),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF6B7280),
+                      color: context.palette.textMuted,
                     ),
                   ),
                 ],
@@ -244,11 +248,11 @@ class _StepAvocatsState extends ConsumerState<StepAvocats> {
               height: 24,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isSelected ? widget.primaryColor : Colors.white,
+                color: isSelected ? widget.primaryColor : context.palette.card,
                 border: Border.all(
                   color: isSelected
                       ? widget.primaryColor
-                      : const Color(0xFFD1D5DB),
+                      : context.palette.borderStrong,
                 ),
               ),
               child: isSelected

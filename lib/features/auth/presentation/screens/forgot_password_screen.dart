@@ -7,6 +7,7 @@ import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/auth_controller.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Écran de réinitialisation de mot de passe (Mot de passe oublié).
 /// Envoie un email de réinitialisation via Firebase Authentication.
@@ -54,7 +55,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.palette.card,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -78,18 +79,20 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppSpacing.vGap32,
-          Text('Mot de passe oublié ?', style: AppTypography.titreMoyen),
+          Text(tr('Mot de passe oublié ?'), style: AppTypography.titreMoyen),
           AppSpacing.vGap8,
           Text(
-            'Entrez votre adresse email ci-dessous. Nous vous enverrons un lien '
-            'sécurisé pour réinitialiser votre mot de passe.',
+            tr(
+              'Entrez votre adresse email ci-dessous. Nous vous enverrons un lien '
+              'sécurisé pour réinitialiser votre mot de passe.',
+            ),
             style: AppTypography.texteSecondaire,
           ),
           AppSpacing.vGap24,
           AppTextField(
             controller: _emailController,
-            label: 'Adresse email',
-            hint: 'Ex: ramla@gmail.com',
+            label: tr('Adresse email'),
+            hint: tr('Ex: ramla@gmail.com'),
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
             validator: Validators.email,
@@ -98,14 +101,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           AppSpacing.vGap32,
           AppButton(
             color: AppColors.lawyer,
-            text: 'Envoyer le lien',
+            text: tr('Envoyer le lien'),
             isLoading: isLoading,
             onPressed: _submit,
           ),
           AppSpacing.vGap16,
           Center(
             child: AppButton.ghost(
-              text: 'Retour à la connexion',
+              text: tr('Retour à la connexion'),
               onPressed: () => context.pop(),
             ),
           ),
@@ -124,18 +127,20 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           color: AppColors.brandPurple,
         ),
         AppSpacing.vGap16,
-        Text('Email envoyé !', style: AppTypography.titreMoyen),
+        Text(tr('Email envoyé !'), style: AppTypography.titreMoyen),
         AppSpacing.vGap8,
         Text(
-          'Un email contenant les instructions de réinitialisation a été envoyé à '
-          '${_emailController.text}.',
+          tr(
+            'Un email contenant les instructions de réinitialisation a été envoyé à {email}.',
+            {'email': _emailController.text},
+          ),
           textAlign: TextAlign.center,
           style: AppTypography.texteSecondaire,
         ),
         AppSpacing.vGap32,
         AppButton(
           color: AppColors.lawyer,
-          text: 'Retour à la connexion',
+          text: tr('Retour à la connexion'),
           onPressed: () => context.go(AppRoutes.login),
         ),
       ],

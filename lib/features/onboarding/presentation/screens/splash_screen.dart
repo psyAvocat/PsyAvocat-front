@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/controllers/session_controller.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Écran de démarrage — maquette Figma « première page ».
 ///
@@ -47,7 +48,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // et serveur injoignable (GET /me). On propose alors de réessayer.
     final session = ref.watch(sessionControllerProvider);
     final errorMessage = session.status == SessionStatus.error
-        ? (session.message ?? 'Connexion au serveur impossible.')
+        ? (session.message ?? tr('Connexion au serveur impossible.'))
         : null;
     final logoSize = (MediaQuery.sizeOf(context).width * 0.55).clamp(
       140.0,
@@ -74,7 +75,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 FadeTransition(
                   opacity: _animation,
                   child: Text(
-                    'Votre solution juridique\net psychologique',
+                    tr('Votre solution juridique\net psychologique'),
                     textAlign: TextAlign.center,
                     style: AppTypography.petitTitre,
                   ),
@@ -88,7 +89,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   ),
                   AppSpacing.vGap16,
                   AppButton(
-                    text: 'Réessayer',
+                    text: tr('Réessayer'),
                     isFullWidth: false,
                     onPressed: () =>
                         ref.read(sessionControllerProvider.notifier).resolve(),

@@ -4,6 +4,7 @@ import '../../../../shared/enums/appointment_status.dart';
 import '../../data/models/rendez_vous_model.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/theme/design_system.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 class RendezVousDetailsSheet extends StatelessWidget {
   final RendezVous item;
@@ -17,11 +18,11 @@ class RendezVousDetailsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dayStr = DateFormat('d', 'fr_FR').format(item.dateHeure);
-    final monthStr = DateFormat('MMM', 'fr_FR').format(item.dateHeure);
-    final yearStr = DateFormat('yyyy', 'fr_FR').format(item.dateHeure);
+    final dayStr = DateFormat('d').format(item.dateHeure);
+    final monthStr = DateFormat('MMM').format(item.dateHeure);
+    final yearStr = DateFormat('yyyy').format(item.dateHeure);
     final timeStr =
-        '${DateFormat('HH:mm', 'fr_FR').format(item.dateHeure)} - ${DateFormat('HH:mm', 'fr_FR').format(item.fin)}';
+        '${DateFormat('HH:mm').format(item.dateHeure)} - ${DateFormat('HH:mm').format(item.fin)}';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
@@ -34,7 +35,7 @@ class RendezVousDetailsSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFFE5E7EB),
+                color: context.palette.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -45,10 +46,10 @@ class RendezVousDetailsSheet extends StatelessWidget {
             children: [
               Text(
                 item.professionnelDisplayName,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF111827),
+                  color: context.palette.textStrong,
                 ),
               ),
               Container(
@@ -77,51 +78,62 @@ class RendezVousDetailsSheet extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '${item.typeProfessionnel} • ${item.professionnelSpecialite ?? ''}',
-            style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563)),
+            '${item.typeLabel} • ${item.professionnelSpecialite ?? ''}',
+            style: TextStyle(fontSize: 14, color: context.palette.text),
           ),
           const Divider(height: 24),
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.calendar_today_rounded,
                 size: 16,
-                color: Color(0xFF6B7280),
-              ),
-              const SizedBox(width: 8),
-              Text('$dayStr $monthStr $yearStr à $timeStr'),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(
-                Icons.location_on_outlined,
-                size: 16,
-                color: Color(0xFF6B7280),
-              ),
-              const SizedBox(width: 8),
-              Expanded(child: Text(item.mode ?? 'Non spécifié')),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(
-                Icons.payments_outlined,
-                size: 16,
-                color: Color(0xFF6B7280),
+                color: context.palette.textMuted,
               ),
               const SizedBox(width: 8),
               Text(
-                'Honoraires : ${item.montantTotal ?? 0} FCFA (Acompte réglé : ${item.montantAcompte ?? 0} FCFA)',
+                tr('{date} à {heure}', {
+                  'date': '$dayStr $monthStr $yearStr',
+                  'heure': timeStr,
+                }),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                Icons.location_on_outlined,
+                size: 16,
+                color: context.palette.textMuted,
+              ),
+              const SizedBox(width: 8),
+              Expanded(child: Text(item.modeLabel ?? tr('Non spécifié'))),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                Icons.payments_outlined,
+                size: 16,
+                color: context.palette.textMuted,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                tr(
+                  'Honoraires : {total} FCFA (Acompte réglé : {acompte} FCFA)',
+                  {
+                    'total': item.montantTotal ?? 0,
+                    'acompte': item.montantAcompte ?? 0,
+                  },
+                ),
               ),
             ],
           ),
           if (item.canBeChangedAt(DateTime.now())) ...[
             const SizedBox(height: 24),
             AppButton.outline(
-              text: 'Annuler ce rendez-vous',
+              text: tr('Annuler ce rendez-vous'),
               color: AppColors.danger,
               onPressed: onCancel,
             ),

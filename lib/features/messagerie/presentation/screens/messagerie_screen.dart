@@ -8,6 +8,8 @@ import '../widgets/conversation_card.dart';
 import '../widgets/messagerie_empty_state.dart';
 import '../widgets/messagerie_error_state.dart';
 import 'conversation_detail_screen.dart';
+import '../../../../core/l10n/app_strings.dart';
+import '../../../../core/theme/design_system.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Provider pour la liste des conversations
@@ -32,30 +34,28 @@ class MessagerieScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final universe = ref.watch(currentUniverseProvider);
-    final primaryColor = universe.primaryColor;
+    final primaryColor = Theme.of(context).colorScheme.primary;
     final conversationsAsync = ref.watch(conversationsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFC),
+      backgroundColor: context.palette.page,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        title: const Text(
-          'Messages',
-          style: TextStyle(
+        title: Text(
+          tr('Messages'),
+          style: AppTypography.titreMoyen.copyWith(
             fontSize: 26,
             fontWeight: FontWeight.w800,
-            color: Color(0xFF111827),
-            fontFamily: 'Montserrat',
+            color: context.palette.textStrong,
           ),
         ),
         actions: [
           IconButton(
             icon: Icon(Icons.search_rounded, color: primaryColor),
             onPressed: () {},
-            tooltip: 'Rechercher',
+            tooltip: tr('Rechercher'),
           ),
         ],
       ),
@@ -88,6 +88,8 @@ class MessagerieScreen extends ConsumerWidget {
                             participantName:
                                 conversation.correspondantDisplayName,
                             participantRole: conversation.correspondantType,
+                            participantPhotoUrl:
+                                conversation.correspondantPhotoUrl,
                           ),
                         ),
                       );

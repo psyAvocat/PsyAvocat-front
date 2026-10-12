@@ -107,23 +107,6 @@ void main() {
         isNull,
       );
     });
-
-    test('profil absent : compléter le profil', () {
-      expect(
-        redirect(
-          AppRoutes.universeSelection,
-          session: SessionStatus.profileIncomplete,
-        ),
-        AppRoutes.completeProfile,
-      );
-      expect(
-        redirect(
-          AppRoutes.completeProfile,
-          session: SessionStatus.profileIncomplete,
-        ),
-        isNull,
-      );
-    });
   });
 
   group('Client connecté', () {

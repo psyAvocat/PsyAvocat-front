@@ -8,6 +8,7 @@ import '../../data/models/professionnel_summary.dart';
 import '../controllers/professionnels_controller.dart';
 import '../widgets/professionnel_card.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 class RechercheScreen extends ConsumerStatefulWidget {
   const RechercheScreen({super.key});
@@ -49,8 +50,8 @@ class _RechercheScreenState extends ConsumerState<RechercheScreen> {
         title: TextField(
           controller: _searchController,
           autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Rechercher un professionnel...',
+          decoration: InputDecoration(
+            hintText: tr('Rechercher un professionnel...'),
             border: InputBorder.none,
             focusedBorder: InputBorder.none,
             enabledBorder: InputBorder.none,
@@ -75,9 +76,10 @@ class _RechercheScreenState extends ConsumerState<RechercheScreen> {
             child: AppAsyncView<List<ProfessionnelSummary>>(
               value: professionnelsAsync,
               isEmpty: (list) => list.isEmpty,
-              emptyTitle: 'Aucun résultat',
-              emptyMessage:
-                  'Aucun professionnel ne correspond à votre recherche.',
+              emptyTitle: tr('Aucun résultat'),
+              emptyMessage: tr(
+                'Aucun professionnel ne correspond à votre recherche.',
+              ),
               emptyIcon: Icons.search_off,
               onRetry: () => ref.invalidate(professionnelsProvider(query)),
               builder: (list) => ListView.separated(
@@ -112,12 +114,12 @@ class _RechercheScreenState extends ConsumerState<RechercheScreen> {
               data: (specialites) => DropdownButtonHideUnderline(
                 child: DropdownButton<String?>(
                   isExpanded: true,
-                  hint: const Text('Spécialité'),
+                  hint: Text(tr('Spécialité')),
                   value: _selectedSpecialiteId,
                   items: [
-                    const DropdownMenuItem(
+                    DropdownMenuItem(
                       value: null,
-                      child: Text('Toutes spécialités'),
+                      child: Text(tr('Toutes spécialités')),
                     ),
                     ...specialites.map(
                       (s) => DropdownMenuItem(value: s.id, child: Text(s.nom)),
@@ -128,7 +130,7 @@ class _RechercheScreenState extends ConsumerState<RechercheScreen> {
                 ),
               ),
               loading: () => const LinearProgressIndicator(),
-              error: (_, __) => const Text('Erreur'),
+              error: (_, __) => Text(tr('Erreur')),
             ),
           ),
           AppSpacing.hGap16,
@@ -137,18 +139,18 @@ class _RechercheScreenState extends ConsumerState<RechercheScreen> {
               child: DropdownButton<ProfessionnelSort>(
                 isExpanded: true,
                 value: _selectedSort,
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: ProfessionnelSort.pertinence,
-                    child: Text('Pertinence'),
+                    child: Text(tr('Pertinence')),
                   ),
                   DropdownMenuItem(
                     value: ProfessionnelSort.nom,
-                    child: Text('Nom (A-Z)'),
+                    child: Text(tr('Nom (A-Z)')),
                   ),
                   DropdownMenuItem(
                     value: ProfessionnelSort.note,
-                    child: Text('Note (Décroissant)'),
+                    child: Text(tr('Note (Décroissant)')),
                   ),
                 ],
                 onChanged: (val) {

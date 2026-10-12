@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/design_system.dart';
 import 'app_button.dart';
+import '../../core/l10n/app_strings.dart';
 
 /// Vue d'état générique et harmonisée pour PsyAvocat.
 class AppFeedbackView extends StatelessWidget {
@@ -216,7 +217,7 @@ class AppEmptyStateView extends StatelessWidget {
   /// il n'y a simplement rien à afficher pour l'instant.
   @override
   Widget build(BuildContext context) {
-    final muted = AppColors.textSecondary;
+    final muted = context.palette.textMuted;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
@@ -231,7 +232,7 @@ class AppEmptyStateView extends StatelessWidget {
                   Icon(icon, size: 30, color: muted),
                   const SizedBox(height: 10),
                   Text(
-                    title,
+                    tr(title),
                     textAlign: TextAlign.center,
                     style: AppTypography.texteSecondaire.copyWith(
                       color: muted,
@@ -242,7 +243,7 @@ class AppEmptyStateView extends StatelessWidget {
                   if (message != null) ...[
                     const SizedBox(height: 4),
                     Text(
-                      message!,
+                      tr(message!),
                       textAlign: TextAlign.center,
                       style: AppTypography.texteSecondaire.copyWith(
                         color: muted,
@@ -255,7 +256,7 @@ class AppEmptyStateView extends StatelessWidget {
             ),
             if (actionText != null && onAction != null) ...[
               const SizedBox(height: 16),
-              AppButton.ghost(text: actionText!, onPressed: onAction),
+              AppButton.ghost(text: tr(actionText!), onPressed: onAction),
             ],
           ],
         ),

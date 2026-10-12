@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/models/messagerie_model.dart';
+import '../../../../core/theme/app_palette.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 class ConversationCard extends StatelessWidget {
   final Conversation conversation;
@@ -20,11 +22,11 @@ class ConversationCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.palette.card,
         borderRadius: BorderRadius.circular(18),
         border: hasUnread
             ? Border.all(color: primaryColor.withValues(alpha: 0.3), width: 1.5)
-            : Border.all(color: const Color(0xFFE5E7EB)),
+            : Border.all(color: context.palette.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -80,7 +82,7 @@ class ConversationCard extends StatelessWidget {
                                 fontWeight: hasUnread
                                     ? FontWeight.w800
                                     : FontWeight.w600,
-                                color: const Color(0xFF111827),
+                                color: context.palette.textStrong,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -94,7 +96,7 @@ class ConversationCard extends StatelessWidget {
                                 fontSize: 12,
                                 color: hasUnread
                                     ? primaryColor
-                                    : const Color(0xFF9CA3AF),
+                                    : context.palette.textSubtle,
                                 fontWeight: hasUnread
                                     ? FontWeight.w700
                                     : FontWeight.w400,
@@ -108,12 +110,12 @@ class ConversationCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               conversation.dernierMessage?.contenu ??
-                                  'Aucun message',
+                                  tr('Aucun message'),
                               style: TextStyle(
                                 fontSize: 13,
                                 color: hasUnread
-                                    ? const Color(0xFF374151)
-                                    : const Color(0xFF9CA3AF),
+                                    ? context.palette.text
+                                    : context.palette.textSubtle,
                                 fontWeight: hasUnread
                                     ? FontWeight.w600
                                     : FontWeight.w400,

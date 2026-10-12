@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/design_system.dart';
 import 'app_button.dart';
+import '../../core/l10n/app_strings.dart';
 
 /// Vue d'erreur avec message et bouton de réessai harmonisée avec le Design System.
 class AppErrorView extends StatelessWidget {
@@ -35,7 +36,7 @@ class AppErrorView extends StatelessWidget {
               message,
               textAlign: TextAlign.center,
               style: AppTypography.texteMedium.copyWith(
-                color: AppColors.textPrimary,
+                color: context.palette.textStrong,
               ),
             ),
             if (onRetry != null) ...[
@@ -43,7 +44,7 @@ class AppErrorView extends StatelessWidget {
               SizedBox(
                 width: 170,
                 child: AppButton.outline(
-                  text: 'Réessayer',
+                  text: tr('Réessayer'),
                   onPressed: onRetry,
                   size: AppButtonSize.compact,
                 ),

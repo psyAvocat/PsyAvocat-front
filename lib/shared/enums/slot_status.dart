@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/l10n/app_strings.dart';
 
 /// Statut d'un créneau, converti depuis les valeurs réelles du backend
 /// (`Disponibilite.statut` : LIBRE, RESERVE, BLOQUE).
@@ -8,9 +9,12 @@ enum SlotStatus {
   bloque('BLOQUE', 'Indisponible');
 
   final String apiValue;
-  final String label;
+  final String _label;
 
-  const SlotStatus(this.apiValue, this.label);
+  const SlotStatus(this.apiValue, this._label);
+
+  /// Libellé dans la langue de l'interface.
+  String get label => tr(_label);
 
   /// Statut inconnu → traité comme indisponible : un créneau n'est jamais
   /// présenté comme libre sans que le backend l'ait dit.

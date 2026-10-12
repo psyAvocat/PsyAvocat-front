@@ -4,6 +4,8 @@ import '../../../../core/theme/universe_provider.dart';
 import '../../../contenus/presentation/controllers/contenus_controller.dart';
 import '../../../notifications/presentation/controllers/notifications_controller.dart';
 import '../../../rendez_vous/presentation/controllers/rendez_vous_controller.dart';
+import '../../../../core/theme/design_system.dart';
+import '../widgets/home_top_bar.dart';
 import '../widgets/lawyer_home_view.dart';
 import '../widgets/psychologist_home_view.dart';
 
@@ -33,13 +35,29 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final universe = ref.watch(currentUniverseProvider);
 
+    // Photo et notifications restent fixes en haut : seul le contenu défile.
     return Scaffold(
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () => _refresh(ref),
-          child: universe.isPsychologist
-              ? const PsychologistHomeView()
-              : const LawyerHomeView(),
+        child: Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.s20,
+                AppSpacing.s12,
+                AppSpacing.s12,
+                AppSpacing.s8,
+              ),
+              child: HomeTopBar(),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () => _refresh(ref),
+                child: universe.isPsychologist
+                    ? const PsychologistHomeView()
+                    : const LawyerHomeView(),
+              ),
+            ),
+          ],
         ),
       ),
     );

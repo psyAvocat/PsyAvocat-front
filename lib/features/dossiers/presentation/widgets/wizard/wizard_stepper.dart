@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/app_palette.dart';
+import '../../../../../core/l10n/app_strings.dart';
 
 class WizardStepper extends StatelessWidget {
   final int currentStep;
@@ -17,7 +19,7 @@ class WizardStepper extends StatelessWidget {
     final steps = [
       isAvocat ? 'Avocats' : 'Psychologues',
       'Informations',
-      'Pièces jointes',
+      tr('Pièces jointes'),
       'Validation',
     ];
 
@@ -31,12 +33,12 @@ class WizardStepper extends StatelessWidget {
 
           Color getCircleColor() {
             if (isCompleted || isActive) return primaryColor;
-            return Colors.white;
+            return context.palette.card;
           }
 
           Color getBorderColor() {
             if (isCompleted || isActive) return primaryColor;
-            return const Color(0xFFD1D5DB);
+            return context.palette.borderStrong;
           }
 
           return Expanded(
@@ -50,7 +52,7 @@ class WizardStepper extends StatelessWidget {
                           height: 2,
                           color: isCompleted || isActive
                               ? primaryColor
-                              : const Color(0xFFD1D5DB),
+                              : context.palette.borderStrong,
                         ),
                       )
                     else
@@ -77,7 +79,7 @@ class WizardStepper extends StatelessWidget {
                                   fontWeight: FontWeight.w700,
                                   color: isActive
                                       ? Colors.white
-                                      : const Color(0xFF9CA3AF),
+                                      : context.palette.textSubtle,
                                 ),
                               ),
                       ),
@@ -88,7 +90,7 @@ class WizardStepper extends StatelessWidget {
                           height: 2,
                           color: isCompleted
                               ? primaryColor
-                              : const Color(0xFFD1D5DB),
+                              : context.palette.borderStrong,
                         ),
                       )
                     else
@@ -104,8 +106,8 @@ class WizardStepper extends StatelessWidget {
                         ? FontWeight.w600
                         : FontWeight.w500,
                     color: isActive || isCompleted
-                        ? const Color(0xFF111827)
-                        : const Color(0xFF9CA3AF),
+                        ? context.palette.textStrong
+                        : context.palette.textSubtle,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,

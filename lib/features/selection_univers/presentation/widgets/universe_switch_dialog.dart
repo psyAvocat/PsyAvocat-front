@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_universe.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Demande confirmation puis bascule vers l'autre univers.
 ///
@@ -22,18 +23,29 @@ Future<void> confirmUniverseSwitch(BuildContext context, WidgetRef ref) async {
             ? Icons.psychology_outlined
             : Icons.balance_outlined,
       ),
-      title: Text('Passer à l’espace ${target.displayName} ?'),
+      title: Text(
+        target.isPsychologist
+            ? tr('Passer à l’espace Psychologue ?')
+            : tr('Passer à l’espace Avocat ?'),
+      ),
       content: Text(
-        'Vous quitterez l’espace ${current.displayName}. Vos rendez-vous et '
-        'vos rappels restent conservés.',
+        current.isPsychologist
+            ? tr(
+                'Vous quitterez l’espace Psychologue. Vos rendez-vous et '
+                'vos rappels restent conservés.',
+              )
+            : tr(
+                'Vous quitterez l’espace Avocat. Vos rendez-vous et '
+                'vos rappels restent conservés.',
+              ),
       ),
       actions: [
         AppButton.ghost(
-          text: 'Annuler',
+          text: tr('Annuler'),
           onPressed: () => Navigator.of(dialogContext).pop(false),
         ),
         AppButton(
-          text: 'Continuer',
+          text: tr('Continuer'),
           isFullWidth: false,
           size: AppButtonSize.compact,
           onPressed: () => Navigator.of(dialogContext).pop(true),

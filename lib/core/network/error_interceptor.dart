@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../errors/app_exception.dart';
+import '../../core/l10n/app_strings.dart';
 
 /// Intercepteur Dio transformant les erreurs HTTP en exceptions typées de l'application.
 class ErrorInterceptor extends Interceptor {
@@ -23,7 +24,7 @@ class ErrorInterceptor extends Interceptor {
         final data = err.response?.data;
         // Seuls les messages métier (4xx) du backend sont affichables ; jamais
         // le message technique de Dio (il contient le code HTTP brut).
-        String message = 'Une erreur est survenue. Veuillez réessayer.';
+        String message = tr('Une erreur est survenue. Veuillez réessayer.');
         final serverMessage = data is Map<String, dynamic>
             ? data['message']?.toString()
             : null;
@@ -59,7 +60,9 @@ class ErrorInterceptor extends Interceptor {
           default:
             exception = (statusCode ?? 500) >= 500
                 ? ServerException(
-                    'Le service est momentanément indisponible. Veuillez réessayer.',
+                    tr(
+                      'Le service est momentanément indisponible. Veuillez réessayer.',
+                    ),
                     statusCode ?? 500,
                   )
                 : AppException(message, statusCode);
@@ -68,11 +71,11 @@ class ErrorInterceptor extends Interceptor {
         break;
 
       case DioExceptionType.cancel:
-        exception = const AppException('La requête a été annulée');
+        exception = AppException(tr('La requête a été annulée'));
         break;
 
       case DioExceptionType.badCertificate:
-        exception = const NetworkException('Certificat SSL non valide');
+        exception = NetworkException(tr('Certificat SSL non valide'));
         break;
 
       case DioExceptionType.unknown:

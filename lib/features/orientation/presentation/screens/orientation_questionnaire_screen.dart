@@ -7,6 +7,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../data/models/questionnaire_model.dart';
 import '../controllers/orientation_controller.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Questionnaire d'orientation — maquettes Figma « Qst 1 Psy » / « Qst 3 Psy ».
 ///
@@ -21,11 +22,12 @@ class OrientationQuestionnaireScreen extends ConsumerWidget {
         .goToPreviousQuestion();
     if (wentBack) return;
 
-    // Première question : on quitte le questionnaire.
+    // Première question : on quitte le questionnaire (ouvert depuis l'accueil,
+    // la fiche patient ou la proposition qui suit le choix de l'univers).
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go(AppRoutes.orientationIntro);
+      context.go(AppRoutes.home);
     }
   }
 
@@ -44,12 +46,12 @@ class OrientationQuestionnaireScreen extends ConsumerWidget {
                 children: [
                   IconButton.outlined(
                     onPressed: () => _goBack(context, ref),
-                    tooltip: 'Retour',
+                    tooltip: tr('Retour'),
                     icon: const Icon(Icons.chevron_left_rounded),
                   ),
                   const Spacer(),
                   AppButton.outline(
-                    text: 'Ignorer',
+                    text: tr('Ignorer'),
                     size: AppButtonSize.compact,
                     isFullWidth: false,
                     onPressed: () => context.go(AppRoutes.home),
@@ -61,10 +63,11 @@ class OrientationQuestionnaireScreen extends ConsumerWidget {
                 child: AppAsyncView<OrientationState>(
                   value: orientation,
                   isEmpty: (state) => state.isEmpty,
-                  emptyTitle: 'Aucun questionnaire disponible',
-                  emptyMessage:
-                      "Le questionnaire d'orientation n'est pas encore publié. "
-                      'Appuyez sur « Ignorer » pour accéder directement aux professionnels.',
+                  emptyTitle: tr('Aucun questionnaire disponible'),
+                  emptyMessage: tr(
+                    "Le questionnaire d'orientation n'est pas encore publié. "
+                    'Appuyez sur « Ignorer » pour accéder directement aux professionnels.',
+                  ),
                   emptyIcon: Icons.quiz_outlined,
                   onRetry: () => ref.invalidate(orientationControllerProvider),
                   builder: (state) => _QuestionnaireContent(state: state),
@@ -110,7 +113,7 @@ class _QuestionnaireContent extends ConsumerWidget {
         AppStepProgress(
           currentStep: state.currentIndex + 1,
           totalSteps: state.totalQuestions,
-          label: 'Question',
+          label: tr('Question'),
         ),
         AppSpacing.vGap24,
         Expanded(
@@ -133,7 +136,7 @@ class _QuestionnaireContent extends ConsumerWidget {
         ),
         AppSpacing.vGap16,
         AppButton(
-          text: state.isLastQuestion ? 'Voir mon orientation' : 'Suivant',
+          text: state.isLastQuestion ? tr('Voir mon orientation') : 'Suivant',
           isLoading: state.isSubmitting,
           onPressed: state.canGoNext
               ? () => _onNextPressed(context, ref)
@@ -167,10 +170,10 @@ class _QuestionView extends StatelessWidget {
           Text(
             question.texte,
             textAlign: TextAlign.left,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF1E2432),
+              color: context.palette.textStrong,
               height: 1.3,
             ),
           ),
@@ -180,10 +183,10 @@ class _QuestionView extends StatelessWidget {
             Text(
               question.contexte!,
               textAlign: TextAlign.left,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFF6B7280),
+                color: context.palette.textMuted,
                 height: 1.5,
               ),
             ),
@@ -195,27 +198,27 @@ class _QuestionView extends StatelessWidget {
               runSpacing: AppSpacing.s8,
               children: [
                 if (question.allowsMultiple)
-                  const Chip(
+                  Chip(
                     label: Text(
-                      'Plusieurs réponses possibles',
+                      tr('Plusieurs réponses possibles'),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    backgroundColor: Color(0xFFF3F4F6),
+                    backgroundColor: context.palette.muted,
                     side: BorderSide.none,
                   ),
                 if (!question.obligatoire)
-                  const Chip(
+                  Chip(
                     label: Text(
-                      'Facultatif',
+                      tr('Facultatif'),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    backgroundColor: Color(0xFFF3F4F6),
+                    backgroundColor: context.palette.muted,
                     side: BorderSide.none,
                   ),
               ],

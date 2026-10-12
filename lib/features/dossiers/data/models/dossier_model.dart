@@ -25,6 +25,26 @@ class DossierModel {
 
   bool get estPrisEnCharge => statut == 'PRIS_EN_CHARGE';
 
+  /// Envoi aux avocats : date et heure de la première soumission.
+  DateTime? get dateEnvoi {
+    DateTime? premiere;
+    for (final s in soumissions) {
+      final d = s.dateSoumission;
+      if (d != null && (premiere == null || d.isBefore(premiere))) {
+        premiere = d;
+      }
+    }
+    return premiere;
+  }
+
+  /// Avocats ayant répondu (acceptation, refus, rendez-vous…).
+  int get nombreReponses =>
+      soumissions.where((s) => s.statut != 'EN_ATTENTE').length;
+
+  /// Tous les avocats sollicités ont décliné.
+  bool get estDecline =>
+      soumissions.isNotEmpty && soumissions.every((s) => s.statut == 'REFUSEE');
+
   /// Soumission de l'avocat qui a accepté la prise en charge, s'il y en a une.
   SoumissionModel? get soumissionRetenue {
     for (final s in soumissions) {
@@ -67,6 +87,7 @@ class SoumissionModel {
   final String statut;
   final String? reponse;
   final double? tarifPropose;
+  final DateTime? dateSoumission;
   final DateTime? dateReponse;
 
   const SoumissionModel({
@@ -77,6 +98,7 @@ class SoumissionModel {
     required this.statut,
     this.reponse,
     this.tarifPropose,
+    this.dateSoumission,
     this.dateReponse,
   });
 
@@ -94,6 +116,9 @@ class SoumissionModel {
       statut: json['statut'] as String? ?? 'EN_ATTENTE',
       reponse: json['reponse'] as String?,
       tarifPropose: (json['tarifPropose'] as num?)?.toDouble(),
+      dateSoumission: DateTime.tryParse(
+        json['dateSoumission'] as String? ?? '',
+      ),
       dateReponse: DateTime.tryParse(json['dateReponse'] as String? ?? ''),
     );
   }

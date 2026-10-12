@@ -8,6 +8,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../data/models/contenu_model.dart';
 import '../controllers/contenus_controller.dart';
 import 'publication_cards.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Section d'accueil « Articles populaires » (Avocat) ou « Conseils populaires »
 /// (Psychologue) : la publication la plus consultée, issue de l'API.
@@ -23,8 +24,10 @@ class PopularPublicationsSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppSectionHeader(
-          title: isLawyer ? 'Articles populaires' : 'Conseils populaires',
-          actionLabel: 'Voir tout',
+          title: isLawyer
+              ? tr('Articles populaires')
+              : tr('Conseils populaires'),
+          actionLabel: tr('Voir tout'),
           onAction: () =>
               context.go(isLawyer ? AppRoutes.articles : AppRoutes.conseils),
         ),
@@ -34,8 +37,8 @@ class PopularPublicationsSection extends ConsumerWidget {
           value: ref.watch(popularPublicationsProvider),
           isEmpty: (list) => list.isEmpty,
           emptyMessage: isLawyer
-              ? 'Aucun article publié pour le moment.'
-              : 'Aucun conseil publié pour le moment.',
+              ? tr('Aucun article publié pour le moment.')
+              : tr('Aucun conseil publié pour le moment.'),
           emptyIcon: isLawyer
               ? Icons.menu_book_outlined
               : Icons.lightbulb_outline_rounded,

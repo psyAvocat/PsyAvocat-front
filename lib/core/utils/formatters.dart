@@ -1,59 +1,36 @@
+import 'package:intl/intl.dart';
+
 /// Utilitaires de formatage (dates, heures, montants).
 class Formatters {
   Formatters._();
 
-  static const List<String> _moisFr = [
-    'janvier',
-    'février',
-    'mars',
-    'avril',
-    'mai',
-    'juin',
-    'juillet',
-    'août',
-    'septembre',
-    'octobre',
-    'novembre',
-    'décembre',
-  ];
-
-  /// « 15 octobre 2026 » (sans dépendre des données de locale d'intl).
+  /// « 15 octobre 2026 » (« October 15, 2026 » en anglais).
   static String formatLongDate(DateTime? date) {
     if (date == null) return '-';
-    return '${date.day} ${_moisFr[date.month - 1]} ${date.year}';
+    return DateFormat.yMMMMd().format(date);
   }
 
-  static const List<String> _joursCourts = [
-    'Lun',
-    'Mar',
-    'Mer',
-    'Jeu',
-    'Ven',
-    'Sam',
-    'Dim',
-  ];
+  /// « Mar » (jour abrégé ; « Tue » en anglais).
+  static String formatJourCourt(DateTime date) => toBeginningOfSentenceCase(
+    DateFormat.E().format(date).replaceAll('.', ''),
+  );
 
-  static const List<String> _jours = [
-    'lundi',
-    'mardi',
-    'mercredi',
-    'jeudi',
-    'vendredi',
-    'samedi',
-    'dimanche',
-  ];
-
-  /// « Mar » (jour abrégé).
-  static String formatJourCourt(DateTime date) =>
-      _joursCourts[date.weekday - 1];
-
-  /// « mardi 15 octobre 2026 ».
+  /// « mardi 15 octobre 2026 » (« Tuesday, October 15, 2026 » en anglais).
   static String formatJourLong(DateTime date) =>
-      '${_jours[date.weekday - 1]} ${formatLongDate(date)}';
+      DateFormat.yMMMMEEEEd().format(date);
 
   /// « 09:30 ».
   static String formatHeure(DateTime date) =>
       '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+
+  /// « 08/10/2026 ».
+  static String formatDateCourte(DateTime date) =>
+      '${date.day.toString().padLeft(2, '0')}/'
+      '${date.month.toString().padLeft(2, '0')}/${date.year}';
+
+  /// « 08/10/2026 · 09:41 ».
+  static String formatDateHeure(DateTime date) =>
+      '${formatDateCourte(date)} · ${formatHeure(date)}';
 
   /// « 150 000 FCFA » (montants en francs CFA, sans décimales).
   static String formatFcfa(num montant) {

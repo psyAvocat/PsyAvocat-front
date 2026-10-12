@@ -1,15 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/user_message.dart';
 import '../../../../core/network/api_logger_interceptor.dart';
 import '../../../../core/network/network_providers.dart';
 import '../../../../core/push/push_service.dart';
 import '../../../../core/services/app_preferences_service.dart';
 import '../../../../core/theme/universe_provider.dart';
+import '../../../profile/data/repositories/profil_repository.dart';
 import '../../data/models/current_user.dart';
+import '../../data/repositories/pending_registration_store.dart';
 import '../../data/repositories/session_repository.dart';
 import '../utils/auth_navigation.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Étapes de la session, dans l'ordre du parcours :
 /// Firebase → `GET /me` → rôle réel → accès.
@@ -25,9 +29,6 @@ enum SessionStatus {
 
   /// Client autorisé.
   authorized,
-
-  /// Compte sans profil métier (inscription interrompue) : le profil doit être complété.
-  profileIncomplete,
 
   /// Client dont l'adresse email n'est pas encore confirmée.
   emailNotVerified,
@@ -62,7 +63,7 @@ class SessionController extends Notifier<SessionState> {
   String? _pendingDeniedMessage;
 
   /// Pendant une inscription, la connexion Firebase automatique ne doit pas
-  /// déclencher de navigation (le compte est déconnecté juste après).
+  /// déclencher `GET /me` avant la création du profil (voir [endRegistration]).
   bool _registrationInProgress = false;
 
   @override
@@ -96,8 +97,15 @@ class SessionController extends Notifier<SessionState> {
     }
   }
 
+  /// Vérification en cours : la connexion explicite (AuthController) et
+  /// l'événement Firebase qui la suit ne déclenchent qu'un seul `GET /me`.
+  Future<void>? _resolving;
+
   /// Charge l'identité backend (`GET /me`) et décide de l'accès.
-  Future<void> resolve() async {
+  Future<void> resolve() =>
+      _resolving ??= _resolve().whenComplete(() => _resolving = null);
+
+  Future<void> _resolve() async {
     if (ref.read(authRepositoryProvider).currentUser == null) {
       state = const SessionState(SessionStatus.unauthenticated);
       return;
@@ -107,16 +115,24 @@ class SessionController extends Notifier<SessionState> {
     if (!state.isAuthorized) state = const SessionState(SessionStatus.loading);
     apiLog('Session : vérification du compte (GET /me)…');
     try {
-      ref.invalidate(currentUserProvider);
-      final user = await ref.read(currentUserProvider.future);
-
-      final decision = evaluateAccess(user);
+      var user = await _fetchCurrentUser();
+      var decision = evaluateAccess(user);
       apiLog('Session : /me OK → décision d’accès : ${decision.name}');
+      if (decision == AccessDecision.profileIncomplete) {
+        if (!await _completeRegistration()) return;
+        user = await _fetchCurrentUser();
+        decision = evaluateAccess(user);
+        apiLog('Session : profil créé → décision d’accès : ${decision.name}');
+      }
       switch (decision) {
         case AccessDecision.authorized:
           state = SessionState(SessionStatus.authorized, user: user);
         case AccessDecision.profileIncomplete:
-          state = SessionState(SessionStatus.profileIncomplete, user: user);
+          // Profil toujours absent juste après sa création : réessai plus tard.
+          state = SessionState(
+            SessionStatus.error,
+            message: tr('Votre profil est en cours de création. Réessayez.'),
+          );
         case AccessDecision.emailNotVerified:
           state = SessionState(SessionStatus.emailNotVerified, user: user);
         case AccessDecision.deniedProfessional:
@@ -132,6 +148,55 @@ class SessionController extends Notifier<SessionState> {
       // Échec sûr : sans réponse fiable de /me, aucun accès n'est accordé.
       state = SessionState(SessionStatus.error, message: userMessageFor(error));
     }
+  }
+
+  Future<CurrentUser> _fetchCurrentUser() {
+    ref.invalidate(currentUserProvider);
+    return ref.read(currentUserProvider.future);
+  }
+
+  /// Compte Firebase sans profil métier : l'inscription a été interrompue
+  /// (serveur injoignable au moment de créer le profil). Le profil est créé
+  /// avec les informations saisies à l'inscription, gardées sur l'appareil :
+  /// rien n'est redemandé. Renvoie `true` si le profil a été créé.
+  ///
+  /// Sans ces informations (inscription commencée sur un autre appareil) ou si
+  /// le serveur les refuse, l'utilisateur est déconnecté et invité à se
+  /// réinscrire avec la même adresse : l'inscription reprend alors ce compte.
+  /// Une erreur réseau remonte à [_resolve] (état `error`, nouvel essai possible).
+  Future<bool> _completeRegistration() async {
+    final uid = ref.read(authRepositoryProvider).currentUser!.uid;
+    final store = ref.read(pendingRegistrationStoreProvider);
+    final pending = store.read(uid);
+    if (pending == null) {
+      await _signOutWithMessage(incompleteRegistrationMessage);
+      return false;
+    }
+    try {
+      await ref
+          .read(profilRepositoryProvider)
+          .createClientProfile(
+            nom: pending.nom,
+            prenom: pending.prenom,
+            telephone: pending.telephone,
+          );
+    } catch (error) {
+      final status = error is AppException ? error.statusCode : null;
+      if (status == null || status < 400 || status >= 500) rethrow;
+      await store.clear(uid);
+      await _signOutWithMessage(
+        '${userMessageFor(error)} ${tr(incompleteRegistrationMessage)}',
+      );
+      return false;
+    }
+    await store.clear(uid);
+    return true;
+  }
+
+  /// Déconnexion avec un message affiché sur l'écran de connexion.
+  Future<void> _signOutWithMessage(String message) async {
+    await signOut();
+    state = SessionState(SessionStatus.unauthenticated, message: message);
   }
 
   /// Le backend a refusé le compte en cours de session (403 `ACCOUNT_DISABLED`
@@ -156,9 +221,6 @@ class SessionController extends Notifier<SessionState> {
 
   /// Plusieurs requêtes refusées en même temps ne ferment la session qu'une fois.
   bool _expiring = false;
-
-  /// Après création du profil manquant : l'accès est réévalué.
-  Future<void> refreshAfterProfileCreation() => resolve();
 
   /// L'utilisateur indique avoir cliqué sur le lien : le jeton est renouvelé
   /// (le backend lit `email_verified` dans le jeton), puis l'accès réévalué.
@@ -198,10 +260,10 @@ class SessionController extends Notifier<SessionState> {
 
   /// Fin de l'inscription : le compte créé est connecté immédiatement
   /// (identité vérifiée via `GET /me`, puis choix de l'univers).
-  void endRegistration() {
+  Future<void> endRegistration() async {
     _registrationInProgress = false;
     if (ref.read(authRepositoryProvider).currentUser != null) {
-      resolve();
+      await resolve();
     } else {
       state = const SessionState(SessionStatus.unauthenticated);
     }

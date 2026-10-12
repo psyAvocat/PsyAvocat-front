@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/l10n/app_strings.dart';
 
 /// Statut d'un rendez-vous, converti depuis les valeurs réelles du backend
 /// (`RendezVous.statut` : CONFIRME, EN_ATTENTE, PASSE, ANNULE).
@@ -11,9 +12,12 @@ enum AppointmentStatus {
   inconnu('', 'Statut inconnu');
 
   final String apiValue;
-  final String label;
+  final String _label;
 
-  const AppointmentStatus(this.apiValue, this.label);
+  const AppointmentStatus(this.apiValue, this._label);
+
+  /// Libellé dans la langue de l'interface.
+  String get label => tr(_label);
 
   static AppointmentStatus fromApi(String? value) {
     final normalise = value?.trim().toUpperCase();
@@ -45,7 +49,10 @@ enum AppointmentPhase {
   enCours('En cours'),
   passe('Passés');
 
-  final String label;
+  final String _label;
 
-  const AppointmentPhase(this.label);
+  const AppointmentPhase(this._label);
+
+  /// Libellé dans la langue de l'interface.
+  String get label => tr(_label);
 }

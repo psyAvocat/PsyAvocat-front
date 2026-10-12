@@ -10,3 +10,4 @@ export 'app_shadows.dart';
 export 'app_icons.dart';
 export 'app_universe.dart';
 export 'app_theme.dart';
+export 'app_palette.dart';

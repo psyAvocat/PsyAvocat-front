@@ -15,7 +15,6 @@ import 'app_routes.dart';
 /// | non connecté, 1re ouverture                 | onboarding                           |
 /// | non connecté                                | connexion (inscription accessible)   |
 /// | refusé                                      | accès refusé                         |
-/// | profil absent                               | compléter le profil                  |
 /// | connecté, univers non choisi                | choix de l'univers                   |
 /// | connecté, univers choisi                    | écran demandé (accueil par défaut)   |
 ///
@@ -49,8 +48,6 @@ String? resolveRedirect({
       return location == AppRoutes.splash ? null : AppRoutes.login;
     case SessionStatus.denied:
       return _stayOn(AppRoutes.accessDenied, location);
-    case SessionStatus.profileIncomplete:
-      return _stayOn(AppRoutes.completeProfile, location);
     case SessionStatus.emailNotVerified:
       return _stayOn(AppRoutes.verifyEmail, location);
     case SessionStatus.unauthenticated:
@@ -82,6 +79,11 @@ String? _authorized(String location, AppUniverse universe) {
   // L'orientation (questionnaire) n'existe que dans l'univers Psychologue.
   if (universe.isLawyer && location.startsWith(AppRoutes.orientation)) {
     return AppRoutes.home;
+  }
+
+  // La fiche patient n'existe que dans l'univers Psychologue.
+  if (universe.isLawyer && location == AppRoutes.fichePatient) {
+    return AppRoutes.profil;
   }
 
   // Les dossiers juridiques n'existent que dans l'univers Avocat.

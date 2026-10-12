@@ -5,6 +5,8 @@ import '../../../../../core/widgets/app_button.dart';
 import '../../../../referentiels/data/models/specialite_option.dart';
 import '../../../../referentiels/presentation/controllers/specialites_provider.dart';
 import '../../controllers/create_dossier_wizard_controller.dart';
+import '../../../../../core/theme/app_palette.dart';
+import '../../../../../core/l10n/app_strings.dart';
 
 /// Étape 2 : titre, domaine juridique (référentiel réel des spécialités Avocat)
 /// et description du dossier.
@@ -30,6 +32,31 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
   late TextEditingController _descController;
   SpecialiteOption? _domaine;
 
+  /// Champs dont l'erreur est affichée : elle disparaît dès que l'utilisateur
+  /// recommence à écrire, et revient au prochain « Suivant » si besoin.
+  final _titreKey = GlobalKey<FormFieldState<String>>();
+  final _descKey = GlobalKey<FormFieldState<String>>();
+  bool _erreurTitre = false;
+  bool _erreurDesc = false;
+
+  String? _validerTitre(String? v) =>
+      _erreurTitre && (v == null || v.trim().isEmpty)
+      ? tr('Champ requis')
+      : null;
+
+  String? _validerDesc(String? v) =>
+      _erreurDesc && (v == null || v.trim().length < 20)
+      ? tr('Décrivez votre situation (20 caractères minimum)')
+      : null;
+
+  /// Saisie dans un champ en erreur : l'erreur (bordure rouge) est retirée.
+  void _effacerErreur(GlobalKey<FormFieldState<String>> key, VoidCallback off) {
+    if (key.currentState?.hasError ?? false) {
+      off();
+      key.currentState!.validate();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +74,8 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
   }
 
   void _saveAndNext() {
+    _erreurTitre = true;
+    _erreurDesc = true;
     if (!_formKey.currentState!.validate()) return;
     ref
         .read(createDossierWizardProvider.notifier)
@@ -72,25 +101,29 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               children: [
-                const Text(
-                  'Informations du dossier',
+                Text(
+                  tr('Informations du dossier'),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF111827),
+                    color: context.palette.textStrong,
                   ),
                 ),
                 const SizedBox(height: 24),
-                const _Libelle('Titre du dossier *'),
+                _Libelle(tr('Titre du dossier *')),
                 TextFormField(
+                  key: _titreKey,
                   controller: _titreController,
                   maxLength: 150,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Champ requis' : null,
-                  decoration: _inputDeco('Ex : Litige concernant un terrain'),
+                  validator: _validerTitre,
+                  onChanged: (_) =>
+                      _effacerErreur(_titreKey, () => _erreurTitre = false),
+                  decoration: _inputDeco(
+                    tr('Ex : Litige concernant un terrain'),
+                  ),
                 ),
                 const SizedBox(height: 12),
-                const _Libelle('Domaine juridique (facultatif)'),
+                _Libelle(tr('Domaine juridique (facultatif)')),
                 domainesAsync.when(
                   loading: () => const LinearProgressIndicator(),
                   error: (e, _) => Row(
@@ -105,7 +138,7 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
                         ),
                       ),
                       AppButton.ghost(
-                        text: 'Réessayer',
+                        text: tr('Réessayer'),
                         onPressed: () =>
                             ref.invalidate(specialitesOfUniverseProvider),
                       ),
@@ -120,15 +153,20 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
                     return DropdownButtonFormField<SpecialiteOption?>(
                       initialValue: selection,
                       isExpanded: true,
-                      icon: const Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: Color(0xFF111827),
+                      // Même taille que les autres champs du formulaire.
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
-                      decoration: _inputDeco('Sélectionner un domaine'),
+                      icon: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: context.palette.textStrong,
+                      ),
+                      decoration: _inputDeco(tr('Sélectionner un domaine')),
                       items: [
-                        const DropdownMenuItem<SpecialiteOption?>(
+                        DropdownMenuItem<SpecialiteOption?>(
                           value: null,
-                          child: Text('Je ne sais pas'),
+                          child: Text(tr('Je ne sais pas')),
                         ),
                         ...domaines.map(
                           (d) => DropdownMenuItem<SpecialiteOption?>(
@@ -142,16 +180,19 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
                   },
                 ),
                 const SizedBox(height: 20),
-                const _Libelle('Description de la situation *'),
+                _Libelle(tr('Description de la situation *')),
                 TextFormField(
+                  key: _descKey,
                   controller: _descController,
                   maxLines: 6,
                   maxLength: 2000,
-                  validator: (v) => (v == null || v.trim().length < 20)
-                      ? 'Décrivez votre situation (20 caractères minimum)'
-                      : null,
+                  validator: _validerDesc,
+                  onChanged: (_) =>
+                      _effacerErreur(_descKey, () => _erreurDesc = false),
                   decoration: _inputDeco(
-                    'Décrivez les faits, les parties concernées et votre demande…',
+                    tr(
+                      'Décrivez les faits, les parties concernées et votre demande…',
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -160,8 +201,8 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
           ),
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: context.palette.card,
               boxShadow: [
                 BoxShadow(
                   color: Color(0x0A000000),
@@ -176,17 +217,17 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
                 children: [
                   Expanded(
                     child: AppButton(
-                      text: 'Retour',
+                      text: tr('Retour'),
                       onPressed: widget.onBack,
                       isOutlined: true,
-                      textColor: const Color(0xFF111827),
-                      color: const Color(0xFFE5E7EB),
+                      textColor: context.palette.textStrong,
+                      color: context.palette.border,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: AppButton(
-                      text: 'Suivant',
+                      text: tr('Suivant'),
                       onPressed: _saveAndNext,
                       color: widget.primaryColor,
                     ),
@@ -203,17 +244,17 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
   InputDecoration _inputDeco(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+      hintStyle: TextStyle(color: context.palette.textSubtle, fontSize: 14),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: context.palette.card,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        borderSide: BorderSide(color: context.palette.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        borderSide: BorderSide(color: context.palette.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
@@ -233,10 +274,10 @@ class _Libelle extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         texte,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF1F2937),
+          color: context.palette.textStrong,
         ),
       ),
     );

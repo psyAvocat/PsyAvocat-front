@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
+import '../l10n/app_strings.dart';
 
 /// Univers de l'application PsyAvocat.
 /// - [neutral] : état avant l'entrée dans un univers (utilise le gradient #0C2659 → #522578)
@@ -18,9 +19,9 @@ enum AppUniverse {
   String get displayName {
     switch (this) {
       case AppUniverse.psychologist:
-        return 'Psychologue';
+        return tr('Psychologue');
       case AppUniverse.lawyer:
-        return 'Avocat';
+        return tr('Avocat');
       case AppUniverse.neutral:
         return 'PsyAvocat';
     }
@@ -43,9 +44,9 @@ enum AppUniverse {
   String get professionalsLabel {
     switch (this) {
       case AppUniverse.psychologist:
-        return 'Psychologues';
+        return tr('Psychologues');
       case AppUniverse.lawyer:
-        return 'Avocats';
+        return tr('Avocats');
       case AppUniverse.neutral:
         return 'Professionnels';
     }

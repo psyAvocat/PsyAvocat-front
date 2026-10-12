@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_palette.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 class MessagerieEmptyState extends StatelessWidget {
   final Color primaryColor;
@@ -19,21 +21,23 @@ class MessagerieEmptyState extends StatelessWidget {
               color: primaryColor.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Aucune conversation',
+            Text(
+              tr('Aucune conversation'),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF1E2432),
+                color: context.palette.textStrong,
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
-              'Vos conversations avec les avocats et psychologues apparaîtront ici.',
+            Text(
+              tr(
+                'Vos conversations avec les avocats et psychologues apparaîtront ici.',
+              ),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFF6B7280),
+                color: context.palette.textMuted,
                 height: 1.5,
               ),
             ),

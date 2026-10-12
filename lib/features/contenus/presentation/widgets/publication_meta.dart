@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../data/models/contenu_model.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Pastille de catégorie (spécialité choisie par l'auteur), si elle existe.
 class PublicationCategoryChip extends StatelessWidget {
@@ -60,7 +61,7 @@ class PublicationMetaRow extends StatelessWidget {
         if (minutes != null)
           _MetaItem(
             icon: Icons.schedule_outlined,
-            text: '$minutes min de lecture',
+            text: tr('{n} min de lecture', {'n': minutes}),
             style: style,
             color: color,
           ),

@@ -175,10 +175,10 @@ class _AppButtonState extends State<AppButton> {
         backgroundColor = Colors.transparent;
         effectiveTextColor = AppColors.buttonDisabledText;
         border = isEffectiveOutlined
-            ? Border.all(color: AppColors.border, width: 1.2)
+            ? Border.all(color: context.palette.border, width: 1.2)
             : null;
       } else if (isSecondary) {
-        backgroundColor = AppColors.neutralSurfaceSecondary;
+        backgroundColor = context.palette.muted;
         effectiveTextColor = AppColors.buttonDisabledText;
         border = null;
       } else {
@@ -191,13 +191,13 @@ class _AppButtonState extends State<AppButton> {
         backgroundColor = _isPressed
             ? primaryColor.withValues(alpha: 0.08)
             : Colors.transparent;
-        effectiveTextColor = widget.textColor ?? primaryColor;
-        border = Border.all(color: primaryColor, width: 1.5);
+        effectiveTextColor = context.readable(widget.textColor ?? primaryColor);
+        border = Border.all(color: context.readable(primaryColor), width: 1.5);
       } else if (isSecondary) {
         backgroundColor = _isPressed
             ? universeColors.surfaceSelected
             : universeColors.surface;
-        effectiveTextColor = widget.textColor ?? primaryColor;
+        effectiveTextColor = context.readable(widget.textColor ?? primaryColor);
         border = Border.all(
           color: universeColors.border.withValues(alpha: 0.5),
           width: 1,
@@ -206,7 +206,7 @@ class _AppButtonState extends State<AppButton> {
         backgroundColor = _isPressed
             ? primaryColor.withValues(alpha: 0.08)
             : Colors.transparent;
-        effectiveTextColor = widget.textColor ?? primaryColor;
+        effectiveTextColor = context.readable(widget.textColor ?? primaryColor);
         border = null;
       } else {
         // Bouton principal coloré : texte TOUJOURS blanc #FFFFFF

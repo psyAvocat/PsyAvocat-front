@@ -11,6 +11,17 @@ final dossiersListProvider =
       DossiersNotifier.new,
     );
 
+/// Dossier consulté : relu dans la liste à jour (statuts temps réel), ou
+/// chargé directement s'il n'y figure pas (lien depuis une notification).
+final dossierDetailProvider = FutureProvider.autoDispose
+    .family<DossierModel, String>((ref, id) async {
+      final dossiers = await ref.watch(dossiersListProvider.future);
+      for (final dossier in dossiers) {
+        if (dossier.id == id) return dossier;
+      }
+      return ref.read(dossierRepositoryProvider).getDossierById(id);
+    });
+
 class DossiersNotifier extends AsyncNotifier<List<DossierModel>> {
   @override
   Future<List<DossierModel>> build() async {

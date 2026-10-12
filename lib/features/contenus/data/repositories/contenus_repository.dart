@@ -19,11 +19,13 @@ enum PublicationSort {
 /// Articles et Conseils publiés depuis l'espace professionnel Angular.
 abstract class ContenusRepository {
   /// [type] : `ARTICLE` (univers Avocat) ou `CONSEIL` (univers Psychologue).
+  /// [auteurId] : publications d'un seul professionnel (sa fiche).
   Future<List<Publication>> rechercher({
     required String type,
     String? q,
     String? specialiteId,
     PublicationSort tri = PublicationSort.recent,
+    String? auteurId,
   });
 
   /// Détail (404 « ressource indisponible » si désactivé ou supprimé).
@@ -41,6 +43,7 @@ class ApiContenusRepository implements ContenusRepository {
     String? q,
     String? specialiteId,
     PublicationSort tri = PublicationSort.recent,
+    String? auteurId,
   }) async {
     final response = await _client.get(
       '/contenus',
@@ -49,6 +52,7 @@ class ApiContenusRepository implements ContenusRepository {
         if (q != null && q.trim().isNotEmpty) 'q': q.trim(),
         'specialiteId': ?specialiteId,
         'tri': tri.apiValue,
+        'auteurId': ?auteurId,
       },
     );
     final list = response.data as List<dynamic>? ?? [];

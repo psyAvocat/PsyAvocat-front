@@ -4,6 +4,7 @@ import '../../../../core/theme/design_system.dart';
 import '../controllers/session_controller.dart';
 import '../utils/auth_navigation.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// « Accès refusé sur mobile » : affiché quand `GET /me` renvoie un rôle
 /// administrateur ou professionnel (ou un compte désactivé).
@@ -16,9 +17,10 @@ class AccessDeniedScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    final message =
-        ref.watch(sessionControllerProvider).message ??
-        professionalAccountMessage;
+    final message = tr(
+      ref.watch(sessionControllerProvider).message ??
+          professionalAccountMessage,
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -39,7 +41,7 @@ class AccessDeniedScreen extends ConsumerWidget {
                 ),
                 AppSpacing.vGap24,
                 Text(
-                  'Accès refusé sur mobile',
+                  tr('Accès refusé sur mobile'),
                   textAlign: TextAlign.center,
                   style: AppTypography.titreMoyen,
                 ),
@@ -51,7 +53,7 @@ class AccessDeniedScreen extends ConsumerWidget {
                 ),
                 AppSpacing.vGap32,
                 AppButton(
-                  text: 'Continuer',
+                  text: tr('Continuer'),
                   onPressed: () => ref
                       .read(sessionControllerProvider.notifier)
                       .acknowledgeDenied(),

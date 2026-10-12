@@ -12,7 +12,6 @@ class AppRoutes {
   static const register = '/register';
   static const forgotPassword = '/forgot-password';
   static const accessDenied = '/acces-refuse';
-  static const completeProfile = '/completer-profil';
   static const verifyEmail = '/verification-email';
   static const universeSelection = '/selection-univers';
 
@@ -37,14 +36,29 @@ class AppRoutes {
   static const rendezVousConfirmation = '/rendez-vous/confirmation';
   static const paiements = '/paiements';
 
+  // Sous-pages du profil
+  static const informationsPersonnelles = '/profil/informations';
+  static const parametres = '/profil/parametres';
+  static const aideSupport = '/profil/aide';
+
+  /// Fiche patient (univers Psychologue uniquement).
+  static const fichePatient = '/profil/fiche-patient';
+
   /// Détail d'un article ou d'un conseil.
   static String contenu(String id) => '/contenus/$id';
+
+  /// Consultation d'un dossier juridique.
+  static String dossier(String id) => '$dossiers/$id';
 
   /// Discussion de la messagerie.
   static String conversation(String id) => '$messagerie/$id';
 
   /// Fiche d'un professionnel.
   static String professionnel(String id) => '$professionnels/$id';
+
+  /// Articles ou conseils publiés par un professionnel.
+  static String publicationsProfessionnel(String id) =>
+      '$professionnels/$id/publications';
 
   /// Choix du créneau chez un professionnel.
   static String choixCreneau(String id) => '$professionnels/$id/creneau';
@@ -58,7 +72,6 @@ class AppRoutes {
     onboarding,
     ...authRoutes,
     accessDenied,
-    completeProfile,
     verifyEmail,
   };
 }

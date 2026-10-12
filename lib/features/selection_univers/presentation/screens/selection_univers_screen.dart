@@ -6,6 +6,7 @@ import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/universe_selection_controller.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Choix de l'univers Avocat ou Psychologue — maquette Figma « category-selection ».
 ///
@@ -46,7 +47,9 @@ class SelectionUniversScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLavender,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? context.palette.page
+          : AppColors.backgroundLavender,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: AppSpacing.screenPadding,
@@ -55,16 +58,16 @@ class SelectionUniversScreen extends ConsumerWidget {
             children: [
               AppSpacing.vGap32,
               Text(
-                'Quel professionnel recherchez-vous ?',
+                tr('Quel professionnel recherchez-vous ?'),
                 style: AppTypography.grandTitre.copyWith(
-                  color: AppColors.lawyer,
+                  color: context.colors.primary,
                 ),
               ),
               AppSpacing.vGap16,
               Text(
-                'Choisissez la catégorie qui correspond à votre besoin.',
+                tr('Choisissez la catégorie qui correspond à votre besoin.'),
                 style: AppTypography.petitTitre.copyWith(
-                  color: AppColors.subtitleSlate,
+                  color: context.palette.textMuted,
                 ),
               ),
               AppSpacing.vGap32,
@@ -77,8 +80,8 @@ class SelectionUniversScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       AppUniverseCard(
-                        title: 'Avocat',
-                        description: 'Conseil juridique et accompagnement',
+                        title: tr('Avocat'),
+                        description: tr('Conseil juridique et accompagnement'),
                         icon: Icons.balance_rounded,
                         gradient: AppColors.lawyerCardGradient,
                         shadowColor: AppColors.lawyer,
@@ -86,8 +89,8 @@ class SelectionUniversScreen extends ConsumerWidget {
                       ),
                       AppSpacing.vGap20,
                       AppUniverseCard(
-                        title: 'Psychologue',
-                        description: 'Écoute et soutien psychologique',
+                        title: tr('Psychologue'),
+                        description: tr('Écoute et soutien psychologique'),
                         icon: Icons.psychology_outlined,
                         gradient: AppColors.psychologistCardGradient,
                         shadowColor: AppColors.psychologist,

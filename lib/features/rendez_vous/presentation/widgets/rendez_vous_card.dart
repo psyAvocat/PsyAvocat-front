@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../shared/enums/appointment_status.dart';
 import '../../data/models/rendez_vous_model.dart';
+import '../../../../core/theme/app_palette.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 class RendezVousCard extends StatelessWidget {
   final RendezVous item;
@@ -25,11 +27,11 @@ class RendezVousCard extends StatelessWidget {
         ? const Color(0xFFFEE2E2)
         : const Color(0xFFFEF3C7);
 
-    final dayStr = DateFormat('d', 'fr_FR').format(item.dateHeure);
-    final monthStr = DateFormat('MMM', 'fr_FR').format(item.dateHeure);
-    final yearStr = DateFormat('yyyy', 'fr_FR').format(item.dateHeure);
+    final dayStr = DateFormat('d').format(item.dateHeure);
+    final monthStr = DateFormat('MMM').format(item.dateHeure);
+    final yearStr = DateFormat('yyyy').format(item.dateHeure);
     final timeStr =
-        '${DateFormat('HH:mm', 'fr_FR').format(item.dateHeure)} - ${DateFormat('HH:mm', 'fr_FR').format(item.fin)}';
+        '${DateFormat('HH:mm').format(item.dateHeure)} - ${DateFormat('HH:mm').format(item.fin)}';
 
     return InkWell(
       onTap: onTap,
@@ -37,9 +39,9 @@ class RendezVousCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.palette.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE5E7EB), width: 1.2),
+          border: Border.all(color: context.palette.border, width: 1.2),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -58,7 +60,7 @@ class RendezVousCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isConfirme
                     ? const Color(0xFFEFF6FF)
-                    : const Color(0xFFF3F4F6),
+                    : context.palette.muted,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Column(
@@ -70,7 +72,7 @@ class RendezVousCard extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                       color: isConfirme
                           ? const Color(0xFF1D4ED8)
-                          : const Color(0xFF6B7280),
+                          : context.palette.textMuted,
                     ),
                   ),
                   Text(
@@ -80,14 +82,14 @@ class RendezVousCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       color: isConfirme
                           ? const Color(0xFF1D4ED8)
-                          : const Color(0xFF6B7280),
+                          : context.palette.textMuted,
                     ),
                   ),
                   Text(
                     yearStr,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
-                      color: Color(0xFF6B7280),
+                      color: context.palette.textMuted,
                     ),
                   ),
                 ],
@@ -103,10 +105,10 @@ class RendezVousCard extends StatelessWidget {
                 children: [
                   Text(
                     timeStr,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF6B7280),
+                      color: context.palette.textMuted,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -115,10 +117,10 @@ class RendezVousCard extends StatelessWidget {
                       Flexible(
                         child: Text(
                           item.professionnelDisplayName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15.5,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF111827),
+                            color: context.palette.textStrong,
                           ),
                         ),
                       ),
@@ -129,15 +131,15 @@ class RendezVousCard extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
+                          color: context.palette.muted,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          item.typeProfessionnel,
-                          style: const TextStyle(
+                          item.typeLabel,
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF4B5563),
+                            color: context.palette.text,
                           ),
                         ),
                       ),
@@ -146,26 +148,23 @@ class RendezVousCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     item.professionnelSpecialite ?? '',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF4B5563),
-                    ),
+                    style: TextStyle(fontSize: 13, color: context.palette.text),
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.location_on_outlined,
                         size: 14,
-                        color: Color(0xFF9CA3AF),
+                        color: context.palette.textSubtle,
                       ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          item.mode ?? 'Non spécifié',
-                          style: const TextStyle(
+                          item.modeLabel ?? tr('Non spécifié'),
+                          style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF6B7280),
+                            color: context.palette.textMuted,
                           ),
                         ),
                       ),
@@ -194,10 +193,10 @@ class RendezVousCard extends StatelessWidget {
               ),
             ),
 
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios_rounded,
               size: 14,
-              color: Color(0xFF9CA3AF),
+              color: context.palette.textSubtle,
             ),
           ],
         ),

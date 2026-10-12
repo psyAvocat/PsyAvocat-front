@@ -11,7 +11,7 @@ import '../theme/design_system.dart';
 /// AppCheckboxTile(
 ///   value: _accepted,
 ///   onChanged: (value) => setState(() => _accepted = value),
-///   label: const Text("J'accepte les conditions"),
+///   label: Text("J'accepte les conditions"),
 /// )
 /// ```
 class AppCheckboxTile extends StatelessWidget {

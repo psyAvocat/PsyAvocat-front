@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_palette.dart';
+import '../../../../core/l10n/app_strings.dart';
 
+/// Saisie d'un message : champ arrondi gris clair et bouton d'envoi rond à
+/// la couleur de l'univers, posés sur une barre blanche arrondie.
 class ChatInputBar extends StatelessWidget {
   final TextEditingController controller;
   final Color primaryColor;
@@ -16,31 +20,38 @@ class ChatInputBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x10000000),
-            blurRadius: 10,
-            offset: Offset(0, -3),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
+        decoration: BoxDecoration(
+          color: context.palette.card,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A000000),
+              blurRadius: 12,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
         child: Row(
           children: [
             Expanded(
               child: TextField(
                 controller: controller,
-                maxLines: null,
+                minLines: 1,
+                maxLines: 4,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
-                  hintText: 'Votre message...',
-                  hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+                  hintText: tr('Écrire un message...'),
+                  hintStyle: TextStyle(
+                    color: context.palette.textSubtle,
+                    fontSize: 15,
+                  ),
                   filled: true,
-                  fillColor: const Color(0xFFF3F4F6),
+                  fillColor: context.palette.inputFill,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
@@ -52,33 +63,37 @@ class ChatInputBar extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            InkWell(
-              onTap: isSending ? null : onSend,
-              borderRadius: BorderRadius.circular(24),
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: primaryColor,
-                  shape: BoxShape.circle,
-                ),
-                child: isSending
-                    ? const Center(
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+            const SizedBox(width: 12),
+            Semantics(
+              button: true,
+              label: tr('Envoyer'),
+              child: InkWell(
+                onTap: isSending ? null : onSend,
+                customBorder: const CircleBorder(),
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: primaryColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: isSending
+                      ? const Center(
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           ),
+                        )
+                      : const Icon(
+                          Icons.send_outlined,
+                          color: Colors.white,
+                          size: 20,
                         ),
-                      )
-                    : const Icon(
-                        Icons.send_rounded,
-                        color: Colors.white,
-                        size: 22,
-                      ),
+                ),
               ),
             ),
           ],

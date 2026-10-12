@@ -4,6 +4,7 @@ import '../../../../core/errors/user_message.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/session_controller.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// « Confirmez votre adresse email » : le backend refuse tout accès client
 /// tant que l'adresse n'est pas confirmée (lien envoyé à l'inscription).
@@ -31,7 +32,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               SessionStatus.emailNotVerified) {
         AppNotification.showWarning(
           context,
-          'Adresse pas encore confirmée. Ouvrez le lien reçu par email, puis réessayez.',
+          tr(
+            'Adresse pas encore confirmée. Ouvrez le lien reçu par email, puis réessayez.',
+          ),
         );
       }
     } catch (error) {
@@ -48,7 +51,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
           .read(sessionControllerProvider.notifier)
           .resendVerificationEmail();
       if (mounted) {
-        AppNotification.showSuccess(context, 'Email de confirmation renvoyé.');
+        AppNotification.showSuccess(
+          context,
+          tr('Email de confirmation renvoyé.'),
+        );
       }
     } catch (error) {
       if (mounted) AppNotification.showError(context, userMessageFor(error));
@@ -78,32 +84,35 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 ),
                 AppSpacing.vGap16,
                 Text(
-                  'Confirmez votre adresse email',
+                  tr('Confirmez votre adresse email'),
                   textAlign: TextAlign.center,
                   style: AppTypography.titreMoyen,
                 ),
                 AppSpacing.vGap8,
                 Text(
-                  'Un lien de confirmation a été envoyé à $email. '
-                  'Ouvrez-le pour activer votre compte.',
+                  tr(
+                    'Un lien de confirmation a été envoyé à {email}. '
+                    'Ouvrez-le pour activer votre compte.',
+                    {'email': email},
+                  ),
                   textAlign: TextAlign.center,
                   style: AppTypography.texteSecondaire,
                 ),
                 AppSpacing.vGap32,
                 AppButton(
                   color: AppColors.lawyer,
-                  text: "J'ai confirmé mon adresse",
+                  text: tr("J'ai confirmé mon adresse"),
                   isLoading: _isChecking,
                   onPressed: busy ? null : _confirm,
                 ),
                 AppSpacing.vGap16,
                 AppButton.ghost(
-                  text: "Renvoyer l'email de confirmation",
+                  text: tr("Renvoyer l'email de confirmation"),
                   isFullWidth: true,
                   onPressed: busy ? null : _resend,
                 ),
                 AppButton.ghost(
-                  text: 'Se déconnecter',
+                  text: tr('Se déconnecter'),
                   isFullWidth: true,
                   onPressed: busy
                       ? null

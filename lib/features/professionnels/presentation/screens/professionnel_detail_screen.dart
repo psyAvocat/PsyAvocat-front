@@ -14,9 +14,11 @@ import '../../../dossiers/presentation/screens/create_dossier_wizard_screen.dart
 import '../../../messagerie/data/repositories/messagerie_repository.dart';
 import '../../../rendez_vous/data/models/reservation_contexte.dart';
 import '../../../signalements/presentation/signalement_sheet.dart';
-import '../../data/models/creneau.dart';
 import '../../data/models/professionnel_detail.dart';
 import '../controllers/professionnels_controller.dart';
+import '../widgets/availability_picker.dart';
+import '../../../../core/l10n/app_strings.dart';
+import '../../../../core/theme/design_system.dart';
 
 /// Fiche détaillée d'un professionnel : uniquement des données réelles du backend.
 ///
@@ -40,22 +42,22 @@ class _ProfessionnelDetailScreenState
   @override
   Widget build(BuildContext context) {
     final universe = ref.watch(currentUniverseProvider);
-    final primaryColor = universe.primaryColor;
+    final primaryColor = Theme.of(context).colorScheme.primary;
     final proAsync = ref.watch(
       professionnelDetailProvider(widget.professionnelId),
     );
 
     return proAsync.when(
       loading: () => Scaffold(
-        backgroundColor: const Color(0xFFF9FAFC),
+        backgroundColor: context.palette.page,
         appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: AppLoadingView(universe: universe),
       ),
       error: (e, _) => Scaffold(
-        backgroundColor: const Color(0xFFF9FAFC),
+        backgroundColor: context.palette.page,
         appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: AppErrorStateView(
-          title: 'Professionnel indisponible',
+          title: tr('Professionnel indisponible'),
           message: userMessageFor(e),
           onRetry: () => ref.invalidate(
             professionnelDetailProvider(widget.professionnelId),
@@ -67,14 +69,18 @@ class _ProfessionnelDetailScreenState
         // l'univers Psychologue (lien profond, notification…), et inversement.
         if (pro.summary.type != universe.apiProfessionalType) {
           return Scaffold(
-            backgroundColor: const Color(0xFFF9FAFC),
+            backgroundColor: context.palette.page,
             appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
             body: AppEmptyStateView(
               icon: Icons.swap_horiz_rounded,
-              title: 'Professionnel d’un autre univers',
+              title: tr('Professionnel d’un autre univers'),
               message: pro.summary.isAvocat
-                  ? 'Cette fiche appartient à l’univers Avocat. Changez d’univers pour la consulter.'
-                  : 'Cette fiche appartient à l’univers Psychologue. Changez d’univers pour la consulter.',
+                  ? tr(
+                      'Cette fiche appartient à l’univers Avocat. Changez d’univers pour la consulter.',
+                    )
+                  : tr(
+                      'Cette fiche appartient à l’univers Psychologue. Changez d’univers pour la consulter.',
+                    ),
             ),
           );
         }
@@ -97,7 +103,7 @@ class _ProfessionnelDetailScreenState
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF9FAFC),
+        backgroundColor: context.palette.page,
         body: NestedScrollView(
           headerSliverBuilder: (context, _) => [
             SliverAppBar(
@@ -107,18 +113,18 @@ class _ProfessionnelDetailScreenState
               foregroundColor: Colors.white,
               actions: [
                 PopupMenuButton<String>(
-                  tooltip: 'Plus d’actions',
+                  tooltip: tr('Plus d’actions'),
                   icon: const Icon(Icons.more_vert_rounded),
                   onSelected: (action) {
                     if (action == 'signaler')
                       _signaler(context, pro, primaryColor);
                   },
-                  itemBuilder: (_) => const [
+                  itemBuilder: (_) => [
                     PopupMenuItem(
                       value: 'signaler',
                       child: ListTile(
                         leading: Icon(Icons.flag_outlined),
-                        title: Text('Signaler ce professionnel'),
+                        title: Text(tr('Signaler ce professionnel')),
                         contentPadding: EdgeInsets.zero,
                       ),
                     ),
@@ -156,6 +162,7 @@ class _ProfessionnelDetailScreenState
               _Disponibilites(
                 professionnelId: pro.id,
                 primaryColor: primaryColor,
+                avocat: pro.summary.isAvocat,
               ),
             ],
           ),
@@ -183,9 +190,9 @@ class _ProfessionnelDetailScreenState
     );
     if (envoye == true && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Signalement envoyé. L’équipe PsyAvocat va l’examiner.',
+            tr('Signalement envoyé. L’équipe PsyAvocat va l’examiner.'),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -195,33 +202,13 @@ class _ProfessionnelDetailScreenState
 
   /// Premier message : la conversation est créée (ou réutilisée) par le backend.
   Future<void> _ecrire(BuildContext context, ProfessionnelDetail pro) async {
-    final controller = TextEditingController();
+    // Le dialogue possède son champ : il est libéré à la fin de l'animation
+    // de fermeture, jamais pendant (sinon « TextEditingController was used
+    // after being disposed »).
     final message = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Écrire à ${pro.summary.displayName}'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLines: 4,
-          maxLength: 1000,
-          decoration: const InputDecoration(hintText: 'Votre message'),
-        ),
-        actions: [
-          AppButton.ghost(
-            text: 'Annuler',
-            onPressed: () => Navigator.pop(context),
-          ),
-          AppButton(
-            text: 'Envoyer',
-            isFullWidth: false,
-            size: AppButtonSize.compact,
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-          ),
-        ],
-      ),
+      builder: (_) => _EcrireDialog(nom: pro.summary.displayName),
     );
-    controller.dispose();
     if (message == null || message.isEmpty || !context.mounted) return;
     try {
       final conversation = await ref
@@ -230,7 +217,11 @@ class _ProfessionnelDetailScreenState
       if (!context.mounted) return;
       context.push(
         AppRoutes.conversation(conversation.id),
-        extra: {'name': pro.summary.displayName, 'role': pro.summary.type},
+        extra: {
+          'name': pro.summary.displayName,
+          'role': pro.summary.type,
+          'photoUrl': pro.summary.photoUrl,
+        },
       );
     } catch (error) {
       if (!context.mounted) return;
@@ -279,11 +270,10 @@ class _Identite extends StatelessWidget {
         children: [
           Text(
             s.displayName,
-            style: const TextStyle(
+            style: AppTypography.titreMoyen.copyWith(
               fontSize: 22,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF111827),
-              fontFamily: 'Montserrat',
+              color: context.palette.textStrong,
             ),
           ),
           const SizedBox(height: 6),
@@ -296,8 +286,10 @@ class _Identite extends StatelessWidget {
                 _Info(
                   icone: Icons.star_rounded,
                   couleur: const Color(0xFFF59E0B),
-                  texte:
-                      '${s.noteMoyenne!.toStringAsFixed(1)} (${s.nombreAvis} avis)',
+                  texte: tr('{note} ({n} avis)', {
+                    'note': s.noteMoyenne!.toStringAsFixed(1),
+                    'n': s.nombreAvis,
+                  }),
                 ),
               if (s.ville != null && s.ville!.isNotEmpty)
                 _Info(icone: Icons.location_on_outlined, texte: s.ville!),
@@ -329,6 +321,20 @@ class _Identite extends StatelessWidget {
                   .toList(),
             ),
           ],
+          const SizedBox(height: 16),
+          AppButton.outline(
+            text: s.isAvocat
+                ? tr('Voir les articles')
+                : tr('Voir les conseils'),
+            icon: s.isAvocat
+                ? Icons.menu_book_outlined
+                : Icons.lightbulb_outline_rounded,
+            color: primaryColor,
+            onPressed: () => context.push(
+              AppRoutes.publicationsProfessionnel(pro.id),
+              extra: s.displayName,
+            ),
+          ),
         ],
       ),
     );
@@ -338,24 +344,20 @@ class _Identite extends StatelessWidget {
 class _Info extends StatelessWidget {
   final IconData icone;
   final String texte;
-  final Color couleur;
-  const _Info({
-    required this.icone,
-    required this.texte,
-    this.couleur = const Color(0xFF9CA3AF),
-  });
+  final Color? couleur;
+  const _Info({required this.icone, required this.texte, this.couleur});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icone, size: 16, color: couleur),
+        Icon(icone, size: 16, color: couleur ?? context.palette.textSubtle),
         const SizedBox(width: 4),
         Flexible(
           child: Text(
             texte,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
+            style: TextStyle(fontSize: 13, color: context.palette.text),
           ),
         ),
       ],
@@ -379,30 +381,30 @@ class _OngletsDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     return Container(
-      color: const Color(0xFFF9FAFC),
+      color: context.palette.page,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFEFF2F7),
+          color: context.palette.muted,
           borderRadius: BorderRadius.circular(22),
         ),
         child: TabBar(
           indicator: BoxDecoration(
-            color: Colors.white,
+            color: context.palette.card,
             borderRadius: BorderRadius.circular(22),
           ),
           indicatorSize: TabBarIndicatorSize.tab,
           dividerColor: Colors.transparent,
-          labelColor: const Color(0xFF111827),
-          unselectedLabelColor: const Color(0xFF6B7280),
+          labelColor: context.palette.textStrong,
+          unselectedLabelColor: context.palette.textMuted,
           labelStyle: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
-          tabs: const [
-            Tab(text: 'Présentation'),
-            Tab(text: 'Tarifs'),
-            Tab(text: 'Disponibilités'),
+          tabs: [
+            Tab(text: tr('Présentation')),
+            Tab(text: tr('Tarifs')),
+            Tab(text: tr('Disponibilités')),
           ],
         ),
       ),
@@ -429,25 +431,25 @@ class _Presentation extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        const _Section('À propos'),
+        _Section(tr('À propos')),
         Text(
           bio.isNotEmpty
               ? bio
-              : 'Ce professionnel n’a pas encore rédigé de présentation.',
+              : tr('Ce professionnel n’a pas encore rédigé de présentation.'),
           style: TextStyle(
             fontSize: 14,
             height: 1.5,
             color: bio.isNotEmpty
-                ? const Color(0xFF374151)
-                : const Color(0xFF9CA3AF),
+                ? context.palette.text
+                : context.palette.textSubtle,
           ),
         ),
         if (pro.adresse != null && pro.adresse!.isNotEmpty) ...[
           const SizedBox(height: 20),
-          const _Section('Adresse du cabinet'),
+          _Section(tr('Adresse du cabinet')),
           Text(
             pro.adresse!,
-            style: const TextStyle(fontSize: 14, color: Color(0xFF374151)),
+            style: TextStyle(fontSize: 14, color: context.palette.text),
           ),
         ],
         if (langues.isNotEmpty) ...[
@@ -478,19 +480,21 @@ class _Tarifs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (pro.summary.isAvocat && pro.tarifs.isEmpty) {
-      return const AppEmptyStateView(
+      return AppEmptyStateView(
         icon: Icons.folder_shared_outlined,
-        title: 'Honoraires sur dossier',
-        message:
-            'L’avocat vous communique ses honoraires lorsqu’il accepte votre dossier.',
+        title: tr('Honoraires sur dossier'),
+        message: tr(
+          'L’avocat vous communique ses honoraires lorsqu’il accepte votre dossier.',
+        ),
       );
     }
     if (pro.tarifs.isEmpty) {
-      return const AppEmptyStateView(
+      return AppEmptyStateView(
         icon: Icons.sell_outlined,
-        title: 'Aucun tarif publié',
-        message:
-            'Ce professionnel n’a pas encore publié de tarif : la réservation n’est pas encore possible.',
+        title: tr('Aucun tarif publié'),
+        message: tr(
+          'Ce professionnel n’a pas encore publié de tarif : la réservation n’est pas encore possible.',
+        ),
       );
     }
     final avocat = pro.summary.isAvocat;
@@ -498,13 +502,15 @@ class _Tarifs extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       children: [
         if (avocat)
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(bottom: 12),
             child: Text(
-              'Tarifs indicatifs. Les honoraires définitifs vous sont proposés lorsque l’avocat accepte votre dossier.',
+              tr(
+                'Tarifs indicatifs. Les honoraires définitifs vous sont proposés lorsque l’avocat accepte votre dossier.',
+              ),
               style: TextStyle(
                 fontSize: 13,
-                color: Color(0xFF6B7280),
+                color: context.palette.textMuted,
                 height: 1.4,
               ),
             ),
@@ -517,7 +523,7 @@ class _Tarifs extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
               side: BorderSide(
-                color: actif ? primaryColor : const Color(0xFFE5E7EB),
+                color: actif ? primaryColor : context.palette.border,
                 width: actif ? 1.6 : 1,
               ),
             ),
@@ -553,9 +559,11 @@ class _Tarifs extends StatelessWidget {
 class _Disponibilites extends ConsumerWidget {
   final String professionnelId;
   final Color primaryColor;
+  final bool avocat;
   const _Disponibilites({
     required this.professionnelId,
     required this.primaryColor,
+    required this.avocat,
   });
 
   @override
@@ -576,45 +584,31 @@ class _Disponibilites extends ConsumerWidget {
             )
             .toList();
         if (libres.isEmpty) {
-          return const AppEmptyStateView(
+          return AppEmptyStateView(
             icon: Icons.event_busy_rounded,
-            title: 'Aucun créneau disponible',
-            message:
-                'Les nouvelles disponibilités apparaîtront ici automatiquement.',
+            title: tr('Aucun créneau disponible'),
+            message: tr(
+              'Les nouvelles disponibilités apparaîtront ici automatiquement.',
+            ),
           );
         }
-        final parJour = <DateTime, List<Creneau>>{};
-        for (final c in libres) {
-          parJour.putIfAbsent(c.jour, () => []).add(c);
-        }
-        final jours = parJour.keys.toList()..sort();
         return ListView(
           padding: const EdgeInsets.all(20),
-          children: jours.map((jour) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _Section(Formatters.formatJourLong(jour)),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: parJour[jour]!
-                        .map(
-                          (c) => Chip(
-                            label: Text(Formatters.formatHeure(c.debut)),
-                            backgroundColor: primaryColor.withValues(
-                              alpha: 0.08,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
+          children: [
+            AvailabilityPicker(
+              creneaux: creneaux,
+              primaryColor: primaryColor,
+              guide: avocat
+                  ? tr(
+                      'Parcourez les disponibilités. Le rendez-vous se réserve '
+                      'une fois votre dossier accepté par l’avocat.',
+                    )
+                  : tr(
+                      'Parcourez les disponibilités, puis choisissez un tarif et '
+                      'appuyez sur « Prendre rendez-vous » pour réserver.',
+                    ),
+            ),
+          ],
         );
       },
     );
@@ -631,10 +625,10 @@ class _Section extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         titre,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w700,
-          color: Color(0xFF111827),
+          color: context.palette.textStrong,
         ),
       ),
     );
@@ -660,7 +654,7 @@ class _BarreAction extends ConsumerWidget {
     final VoidCallback? action;
     final String libelle;
     if (avocat) {
-      libelle = 'Soumettre un dossier';
+      libelle = tr('Soumettre un dossier');
       action = () {
         ref
             .read(createDossierWizardProvider.notifier)
@@ -671,10 +665,10 @@ class _BarreAction extends ConsumerWidget {
       };
     } else {
       libelle = tarif != null
-          ? 'Prendre rendez-vous'
+          ? tr('Prendre rendez-vous')
           : (pro.tarifs.isEmpty
-                ? 'Réservation indisponible'
-                : 'Choisissez un tarif');
+                ? tr('Réservation indisponible')
+                : tr('Choisissez un tarif'));
       action = tarif == null
           ? null
           : () {
@@ -691,7 +685,7 @@ class _BarreAction extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.palette.card,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -706,7 +700,7 @@ class _BarreAction extends ConsumerWidget {
           children: [
             IconButton.outlined(
               onPressed: onEcrire,
-              tooltip: 'Écrire',
+              tooltip: tr('Écrire'),
               icon: Icon(
                 Icons.chat_bubble_outline_rounded,
                 color: primaryColor,
@@ -723,6 +717,52 @@ class _BarreAction extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Saisie du premier message envoyé à un professionnel.
+class _EcrireDialog extends StatefulWidget {
+  final String nom;
+
+  const _EcrireDialog({required this.nom});
+
+  @override
+  State<_EcrireDialog> createState() => _EcrireDialogState();
+}
+
+class _EcrireDialogState extends State<_EcrireDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(tr('Écrire à {nom}', {'nom': widget.nom})),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        maxLines: 4,
+        maxLength: 1000,
+        decoration: InputDecoration(hintText: tr('Votre message')),
+      ),
+      actions: [
+        AppButton.ghost(
+          text: tr('Annuler'),
+          onPressed: () => Navigator.pop(context),
+        ),
+        AppButton(
+          text: tr('Envoyer'),
+          isFullWidth: false,
+          size: AppButtonSize.compact,
+          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+        ),
+      ],
     );
   }
 }

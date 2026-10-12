@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/errors/user_message.dart';
 import '../../../core/widgets/app_button.dart';
 import '../data/signalement_repository.dart';
+import '../../../core/theme/app_palette.dart';
+import '../../../core/l10n/app_strings.dart';
 
 /// Ouvre la feuille de signalement d'un professionnel.
 /// Renvoie `true` si le signalement a été enregistré par le backend.
@@ -17,7 +19,7 @@ Future<bool?> showSignalementSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: Colors.white,
+    backgroundColor: context.palette.card,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -110,26 +112,28 @@ class _SignalementSheetState extends ConsumerState<_SignalementSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD1D5DB),
+                  color: context.palette.borderStrong,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              'Signaler ${widget.professionnelNom}',
-              style: const TextStyle(
+              tr('Signaler {nom}', {'nom': widget.professionnelNom}),
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF111827),
+                color: context.palette.textStrong,
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Votre signalement est transmis à l’équipe PsyAvocat, qui l’examine en toute confidentialité.',
+            Text(
+              tr(
+                'Votre signalement est transmis à l’équipe PsyAvocat, qui l’examine en toute confidentialité.',
+              ),
               style: TextStyle(
                 fontSize: 13,
-                color: Color(0xFF6B7280),
+                color: context.palette.textMuted,
                 height: 1.4,
               ),
             ),
@@ -148,7 +152,7 @@ class _SignalementSheetState extends ConsumerState<_SignalementSheet> {
                     ),
                   ),
                   AppButton.ghost(
-                    text: 'Réessayer',
+                    text: tr('Réessayer'),
                     onPressed: () => ref.invalidate(motifsSignalementProvider),
                   ),
                 ],
@@ -181,10 +185,10 @@ class _SignalementSheetState extends ConsumerState<_SignalementSheet> {
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 labelText: _motif?.exigeDescription == true
-                    ? 'Décrivez la situation *'
-                    : 'Précisions (facultatif)',
+                    ? tr('Décrivez la situation *')
+                    : tr('Précisions (facultatif)'),
                 helperText: _motif?.exigeDescription == true
-                    ? '$_minDescriptionAutre caractères minimum'
+                    ? tr('{n} caractères minimum', {'n': _minDescriptionAutre})
                     : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -197,7 +201,7 @@ class _SignalementSheetState extends ConsumerState<_SignalementSheet> {
             ],
             const SizedBox(height: 16),
             AppButton(
-              text: 'Envoyer le signalement',
+              text: tr('Envoyer le signalement'),
               isLoading: _envoi,
               onPressed: _valide && !_envoi ? _envoyer : null,
               color: widget.primaryColor,

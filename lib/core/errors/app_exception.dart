@@ -72,5 +72,8 @@ class ServerException extends AppException {
 }
 
 class AuthException extends AppException {
-  const AuthException(super.message);
+  /// Code Firebase d'origine (ex. `email-already-in-use`), jamais affiché.
+  final String? code;
+
+  const AuthException(super.message, {this.code});
 }

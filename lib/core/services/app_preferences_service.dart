@@ -8,6 +8,8 @@ class AppPreferencesService {
   static const String _keyHasSeenOnboarding = 'has_seen_onboarding';
   static const String _keySelectedUniverse = 'selected_universe';
   static const String _keyPushEnabled = 'push_enabled';
+  static const String _keyThemeMode = 'theme_mode';
+  static const String _keyLanguage = 'app_language';
 
   final SharedPreferences _prefs;
 
@@ -48,6 +50,17 @@ class AppPreferencesService {
   Future<void> setPushEnabled(bool enabled) async {
     await _prefs.setBool(_keyPushEnabled, enabled);
   }
+
+  /// Thème choisi : `system` (par défaut), `light` ou `dark`.
+  String themeMode() => _prefs.getString(_keyThemeMode) ?? 'system';
+
+  Future<void> setThemeMode(String mode) =>
+      _prefs.setString(_keyThemeMode, mode);
+
+  /// Langue de l'interface : `fr` (par défaut) ou `en`.
+  String language() => _prefs.getString(_keyLanguage) ?? 'fr';
+
+  Future<void> setLanguage(String code) => _prefs.setString(_keyLanguage, code);
 }
 
 /// Provider pour initialiser et accéder à SharedPreferences

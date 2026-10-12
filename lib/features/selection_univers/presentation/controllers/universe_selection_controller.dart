@@ -4,9 +4,9 @@ import '../../../../core/theme/universe_provider.dart';
 
 /// Choix de l'univers Avocat / Psychologue.
 ///
-/// Le profil client est unique et déjà créé (à l'inscription ou sur l'écran
-/// « Compléter mon profil ») : choisir l'univers ne fait qu'enregistrer le
-/// contexte affiché (thème + données chargées ensuite).
+/// Le profil client est unique et déjà créé à l'inscription : choisir
+/// l'univers ne fait qu'enregistrer le contexte affiché (thème + données
+/// chargées ensuite).
 class UniverseSelectionController extends Notifier<AsyncValue<void>> {
   @override
   AsyncValue<void> build() => const AsyncValue.data(null);

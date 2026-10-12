@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/theme/app_palette.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 class MessagerieErrorState extends StatelessWidget {
   final VoidCallback onRetry;
@@ -12,15 +14,19 @@ class MessagerieErrorState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.wifi_off_rounded,
             size: 60,
-            color: Color(0xFFD1D5DB),
+            color: context.palette.borderStrong,
           ),
           const SizedBox(height: 16),
-          const Text('Impossible de charger les messages'),
+          Text(tr('Impossible de charger les messages')),
           const SizedBox(height: 12),
-          AppButton(text: 'Réessayer', isFullWidth: false, onPressed: onRetry),
+          AppButton(
+            text: tr('Réessayer'),
+            isFullWidth: false,
+            onPressed: onRetry,
+          ),
         ],
       ),
     );

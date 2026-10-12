@@ -7,6 +7,7 @@ import '../../../referentiels/data/models/specialite_option.dart';
 import '../../data/models/dossier_model.dart';
 import '../../data/repositories/dossier_repository.dart';
 import 'dossiers_controller.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Fichier choisi par le justiciable, envoyé au backend après création du dossier.
 class PieceAJoindre {
@@ -137,13 +138,17 @@ class CreateDossierWizardNotifier extends Notifier<CreateDossierWizardState> {
   /// Ajoute un fichier ; renvoie un message d'erreur s'il est refusé.
   String? addPieceJointe(PieceAJoindre piece) {
     if (state.piecesJointes.length >= maxPiecesJointes) {
-      return 'Vous pouvez joindre au maximum $maxPiecesJointes documents.';
+      return tr('Vous pouvez joindre au maximum {n} documents.', {
+        'n': maxPiecesJointes,
+      });
     }
     if (piece.taille > maxTaillePieceJointe) {
-      return '« ${piece.nom} » dépasse la taille maximale de 10 Mo.';
+      return tr('« {nom} » dépasse la taille maximale de 10 Mo.', {
+        'nom': piece.nom,
+      });
     }
     if (state.piecesJointes.any((p) => p.nom == piece.nom)) {
-      return '« ${piece.nom} » est déjà joint.';
+      return tr('« {nom} » est déjà joint.', {'nom': piece.nom});
     }
     state = state.copyWith(piecesJointes: [...state.piecesJointes, piece]);
     return null;

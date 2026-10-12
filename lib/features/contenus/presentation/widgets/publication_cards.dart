@@ -3,6 +3,7 @@ import '../../../../core/theme/design_system.dart';
 import '../../data/models/contenu_model.dart';
 import 'publication_image.dart';
 import 'publication_meta.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Carte horizontale d'une publication (maquettes « Articles » et « Conseils ») :
 /// image à gauche, catégorie, titre, auteur, résumé, date et temps de lecture.
@@ -48,7 +49,7 @@ class PublicationListCard extends StatelessWidget {
                     if (pub.auteurDisplayName != null) ...[
                       AppSpacing.vGap4,
                       Text(
-                        'Par ${pub.auteurDisplayName}',
+                        tr('Par {auteur}', {'auteur': pub.auteurDisplayName}),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.miniTexte.copyWith(

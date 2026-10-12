@@ -120,9 +120,9 @@ class AppBadge extends StatelessWidget {
         borderColor = AppColors.psychologistBorder;
         break;
       case AppBadgeType.neutral:
-        backgroundColor = AppColors.neutralSurfaceSecondary;
-        textColor = AppColors.textSecondary;
-        borderColor = AppColors.border;
+        backgroundColor = context.palette.muted;
+        textColor = context.palette.textMuted;
+        borderColor = context.palette.border;
         break;
     }
 

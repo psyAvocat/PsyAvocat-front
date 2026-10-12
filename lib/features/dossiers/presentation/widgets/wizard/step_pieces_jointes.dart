@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/widgets/app_button.dart';
 import '../../controllers/create_dossier_wizard_controller.dart';
+import '../../../../../core/theme/app_palette.dart';
+import '../../../../../core/l10n/app_strings.dart';
 
 /// Étape 3 : pièces du dossier, choisies sur l'appareil puis déposées dans le
 /// stockage privé du backend lors de l'envoi (formats acceptés par le serveur).
@@ -44,7 +46,8 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
         if (erreur != null && mounted) _message(erreur);
       }
     } catch (_) {
-      if (mounted) _message('Impossible d’accéder à ce fichier. Réessayez.');
+      if (mounted)
+        _message(tr('Impossible d’accéder à ce fichier. Réessayez.'));
     } finally {
       if (mounted) setState(() => _selection = false);
     }
@@ -57,9 +60,10 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
   }
 
   String _taille(int octets) {
-    if (octets >= 1024 * 1024)
-      return '${(octets / (1024 * 1024)).toStringAsFixed(1)} Mo';
-    return '${(octets / 1024).ceil()} Ko';
+    if (octets >= 1024 * 1024) {
+      return tr('{n} Mo', {'n': (octets / (1024 * 1024)).toStringAsFixed(1)});
+    }
+    return tr('{n} Ko', {'n': (octets / 1024).ceil()});
   }
 
   @override
@@ -73,19 +77,24 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             children: [
-              const Text(
-                'Ajouter les pièces du dossier',
+              Text(
+                tr('Ajouter les pièces du dossier'),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
+                  color: context.palette.textStrong,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Joignez les documents utiles (contrat, courrier, décision, photo…). '
-                'Ils ne sont visibles que par vous et les avocats destinataires.',
-                style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+              Text(
+                tr(
+                  'Joignez les documents utiles (contrat, courrier, décision, photo…). '
+                  'Ils ne sont visibles que par vous et les avocats destinataires.',
+                ),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: context.palette.textMuted,
+                ),
               ),
               const SizedBox(height: 24),
               InkWell(
@@ -99,7 +108,7 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
                     horizontal: 16,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.palette.card,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: primaryColor.withValues(alpha: 0.5),
@@ -121,7 +130,7 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
                             ),
                       const SizedBox(height: 12),
                       Text(
-                        'Choisir des fichiers',
+                        tr('Choisir des fichiers'),
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -129,12 +138,14 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      const Text(
-                        'PDF, JPG, PNG, DOC, DOCX — 10 Mo maximum par fichier',
+                      Text(
+                        tr(
+                          'PDF, JPG, PNG, DOC, DOCX — 10 Mo maximum par fichier',
+                        ),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Color(0xFF6B7280),
+                          color: context.palette.textMuted,
                         ),
                       ),
                     ],
@@ -143,18 +154,26 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Documents ajoutés (${pieces.length}/$maxPiecesJointes)',
-                style: const TextStyle(
+                tr('Documents ajoutés ({n}/{max})', {
+                  'n': pieces.length,
+                  'max': maxPiecesJointes,
+                }),
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
+                  color: context.palette.textStrong,
                 ),
               ),
               const SizedBox(height: 12),
               if (pieces.isEmpty)
-                const Text(
-                  'Aucun document pour le moment. Cette étape est facultative.',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+                Text(
+                  tr(
+                    'Aucun document pour le moment. Cette étape est facultative.',
+                  ),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: context.palette.textSubtle,
+                  ),
                 ),
               ...pieces.map(
                 (p) => Container(
@@ -164,9 +183,9 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.palette.card,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                    border: Border.all(color: context.palette.border),
                   ),
                   child: Row(
                     children: [
@@ -190,19 +209,19 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
                             ),
                             Text(
                               _taille(p.taille),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Color(0xFF6B7280),
+                                color: context.palette.textMuted,
                               ),
                             ),
                           ],
                         ),
                       ),
                       IconButton(
-                        tooltip: 'Retirer',
-                        icon: const Icon(
+                        tooltip: tr('Retirer'),
+                        icon: Icon(
                           Icons.close_rounded,
-                          color: Color(0xFF6B7280),
+                          color: context.palette.textMuted,
                         ),
                         onPressed: () => ref
                             .read(createDossierWizardProvider.notifier)
@@ -218,8 +237,8 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
         ),
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: context.palette.card,
             boxShadow: [
               BoxShadow(
                 color: Color(0x0A000000),
@@ -234,17 +253,17 @@ class _StepPiecesJointesState extends ConsumerState<StepPiecesJointes> {
               children: [
                 Expanded(
                   child: AppButton(
-                    text: 'Retour',
+                    text: tr('Retour'),
                     onPressed: widget.onBack,
                     isOutlined: true,
-                    textColor: const Color(0xFF111827),
-                    color: const Color(0xFFE5E7EB),
+                    textColor: context.palette.textStrong,
+                    color: context.palette.border,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: AppButton(
-                    text: 'Suivant',
+                    text: tr('Suivant'),
                     onPressed: widget.onNext,
                     color: primaryColor,
                   ),

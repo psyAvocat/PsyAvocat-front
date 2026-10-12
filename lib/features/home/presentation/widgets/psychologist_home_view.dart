@@ -6,7 +6,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../contenus/presentation/widgets/popular_publications_section.dart';
 import 'home_action_card.dart';
 import 'home_cards.dart';
-import 'home_top_bar.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Accueil de l'univers Psychologue — maquette « Accueil psychologue ».
 class PsychologistHomeView extends StatelessWidget {
@@ -15,19 +15,18 @@ class PsychologistHomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       // Marge basse : la barre de navigation flotte au-dessus du contenu.
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.s20,
-        AppSpacing.s16,
+        AppSpacing.s8,
         AppSpacing.s20,
         120,
       ),
       children: [
-        const HomeTopBar(),
-        AppSpacing.vGap16,
         // La recherche ouvre l'écran de recherche des psychologues.
         SearchBar(
-          hintText: 'Rechercher un psychologue, une spécialité…',
+          hintText: tr('Rechercher un psychologue, une spécialité…'),
           leading: const Icon(Icons.search_rounded),
           elevation: const WidgetStatePropertyAll(0),
           onTap: () => context.go(AppRoutes.professionnelsRecherche),
@@ -42,8 +41,8 @@ class PsychologistHomeView extends StatelessWidget {
             children: [
               Expanded(
                 child: HomeActionCard(
-                  title: 'Trouver un psychologue',
-                  subtitle: 'Trouvez le professionnel qui vous correspond',
+                  title: tr('Trouver un psychologue'),
+                  subtitle: tr('Trouvez le professionnel qui vous correspond'),
                   highlighted: true,
                   onTap: () => context.go(AppRoutes.professionnels),
                 ),
@@ -51,8 +50,8 @@ class PsychologistHomeView extends StatelessWidget {
               AppSpacing.hGap12,
               Expanded(
                 child: HomeActionCard(
-                  title: 'Consulter les conseils',
-                  subtitle: 'Des conseils d’experts pour mieux vivre',
+                  title: tr('Consulter les conseils'),
+                  subtitle: tr('Des conseils d’experts pour mieux vivre'),
                   onTap: () => context.go(AppRoutes.conseils),
                 ),
               ),
@@ -60,7 +59,7 @@ class PsychologistHomeView extends StatelessWidget {
           ),
         ),
         AppSpacing.vGap24,
-        const AppSectionHeader(title: 'Votre prochain rendez-vous'),
+        AppSectionHeader(title: tr('Votre prochain rendez-vous')),
         AppSpacing.vGap8,
         const NextAppointmentCard(),
         AppSpacing.vGap24,
@@ -85,7 +84,7 @@ class _WellbeingBanner extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => context.push(AppRoutes.orientationIntro),
+          onTap: () => context.push(AppRoutes.orientation),
           child: Stack(
             children: [
               Positioned.fill(
@@ -98,14 +97,16 @@ class _WellbeingBanner extends StatelessWidget {
                   children: [
                     AppSpacing.vGap16,
                     Text(
-                      'Prenez soin\nde votre santé mentale',
+                      tr('Prenez soin\nde votre santé mentale'),
                       style: AppTypography.petitTitre.copyWith(
                         color: scheme.onPrimary,
                       ),
                     ),
                     AppSpacing.vGap8,
                     Text(
-                      'Un accompagnement bienveillant pour avancer sereinement.',
+                      tr(
+                        'Un accompagnement bienveillant pour avancer sereinement.',
+                      ),
                       style: AppTypography.texteSecondaire.copyWith(
                         color: scheme.onPrimary,
                       ),
@@ -121,7 +122,7 @@ class _WellbeingBanner extends StatelessWidget {
                         borderRadius: AppRadii.pill,
                       ),
                       child: Text(
-                        'Faire le test d’orientation',
+                        tr('Faire le test d’orientation'),
                         style: AppTypography.texteSecondaire.copyWith(
                           color: scheme.primary,
                           fontWeight: FontWeight.w700,

@@ -9,12 +9,19 @@ const professionalAccountMessage =
 const deactivatedAccountMessage =
     "Votre compte a été désactivé. Contactez le support PsyAvocat pour plus d'informations.";
 
+/// Message affiché quand un compte n'a pas de profil et que les informations
+/// d'inscription ne sont plus disponibles sur l'appareil.
+const incompleteRegistrationMessage =
+    "Votre inscription n'a pas été finalisée. Inscrivez-vous à nouveau avec "
+    'la même adresse e-mail et le même mot de passe.';
+
 /// Verdict d'accès à l'app mobile, calculé UNIQUEMENT à partir de `GET /me`.
 enum AccessDecision {
   /// Client avec profil métier : accès autorisé.
   authorized,
 
-  /// Compte Firebase sans profil métier : le profil doit être complété.
+  /// Compte Firebase sans profil métier : inscription interrompue, le profil
+  /// est créé avec les informations d'inscription gardées sur l'appareil.
   profileIncomplete,
 
   /// Client dont l'adresse email n'est pas encore confirmée.

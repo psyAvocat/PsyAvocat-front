@@ -6,10 +6,12 @@ import '../../../../core/router/app_routes.dart';
 import '../../../../core/services/app_preferences_service.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../widgets/auto_crossfade_images.dart';
 import '../widgets/onboarding_page.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Onboarding en 2 pages — maquettes « Splash screen psychologue » puis
-/// « Splash screen avocat ». Sur chaque page, deux photos défilent
+/// « Splash screen avocat ». Sur chaque page, les photos de l'univers défilent
 /// automatiquement l'une après l'autre.
 ///
 /// Transition fluide : photos préchargées avant l'affichage (aucun décodage
@@ -29,15 +31,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   static const List<OnboardingContent> _pages = [
     OnboardingContent(
       images: [
-        'assets/images/psychologist_1.jpg',
-        'assets/images/psychologist_2.jpg',
+        'assets/images/psychologist 1.jpg',
+        'assets/images/psychologist 2.jpg',
+        'assets/images/psychologist 3.jpg',
+        'assets/images/psychologist 4.jpg',
       ],
-      titleBefore: 'Bénéficiez d’un soutien\n',
+      titleBefore: 'Bénéficiez\nd’un soutien\n',
       highlight: 'psychologique',
       titleAfter: '\nà votre écoute',
       highlightColor: _violet,
-      subtitle:
-          'Des psychologues vérifiés vous accompagnent pas à pas, à votre rythme.',
+
       points: [
         'Écoute bienveillante',
         'Suivi personnalisé',
@@ -45,13 +48,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ],
     ),
     OnboardingContent(
-      images: ['assets/images/lawyer_1.jpg', 'assets/images/lawyer_2.jpg'],
+      images: [
+        'assets/images/lawyer 1.jpg',
+        'assets/images/lawyer 2.jpg',
+        'assets/images/lawyer 3.jpg',
+        'assets/images/lawyer 4.jpg',
+        'assets/images/lawyer 5.jpg',
+      ],
       titleBefore: 'Trouvez un ',
       highlight: 'avocat',
-      titleAfter: '\npour vous conseiller\net vous accompagner',
+      titleAfter: '\npour vous\nconseiller et vous\naccompagner',
       highlightColor: _bleu,
-      subtitle:
-          'Présentez votre situation et échangez avec des avocats vérifiés.',
+      subtitle: '',
       points: [
         'Avocats vérifiés',
         'Dossier confidentiel',
@@ -69,13 +77,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Décodage des photos avant leur première apparition : pas d'à-coup.
+    // Décodage de la première photo de chaque page avant son apparition :
+    // pas d'à-coup au glissement. Les suivantes sont préchargées au fil du
+    // défilement (AutoCrossfadeImages), sans garder toutes les photos en mémoire.
     if (!_imagesPrechargees) {
       _imagesPrechargees = true;
       for (final page in _pages) {
-        for (final image in page.images) {
-          precacheImage(AssetImage(image), context);
-        }
+        precacheImage(
+          AutoCrossfadeImages.provider(context, page.images.first),
+          context,
+        );
       }
     }
   }
@@ -111,7 +122,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             PageView.builder(
               controller: _pageController,
               itemCount: _pages.length,
-              physics: const BouncingScrollPhysics(),
+              // Pages fixes : on ne passe à la suivante que par le bouton.
+              physics: const NeverScrollableScrollPhysics(),
               onPageChanged: (index) => setState(() => _currentPage = index),
               itemBuilder: (_, index) => AnimatedBuilder(
                 animation: _pageController,
@@ -142,10 +154,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     AppButton(
-                      text: _isLastPage ? 'Commencer' : 'Continuer',
-                      color: _isLastPage
-                          ? AppColors.lawyerSecondary
-                          : AppColors.psychologistLight,
+                      text: _isLastPage ? tr('Commencer') : tr('Continuer'),
+                      // Même bleu sur les deux pages.
+                      color: AppColors.lawyerSecondary,
                       onPressed: _onContinue,
                     ),
                     AppSpacing.vGap20,

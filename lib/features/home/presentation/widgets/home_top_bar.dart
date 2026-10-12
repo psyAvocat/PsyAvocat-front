@@ -7,6 +7,7 @@ import '../../../auth/data/repositories/session_repository.dart';
 import '../../../auth/presentation/controllers/session_controller.dart';
 import '../../../notifications/presentation/controllers/notifications_controller.dart';
 import '../../../profile/presentation/controllers/profil_controller.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Haut de l'accueil (maquettes « Accueil ») : photo de l'utilisateur à gauche,
 /// notifications à droite. Le changement d'univers est dans le profil.
@@ -35,7 +36,7 @@ class HomeTopBar extends ConsumerWidget {
         ),
         const Spacer(),
         IconButton(
-          tooltip: 'Notifications',
+          tooltip: tr('Notifications'),
           onPressed: () => context.push(AppRoutes.notifications),
           icon: Badge(
             isLabelVisible: unreadCount > 0,

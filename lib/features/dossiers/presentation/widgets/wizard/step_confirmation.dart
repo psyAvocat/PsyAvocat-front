@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/widgets/app_button.dart';
 import '../../controllers/create_dossier_wizard_controller.dart';
+import '../../../../../core/theme/app_palette.dart';
+import '../../../../../core/l10n/app_strings.dart';
 
 /// Résultat de l'envoi : n'affiche que ce que le backend a réellement enregistré,
 /// avec le détail d'éventuels échecs partiels.
@@ -27,7 +29,7 @@ class StepConfirmationScreen extends ConsumerWidget {
         if (!didPop) terminer();
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: context.palette.card,
         body: SafeArea(
           child: ListView(
             padding: const EdgeInsets.all(24),
@@ -55,46 +57,51 @@ class StepConfirmationScreen extends ConsumerWidget {
               const SizedBox(height: 28),
               Text(
                 complet
-                    ? 'Votre dossier a été envoyé'
-                    : 'Dossier créé, envoi incomplet',
+                    ? tr('Votre dossier a été envoyé')
+                    : tr('Dossier créé, envoi incomplet'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF111827),
+                  color: context.palette.textStrong,
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 complet
-                    ? 'Les avocats sélectionnés ont été notifiés. Vous serez prévenu dès qu’un avocat '
-                          'accepte votre dossier ; vous pourrez alors prendre rendez-vous depuis « Mes dossiers ».'
-                    : 'Votre dossier « ${resultat?.dossier.titre ?? ''} » est enregistré, mais certains éléments '
-                          'n’ont pas pu être transmis. Vous pouvez réessayer depuis « Mes dossiers ».',
+                    ? tr(
+                        'Les avocats sélectionnés ont été notifiés. Vous serez prévenu dès qu’un avocat '
+                        'accepte votre dossier ; vous pourrez alors prendre rendez-vous depuis « Mes dossiers ».',
+                      )
+                    : tr(
+                        'Votre dossier « {titre} » est enregistré, mais certains éléments '
+                        'n’ont pas pu être transmis. Vous pouvez réessayer depuis « Mes dossiers ».',
+                        {'titre': resultat?.dossier.titre ?? ''},
+                      ),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: Color(0xFF4B5563),
+                  color: context.palette.text,
                   height: 1.5,
                 ),
               ),
               if (resultat != null && resultat.avocatsEnEchec.isNotEmpty) ...[
                 const SizedBox(height: 20),
                 _Liste(
-                  titre: 'Non transmis à',
+                  titre: tr('Non transmis à'),
                   elements: resultat.avocatsEnEchec,
                 ),
               ],
               if (resultat != null && resultat.piecesEnEchec.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 _Liste(
-                  titre: 'Pièces non enregistrées',
+                  titre: tr('Pièces non enregistrées'),
                   elements: resultat.piecesEnEchec,
                 ),
               ],
               const SizedBox(height: 32),
               AppButton(
-                text: 'Voir mes dossiers',
+                text: tr('Voir mes dossiers'),
                 onPressed: terminer,
                 color: primaryColor,
               ),

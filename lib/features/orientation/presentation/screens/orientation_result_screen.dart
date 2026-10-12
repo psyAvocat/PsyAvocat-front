@@ -8,6 +8,7 @@ import '../../../professionnels/presentation/widgets/professionnel_card.dart';
 import '../../data/models/questionnaire_model.dart';
 import '../controllers/orientation_controller.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Résultat d'orientation, tel que calculé par Spring Boot.
 ///
@@ -22,11 +23,11 @@ class OrientationResultScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Votre orientation'),
+        title: Text(tr('Votre orientation')),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            tooltip: "Aller à l'accueil",
+            tooltip: tr("Aller à l'accueil"),
             onPressed: () => context.go(AppRoutes.home),
             icon: const Icon(Icons.close_rounded),
           ),
@@ -34,11 +35,12 @@ class OrientationResultScreen extends ConsumerWidget {
       ),
       body: result == null
           ? AppEmptyStateView(
-              title: 'Aucun résultat',
-              message:
-                  "Répondez au questionnaire pour obtenir votre orientation.",
+              title: tr('Aucun résultat'),
+              message: tr(
+                "Répondez au questionnaire pour obtenir votre orientation.",
+              ),
               icon: Icons.quiz_outlined,
-              actionText: 'Faire le questionnaire',
+              actionText: tr('Faire le questionnaire'),
               onAction: () => context.go(AppRoutes.orientation),
             )
           : _ResultContent(result: result),
@@ -60,24 +62,32 @@ class _ResultContent extends ConsumerWidget {
       children: [
         _MainResultCard(result: result),
         AppSpacing.vGap16,
-        const AppAlertBanner(
-          message:
-              'Ce résultat est une orientation, pas un diagnostic. '
-              'Seul un professionnel peut évaluer votre situation.',
+        AppAlertBanner(
+          message: tr(
+            'Ce résultat est une orientation, pas un diagnostic. '
+            'Seul un professionnel peut évaluer votre situation.',
+          ),
         ),
         if (result.scoresParCategorie.isNotEmpty) ...[
           AppSpacing.vGap32,
-          const AppSectionHeader(title: 'Détail par besoin'),
+          AppSectionHeader(title: tr('Détail par besoin')),
           AppSpacing.vGap12,
           _CategoryScores(scores: result.scoresParCategorie),
         ],
         AppSpacing.vGap32,
-        const AppSectionHeader(title: 'Professionnels recommandés'),
+        AppSectionHeader(title: tr('Professionnels recommandés')),
         AppSpacing.vGap12,
         if (result.professionnelsRecommandes.isEmpty)
           Text(
-            'Aucun professionnel ne correspond encore à cette orientation. '
-            'Consultez la liste complète des ${universe.professionalsLabel.toLowerCase()}.',
+            universe.isLawyer
+                ? tr(
+                    'Aucun professionnel ne correspond encore à cette orientation. '
+                    'Consultez la liste complète des avocats.',
+                  )
+                : tr(
+                    'Aucun professionnel ne correspond encore à cette orientation. '
+                    'Consultez la liste complète des psychologues.',
+                  ),
             style: AppTypography.texteSecondaire,
           )
         else
@@ -91,13 +101,15 @@ class _ResultContent extends ConsumerWidget {
             ),
         AppSpacing.vGap24,
         AppButton(
-          text: 'Voir les ${universe.professionalsLabel.toLowerCase()}',
+          text: universe.isLawyer
+              ? tr('Voir les avocats')
+              : tr('Voir les psychologues'),
           onPressed: () => context.go(AppRoutes.professionnels),
         ),
         AppSpacing.vGap12,
         Center(
           child: AppButton.ghost(
-            text: "Aller à l'accueil",
+            text: tr("Aller à l'accueil"),
             onPressed: () => context.go(AppRoutes.home),
           ),
         ),
@@ -132,14 +144,14 @@ class _MainResultCard extends StatelessWidget {
             ),
             AppSpacing.vGap12,
             Text(
-              'Nous vous orientons vers',
+              tr('Nous vous orientons vers'),
               style: AppTypography.texteSecondaire.copyWith(
                 color: scheme.onPrimaryContainer,
               ),
             ),
             AppSpacing.vGap4,
             Text(
-              result.mainLabel ?? 'Un accompagnement adapté',
+              result.mainLabel ?? tr('Un accompagnement adapté'),
               style: AppTypography.titreMoyen.copyWith(
                 color: scheme.onPrimaryContainer,
               ),

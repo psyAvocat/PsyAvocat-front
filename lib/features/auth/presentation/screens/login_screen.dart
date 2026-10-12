@@ -8,6 +8,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/session_controller.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Écran de connexion — interface fixe, stable et réactive.
 ///
@@ -61,22 +62,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     ref.listen<SessionState>(sessionControllerProvider, (previous, next) {
-      // Succès confirmé seulement quand le backend a validé le compte (GET /me).
-      if (next.isAuthorized && previous?.isAuthorized != true) {
-        AppNotification.showSuccess(context, 'Connexion réussie');
+      // Déconnexion expliquée (inscription à refaire…) : message affiché ici.
+      if (next.status == SessionStatus.unauthenticated &&
+          next.message != null &&
+          previous?.message != next.message) {
+        AppNotification.showError(context, tr(next.message!));
       }
       // Serveur injoignable pendant la vérification du compte : message clair.
       if (next.status == SessionStatus.error &&
           previous?.status != SessionStatus.error) {
         AppNotification.showError(
           context,
-          next.message ?? 'Connexion au serveur impossible. Réessayez.',
+          next.message ?? tr('Connexion au serveur impossible. Réessayez.'),
         );
       }
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.palette.card,
       resizeToAvoidBottomInset: true,
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -100,14 +103,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             children: [
                               AppSpacing.vGap24,
                               Text(
-                                'Connexion',
+                                tr('Connexion'),
                                 style: AppTypography.grandTitre,
                               ),
                               AppSpacing.vGap16,
                               AppTextField(
                                 controller: _emailController,
-                                label: 'Email',
-                                hint: 'Ex: ramla@gmail.com',
+                                label: tr('Email'),
+                                hint: tr('Ex: ramla@gmail.com'),
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
                                 validator: Validators.email,
@@ -115,7 +118,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               AppSpacing.vGap20,
                               AppTextField(
                                 controller: _passwordController,
-                                label: 'Mot de passe',
+                                label: tr('Mot de passe'),
                                 hint: '••••••••',
                                 obscureText: true,
                                 textInputAction: TextInputAction.done,
@@ -125,8 +128,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: AppButton.ghost(
-                                  text: 'Mot de passe oublié ?',
-                                  color: AppColors.lawyer,
+                                  text: tr('Mot de passe oublié ?'),
+                                  color: context.colors.primary,
                                   size: AppButtonSize.compact,
                                   onPressed: () =>
                                       context.push(AppRoutes.forgotPassword),
@@ -134,7 +137,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               AppSpacing.vGap8,
                               AppButton(
-                                text: 'Se connecter',
+                                text: tr('Se connecter'),
                                 color: AppColors.lawyer,
                                 isLoading: isLoading,
                                 onPressed: _submit,
@@ -142,8 +145,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               const Spacer(),
                               AppSpacing.vGap24,
                               AppInlineLink(
-                                text: 'Pas encore de compte ?',
-                                linkText: "S'inscrire",
+                                text: tr('Pas encore de compte ?'),
+                                linkText: tr("S'inscrire"),
                                 onTap: () => context.push(AppRoutes.register),
                               ),
                               AppSpacing.vGap24,

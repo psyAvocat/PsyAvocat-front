@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/l10n/app_strings.dart';
 
 /// Petits points indiquant la page courante d'un carrousel.
 ///
@@ -18,7 +19,7 @@ class AppPageDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Page ${activeIndex + 1} sur $count',
+      label: tr('Page {n} sur {total}', {'n': activeIndex + 1, 'total': count}),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

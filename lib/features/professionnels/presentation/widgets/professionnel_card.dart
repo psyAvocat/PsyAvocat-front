@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../data/models/professionnel_summary.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Ligne d'un professionnel — maquettes « Avocats » et « Psychologues » :
 /// photo ronde, nom, spécialité, mode de consultation, ville.
@@ -55,7 +56,7 @@ class ProfessionnelCard extends StatelessWidget {
                       // Information réelle du backend (`enLigne`).
                       if (pro.enLigne) ...[
                         AppSpacing.hGap8,
-                        const AppBadge.success(label: 'En ligne'),
+                        AppBadge.success(label: tr('En ligne')),
                       ],
                     ],
                   ),
@@ -90,7 +91,10 @@ class ProfessionnelCard extends StatelessWidget {
                         ),
                         AppSpacing.hGap4,
                         Text(
-                          '${pro.noteMoyenne!.toStringAsFixed(1)} (${pro.nombreAvis} avis)',
+                          tr('{note} ({n} avis)', {
+                            'note': pro.noteMoyenne!.toStringAsFixed(1),
+                            'n': pro.nombreAvis,
+                          }),
                           style: AppTypography.miniTexte,
                         ),
                       ],

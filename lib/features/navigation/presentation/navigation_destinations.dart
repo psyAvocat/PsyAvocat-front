@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_universe.dart';
 import '../../../core/widgets/navigation/psyavocat_navigation_bar.dart';
+import '../../../core/l10n/app_strings.dart';
 
 /// Onglets de la barre de navigation selon l'univers.
 ///
@@ -11,44 +12,44 @@ List<NavDestination> navigationDestinationsFor(AppUniverse universe) {
   final isPsychologist = universe.isPsychologist;
 
   return [
-    const NavDestination(
+    NavDestination(
       icon: Icons.home_outlined,
       selectedIcon: Icons.home_rounded,
-      label: 'Accueil',
+      label: tr('Accueil'),
     ),
     isPsychologist
-        ? const NavDestination(
+        ? NavDestination(
             icon: Icons.lightbulb_outline_rounded,
             selectedIcon: Icons.lightbulb_rounded,
-            label: 'Conseils',
+            label: tr('Conseils'),
           )
-        : const NavDestination(
+        : NavDestination(
             icon: Icons.menu_book_outlined,
             selectedIcon: Icons.menu_book_rounded,
-            label: 'Articles',
+            label: tr('Articles'),
           ),
     isPsychologist
-        ? const NavDestination(
+        ? NavDestination(
             icon: Icons.psychology_rounded,
             selectedIcon: Icons.psychology_rounded,
-            label: 'Psychologues',
+            label: tr('Psychologues'),
             isCentral: true,
           )
-        : const NavDestination(
+        : NavDestination(
             icon: Icons.gavel_rounded,
             selectedIcon: Icons.gavel_rounded,
-            label: 'Avocats',
+            label: tr('Avocats'),
             isCentral: true,
           ),
-    const NavDestination(
+    NavDestination(
       icon: Icons.calendar_month_outlined,
       selectedIcon: Icons.calendar_month_rounded,
-      label: 'Rendez-vous',
+      label: tr('Rendez-vous'),
     ),
-    const NavDestination(
+    NavDestination(
       icon: Icons.person_outline_rounded,
       selectedIcon: Icons.person_rounded,
-      label: 'Profil',
+      label: tr('Profil'),
     ),
   ];
 }

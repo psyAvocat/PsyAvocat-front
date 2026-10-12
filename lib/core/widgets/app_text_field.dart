@@ -82,7 +82,7 @@ class _AppTextFieldState extends State<AppTextField> {
           _obscureText
               ? Icons.visibility_outlined
               : Icons.visibility_off_outlined,
-          color: AppColors.formHint,
+          color: context.palette.textSubtle,
           size: AppIcons.sizeMd,
         ),
         splashRadius: 20,
@@ -102,8 +102,8 @@ class _AppTextFieldState extends State<AppTextField> {
           widget.label,
           style: AppTypography.labelInput.copyWith(
             color: widget.enabled
-                ? AppColors.formLabel
-                : AppColors.textTertiary,
+                ? context.palette.text
+                : context.palette.textSubtle,
           ),
         ),
         AppSpacing.vGap8,
@@ -123,8 +123,8 @@ class _AppTextFieldState extends State<AppTextField> {
           inputFormatters: widget.inputFormatters,
           style: AppTypography.texte.copyWith(
             color: widget.enabled
-                ? AppColors.textPrimary
-                : AppColors.textTertiary,
+                ? context.palette.textStrong
+                : context.palette.textSubtle,
           ),
           decoration: InputDecoration(
             hintText: widget.hint,
@@ -133,11 +133,13 @@ class _AppTextFieldState extends State<AppTextField> {
             errorStyle: AppTypography.miniTexte.copyWith(
               color: AppColors.danger,
             ),
-            hintStyle: AppTypography.texte.copyWith(color: AppColors.formHint),
+            hintStyle: AppTypography.texte.copyWith(
+              color: context.palette.textSubtle,
+            ),
             filled: true,
             fillColor: widget.enabled
-                ? AppColors.neutralSurface
-                : AppColors.neutralSurfaceSecondary,
+                ? context.palette.card
+                : context.palette.muted,
             contentPadding: AppSpacing.inputPadding,
             prefixIcon: widget.prefixIcon != null
                 ? Padding(
@@ -159,13 +161,13 @@ class _AppTextFieldState extends State<AppTextField> {
               minWidth: 44,
               minHeight: 44,
             ),
-            border: const OutlineInputBorder(
+            border: OutlineInputBorder(
               borderRadius: AppRadii.r14,
-              borderSide: BorderSide(color: AppColors.formBorder, width: 1),
+              borderSide: BorderSide(color: context.palette.border, width: 1),
             ),
-            enabledBorder: const OutlineInputBorder(
+            enabledBorder: OutlineInputBorder(
               borderRadius: AppRadii.r14,
-              borderSide: BorderSide(color: AppColors.formBorder, width: 1),
+              borderSide: BorderSide(color: context.palette.border, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: AppRadii.r14,
@@ -179,9 +181,9 @@ class _AppTextFieldState extends State<AppTextField> {
               borderRadius: AppRadii.r14,
               borderSide: BorderSide(color: AppColors.danger, width: 1.8),
             ),
-            disabledBorder: const OutlineInputBorder(
+            disabledBorder: OutlineInputBorder(
               borderRadius: AppRadii.r14,
-              borderSide: BorderSide(color: AppColors.borderSubtle, width: 1),
+              borderSide: BorderSide(color: context.palette.border, width: 1),
             ),
           ),
         ),

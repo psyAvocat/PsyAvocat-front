@@ -12,6 +12,7 @@ import '../../data/models/contenu_model.dart';
 import '../../data/repositories/contenus_repository.dart';
 import '../controllers/contenus_controller.dart';
 import '../widgets/publication_cards.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Onglet « Articles » (univers Avocat) ou « Conseils » (univers Psychologue) —
 /// maquettes « Articles » et « Conseils ».
@@ -65,7 +66,7 @@ class _ContenusScreenState extends ConsumerState<ContenusScreen> {
           title: Text(label),
           actions: [
             IconButton(
-              tooltip: 'Notifications',
+              tooltip: tr('Notifications'),
               onPressed: () => context.push(AppRoutes.notifications),
               icon: Badge(
                 isLabelVisible: unreadCount > 0,
@@ -81,9 +82,9 @@ class _ContenusScreenState extends ConsumerState<ContenusScreen> {
                   ? PublicationSort.populaire
                   : PublicationSort.recent,
             ),
-            tabs: const [
-              Tab(text: 'Populaires'),
-              Tab(text: 'Récents'),
+            tabs: [
+              Tab(text: tr('Populaires')),
+              Tab(text: tr('Récents')),
             ],
           ),
         ),
@@ -98,8 +99,8 @@ class _ContenusScreenState extends ConsumerState<ContenusScreen> {
               ),
               child: SearchBar(
                 hintText: universe.isLawyer
-                    ? 'Rechercher un article…'
-                    : 'Rechercher un conseil…',
+                    ? tr('Rechercher un article…')
+                    : tr('Rechercher un conseil…'),
                 leading: const Icon(Icons.search_rounded),
                 elevation: const WidgetStatePropertyAll(0),
                 onChanged: _onSearchChanged,
@@ -116,13 +117,19 @@ class _ContenusScreenState extends ConsumerState<ContenusScreen> {
                 value: publications,
                 isEmpty: (list) => list.isEmpty,
                 emptyTitle: _hasFilters
-                    ? 'Aucun résultat'
+                    ? tr('Aucun résultat')
                     : (universe.isLawyer
-                          ? 'Aucun article publié'
-                          : 'Aucun conseil publié'),
+                          ? tr('Aucun article publié')
+                          : tr('Aucun conseil publié')),
                 emptyMessage: _hasFilters
-                    ? 'Modifiez votre recherche ou la catégorie.'
-                    : 'Les ${label.toLowerCase()} publiés par nos professionnels apparaîtront ici.',
+                    ? tr('Modifiez votre recherche ou la catégorie.')
+                    : (universe.isLawyer
+                          ? tr(
+                              'Les articles publiés par nos professionnels apparaîtront ici.',
+                            )
+                          : tr(
+                              'Les conseils publiés par nos professionnels apparaîtront ici.',
+                            )),
                 emptyIcon: universe.isLawyer
                     ? Icons.menu_book_outlined
                     : Icons.lightbulb_outline_rounded,

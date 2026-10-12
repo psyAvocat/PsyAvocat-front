@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
+import 'app_palette.dart';
 import 'app_typography.dart';
 import 'app_radii.dart';
 import 'app_spacing.dart';
@@ -158,14 +159,15 @@ class AppTheme {
     }
   }
 
-  /// Variantes sombres : couleurs d'univers éclaircies pour rester lisibles
-  /// sur fond sombre (contraste AA), surfaces neutres sombres communes.
+  /// Variantes sombres : couleurs d'univers éclaircies jusqu'à un ton
+  /// intermédiaire, lisible en texte sur fond sombre (≈ 4,8:1) comme en fond
+  /// sous un texte blanc (≈ 3,5:1) ; surfaces neutres sombres communes.
   static ColorScheme _darkSchemeFor(AppUniverse universe) {
     switch (universe) {
       case AppUniverse.psychologist:
         return _darkBaseScheme.copyWith(
-          primary: const Color(0xFFCDB2F7),
-          onPrimary: AppColors.psychologistDark,
+          primary: const Color(0xFF9B72E6),
+          onPrimary: Colors.white,
           primaryContainer: AppColors.psychologist,
           onPrimaryContainer: AppColors.psychologistSurfaceSelected,
           secondary: AppColors.psychologistAccent,
@@ -175,8 +177,8 @@ class AppTheme {
         );
       case AppUniverse.lawyer:
         return _darkBaseScheme.copyWith(
-          primary: const Color(0xFFA9C2F5),
-          onPrimary: AppColors.lawyerDark,
+          primary: const Color(0xFF4F86F0),
+          onPrimary: Colors.white,
           primaryContainer: AppColors.lawyerLight,
           onPrimaryContainer: AppColors.lawyerSurfaceSelected,
           secondary: AppColors.lawyerAccent,
@@ -186,8 +188,8 @@ class AppTheme {
         );
       case AppUniverse.neutral:
         return _darkBaseScheme.copyWith(
-          primary: const Color(0xFFC9B0F5),
-          onPrimary: AppColors.psychologistDark,
+          primary: const Color(0xFF4F86F0),
+          onPrimary: Colors.white,
           primaryContainer: AppColors.brandPurple,
           onPrimaryContainer: AppColors.psychologistSurfaceSelected,
           secondary: AppColors.lawyerAccent,
@@ -261,6 +263,7 @@ class AppTheme {
       scaffoldBackgroundColor: scheme.surfaceContainerLow,
       extensions: [
         AppUniverseColors.fromUniverse(universe, brightness: brightness),
+        brightness == Brightness.dark ? AppPalette.dark : AppPalette.light,
       ],
       textTheme: textTheme,
 

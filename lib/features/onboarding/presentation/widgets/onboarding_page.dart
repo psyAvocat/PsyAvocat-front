@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_system.dart';
 import 'auto_crossfade_images.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Contenu d'une page d'onboarding.
 class OnboardingContent {
@@ -12,7 +13,8 @@ class OnboardingContent {
   final String titleAfter;
   final Color highlightColor;
 
-  final String subtitle;
+  /// Facultatif : absent ou vide, rien n'est affiché sous le titre.
+  final String? subtitle;
   final List<String> points;
 
   const OnboardingContent({
@@ -21,7 +23,7 @@ class OnboardingContent {
     required this.highlight,
     required this.titleAfter,
     required this.highlightColor,
-    required this.subtitle,
+    this.subtitle,
     required this.points,
   });
 }
@@ -43,11 +45,14 @@ class OnboardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    // Grand titre proportionnel à la largeur : ~37 px sur un téléphone de
+    // 393 pt, sans que la plus longue ligne (« Trouvez un avocat ») ne déborde.
     final white = AppTypography.grandTitre.copyWith(
       color: AppColors.textOnColor,
-      height: 1.2,
+      fontSize: (width * 0.095).clamp(32.0, 40.0),
+      height: 1.15,
     );
-    final width = MediaQuery.sizeOf(context).width;
     final visibilite = (1 - pageOffset.abs()).clamp(0.0, 1.0);
 
     return Stack(
@@ -81,10 +86,11 @@ class OnboardingPage extends StatelessWidget {
             child: LayoutBuilder(
               builder: (context, constraints) => SingleChildScrollView(
                 physics: const NeverScrollableScrollPhysics(),
+                // Même marge que le bouton : textes et bouton alignés à gauche.
                 padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.s32,
+                  AppSpacing.s24,
                   0,
-                  AppSpacing.s32,
+                  AppSpacing.s24,
                   _bottomControlsHeight,
                 ),
                 child: ConstrainedBox(
@@ -96,26 +102,30 @@ class OnboardingPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text.rich(
+                        textAlign: TextAlign.left,
                         TextSpan(
                           style: white,
                           children: [
-                            TextSpan(text: content.titleBefore),
+                            TextSpan(text: tr(content.titleBefore)),
                             TextSpan(
-                              text: content.highlight,
+                              text: tr(content.highlight),
                               style: TextStyle(color: content.highlightColor),
                             ),
-                            TextSpan(text: content.titleAfter),
+                            TextSpan(text: tr(content.titleAfter)),
                           ],
                         ),
                       ),
-                      AppSpacing.vGap12,
-                      Text(
-                        content.subtitle,
-                        style: AppTypography.texte.copyWith(
-                          color: AppColors.onboardingTextMuted,
-                          height: 1.45,
+                      if (content.subtitle?.isNotEmpty ?? false) ...[
+                        AppSpacing.vGap16,
+                        Text(
+                          tr(content.subtitle!),
+                          textAlign: TextAlign.left,
+                          style: AppTypography.texte.copyWith(
+                            color: AppColors.onboardingTextMuted,
+                            height: 1.45,
+                          ),
                         ),
-                      ),
+                      ],
                       AppSpacing.vGap20,
                       for (final point in content.points)
                         Padding(
@@ -135,7 +145,7 @@ class OnboardingPage extends StatelessWidget {
                               AppSpacing.hGap12,
                               Expanded(
                                 child: Text(
-                                  point,
+                                  tr(point),
                                   style: AppTypography.texte.copyWith(
                                     color: AppColors.textOnColor,
                                   ),

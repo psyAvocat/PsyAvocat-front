@@ -3,13 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/controllers/session_controller.dart';
 import '../../features/auth/presentation/screens/access_denied_screen.dart';
-import '../../features/auth/presentation/screens/complete_profile_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/verify_email_screen.dart';
 import '../../features/contenus/presentation/screens/contenu_detail_screen.dart';
 import '../../features/contenus/presentation/screens/contenus_screen.dart';
+import '../../features/contenus/presentation/screens/professionnel_publications_screen.dart';
+import '../../features/dossiers/presentation/screens/dossier_detail_screen.dart';
 import '../../features/dossiers/presentation/screens/dossiers_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/messagerie/presentation/screens/conversation_detail_screen.dart';
@@ -25,7 +26,11 @@ import '../../features/paiements/presentation/screens/paiements_screen.dart';
 import '../../features/professionnels/presentation/screens/professionnel_detail_screen.dart';
 import '../../features/professionnels/presentation/screens/professionnels_list_screen.dart';
 import '../../features/professionnels/presentation/screens/recherche_screen.dart';
+import '../../features/profile/presentation/screens/fiche_patient_screen.dart';
+import '../../features/profile/presentation/screens/help_support_screen.dart';
+import '../../features/profile/presentation/screens/personal_info_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/profile/presentation/screens/settings_screen.dart';
 import '../../features/rendez_vous/data/models/reservation_contexte.dart';
 import '../../features/rendez_vous/presentation/screens/choix_creneau_screen.dart';
 import '../../features/rendez_vous/presentation/screens/rendez_vous_confirmation_screen.dart';
@@ -37,6 +42,7 @@ import '../widgets/app_button.dart';
 import 'app_routes.dart';
 import 'route_guard.dart';
 import 'startup_splash.dart';
+import '../../core/l10n/app_strings.dart';
 
 /// Configuration GoRouter de l'application PsyAvocat.
 ///
@@ -82,10 +88,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const ForgotPasswordScreen(),
       ),
       _fadeRoute(AppRoutes.accessDenied, (_) => const AccessDeniedScreen()),
-      _fadeRoute(
-        AppRoutes.completeProfile,
-        (_) => const CompleteProfileScreen(),
-      ),
       _fadeRoute(AppRoutes.verifyEmail, (_) => const VerifyEmailScreen()),
       _fadeRoute(
         AppRoutes.universeSelection,
@@ -169,6 +171,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.dossiers,
         builder: (_, _) => const DossiersScreen(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (context, state) =>
+                DossierDetailScreen(dossierId: state.pathParameters['id']!),
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.messagerie,
@@ -182,6 +191,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             conversationId: state.pathParameters['id']!,
             participantName: extra['name'] as String? ?? 'Discussion',
             participantRole: extra['role'] as String? ?? 'AVOCAT',
+            participantPhotoUrl: extra['photoUrl'] as String?,
           );
         },
       ),
@@ -189,6 +199,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '${AppRoutes.professionnels}/:id',
         builder: (context, state) => ProfessionnelDetailScreen(
           professionnelId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '${AppRoutes.professionnels}/:id/publications',
+        builder: (context, state) => ProfessionnelPublicationsScreen(
+          professionnelId: state.pathParameters['id']!,
+          professionnelNom: state.extra is String
+              ? state.extra as String
+              : null,
         ),
       ),
       GoRoute(
@@ -220,6 +239,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.paiements,
         builder: (_, _) => const PaiementsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.informationsPersonnelles,
+        builder: (_, _) => const PersonalInfoScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.parametres,
+        builder: (_, _) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.aideSupport,
+        builder: (_, _) => const HelpSupportScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.fichePatient,
+        builder: (_, _) => const FichePatientScreen(),
       ),
     ],
   );
@@ -266,10 +301,10 @@ class _NotFoundScreen extends StatelessWidget {
             children: [
               const Icon(Icons.explore_off_outlined, size: 56),
               const SizedBox(height: 16),
-              const Text('Page introuvable', textAlign: TextAlign.center),
+              Text(tr('Page introuvable'), textAlign: TextAlign.center),
               const SizedBox(height: 24),
               AppButton(
-                text: "Retour à l'accueil",
+                text: tr("Retour à l'accueil"),
                 onPressed: () => context.go(AppRoutes.home),
               ),
             ],

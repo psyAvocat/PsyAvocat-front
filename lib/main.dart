@@ -2,9 +2,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/config/app_config.dart';
+import 'core/l10n/app_strings.dart';
+import 'core/settings/app_settings.dart';
 import 'core/network/api_logger_interceptor.dart';
 import 'core/services/app_preferences_service.dart';
 import 'core/services/firebase_messaging_service.dart';
@@ -33,6 +37,12 @@ void main() async {
   // Initialisation des préférences locales
   final sharedPreferences = await SharedPreferences.getInstance();
 
+  // Noms des mois et des jours (DateFormat) : sans cette initialisation,
+  // `DateFormat('MMM')` lève une LocaleDataException dès qu'un rendez-vous
+  // s'affiche (accueil « Prochain rendez-vous », page Rendez-vous).
+  await initializeDateFormatting();
+  setAppLanguage(AppPreferencesService(sharedPreferences).language());
+
   // Enregistrement du handler d'arrière-plan FCM sur mobile
   if (!kIsWeb) {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -58,12 +68,25 @@ class PsyAvocatApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final universe = ref.watch(currentUniverseProvider);
+    final settings = ref.watch(appSettingsProvider);
+
+    // Changement de langue : tous les écrans relisent leurs textes.
+    ref.listen(appSettingsProvider.select((s) => s.locale), (_, _) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) rebuildAllChildren(context);
+      });
+    });
 
     return MaterialApp.router(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: AppNotification.messengerKey,
       theme: AppTheme.buildTheme(universe),
+      darkTheme: AppTheme.buildTheme(universe, brightness: Brightness.dark),
+      themeMode: settings.themeMode,
+      locale: settings.locale,
+      supportedLocales: supportedAppLocales,
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       routerConfig: router,
     );
   }

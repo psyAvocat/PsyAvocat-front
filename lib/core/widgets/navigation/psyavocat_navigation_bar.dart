@@ -1,9 +1,10 @@
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
+
 import 'nav_bar_painter.dart';
 import 'nav_destination.dart';
+import '../../../core/theme/app_palette.dart';
 
 export 'nav_destination.dart';
 
@@ -192,8 +193,8 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = selection;
-    final iconColor = Color.lerp(AppColors.textTertiary, Colors.white, s)!;
-    final labelColor = Color.lerp(AppColors.textTertiary, primary, s)!;
+    final iconColor = Color.lerp(context.palette.textSubtle, Colors.white, s)!;
+    final labelColor = Color.lerp(context.palette.textSubtle, primary, s)!;
     // Repos : icône posée dans la barre. Actif : centre du rond au-dessus du bord.
     final restingTop = lift + 12;
     final activeTop = 0.0;

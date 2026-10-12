@@ -52,9 +52,9 @@ class AppConfig {
   static String get meUrl => '$serverBaseUrl/me';
 
   /// Délais d'expiration des requêtes HTTP
-  static const Duration connectTimeout = Duration(seconds: 20);
-  static const Duration receiveTimeout = Duration(seconds: 30);
-  static const Duration sendTimeout = Duration(seconds: 30);
+  static const Duration connectTimeout = Duration(seconds: 40);
+  static const Duration receiveTimeout = Duration(seconds: 60);
+  static const Duration sendTimeout = Duration(seconds: 60);
 
   /// Clé publique VAPID (Web Push Certificate) pour Firebase Cloud Messaging sur le Web.
   /// Générée sur Firebase Console > Paramètres du projet > Cloud Messaging > Certificats Web Push.

@@ -12,6 +12,7 @@ import '../../data/models/contenu_model.dart';
 import '../controllers/contenus_controller.dart';
 import '../widgets/publication_image.dart';
 import '../widgets/publication_meta.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Détail d'un article ou d'un conseil — maquettes « Article » et « Conseil ».
 ///
@@ -41,10 +42,10 @@ class ContenuDetailScreen extends ConsumerWidget {
         appBar: AppBar(),
         body: error is NotFoundException
             ? AppEmptyStateView(
-                title: "Cette ressource n'est plus disponible",
-                message: "Elle a été retirée par son auteur.",
+                title: tr("Cette ressource n'est plus disponible"),
+                message: tr("Elle a été retirée par son auteur."),
                 icon: Icons.link_off_rounded,
-                actionText: 'Retour',
+                actionText: tr('Retour'),
                 onAction: () => _leave(context),
               )
             : AppErrorStateView(
@@ -61,12 +62,16 @@ class ContenuDetailScreen extends ConsumerWidget {
           return Scaffold(
             appBar: AppBar(),
             body: AppEmptyStateView(
-              title: 'Publication d’un autre univers',
+              title: tr('Publication d’un autre univers'),
               message: publication.isArticle
-                  ? 'Cet article appartient à l’univers Avocat. Changez d’univers pour le lire.'
-                  : 'Ce conseil appartient à l’univers Psychologue. Changez d’univers pour le lire.',
+                  ? tr(
+                      'Cet article appartient à l’univers Avocat. Changez d’univers pour le lire.',
+                    )
+                  : tr(
+                      'Ce conseil appartient à l’univers Psychologue. Changez d’univers pour le lire.',
+                    ),
               icon: Icons.swap_horiz_rounded,
-              actionText: 'Retour',
+              actionText: tr('Retour'),
               onAction: () => _leave(context),
             ),
           );
@@ -119,7 +124,9 @@ class _ArticleView extends StatelessWidget {
                 AppSpacing.vGap12,
                 if (pub.datePublication != null)
                   Text(
-                    'Publié le ${Formatters.formatLongDate(pub.datePublication)}',
+                    tr('Publié le {date}', {
+                      'date': Formatters.formatLongDate(pub.datePublication),
+                    }),
                     style: AppTypography.texteSecondaire,
                   ),
                 if (pub.auteurDisplayName != null)
@@ -127,7 +134,7 @@ class _ArticleView extends StatelessWidget {
                     TextSpan(
                       style: AppTypography.texteSecondaire,
                       children: [
-                        const TextSpan(text: 'par '),
+                        TextSpan(text: tr('par ')),
                         TextSpan(
                           text: pub.auteurDisplayName,
                           style: TextStyle(
@@ -151,7 +158,7 @@ class _ArticleView extends StatelessWidget {
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.all(AppSpacing.s16),
-        child: AppButton(text: 'Quitter', onPressed: onQuit),
+        child: AppButton(text: tr('Quitter'), onPressed: onQuit),
       ),
     );
   }
@@ -173,11 +180,11 @@ class _ConseilView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          tooltip: 'Retour',
+          tooltip: tr('Retour'),
           onPressed: onBack,
           icon: const Icon(Icons.chevron_left_rounded),
         ),
-        title: Text('Conseil', style: TextStyle(color: scheme.primary)),
+        title: Text(tr('Conseil'), style: TextStyle(color: scheme.primary)),
       ),
       body: ListView(
         padding: AppSpacing.screenPadding,
@@ -202,7 +209,7 @@ class _ConseilView extends StatelessWidget {
                 AppSpacing.hGap8,
                 Expanded(
                   child: Text(
-                    'Par ${pub.auteurDisplayName}',
+                    tr('Par {auteur}', {'auteur': pub.auteurDisplayName}),
                     style: AppTypography.texteSecondaire,
                   ),
                 ),

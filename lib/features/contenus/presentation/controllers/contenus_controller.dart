@@ -39,6 +39,19 @@ final publicationsProvider = FutureProvider.autoDispose
           );
     });
 
+/// Publications d'un professionnel (bouton « Voir les articles » de sa fiche),
+/// dans le type de l'univers courant.
+final professionnelPublicationsProvider = FutureProvider.autoDispose
+    .family<List<Publication>, String>((ref, auteurId) {
+      final universe = ref.watch(currentUniverseProvider);
+      listenRealtime(ref, {
+        RealtimeEventType.contenuMisAJour,
+      }, (_) => ref.invalidateSelf());
+      return ref
+          .read(contenusRepositoryProvider)
+          .rechercher(type: publicationTypeFor(universe), auteurId: auteurId);
+    });
+
 /// Publications populaires affichées sur l'accueil.
 final popularPublicationsProvider =
     FutureProvider.autoDispose<List<Publication>>((ref) async {
