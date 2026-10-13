@@ -61,7 +61,7 @@ class AppCard extends StatelessWidget {
        backgroundColor = null,
        borderColor = null;
 
-  /// Constructeur de commodité pour carte en dégradé d'univers (transition #0C2659 → #45088E)
+  /// Constructeur de commodité pour carte en dégradé d'univers (transition #0C2659 → #522578)
   const AppCard.gradient({
     super.key,
     required this.child,
@@ -89,18 +89,18 @@ class AppCard extends StatelessWidget {
 
     switch (variant) {
       case AppCardVariant.elevated:
-        effectiveBgColor = backgroundColor ?? AppColors.neutralSurface;
+        effectiveBgColor = backgroundColor ?? context.palette.card;
         effectiveBorder = Border.all(
-          color: borderColor ?? AppColors.border,
+          color: borderColor ?? context.palette.border,
           width: 1,
         );
         effectiveShadows = AppShadows.card;
         break;
 
       case AppCardVariant.outlined:
-        effectiveBgColor = backgroundColor ?? AppColors.neutralSurface;
+        effectiveBgColor = backgroundColor ?? context.palette.card;
         effectiveBorder = Border.all(
-          color: borderColor ?? AppColors.border,
+          color: borderColor ?? context.palette.border,
           width: 1,
         );
         if (hasShadow) effectiveShadows = AppShadows.subtle;

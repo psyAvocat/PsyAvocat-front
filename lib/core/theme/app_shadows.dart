@@ -50,11 +50,6 @@ class AppShadows {
     ];
   }
 
-  /// Ombre violette des boutons en dégradé (Figma : #632CB5 à 25 %, flou 16, y 8)
-  static const List<BoxShadow> brandButton = [
-    BoxShadow(color: Color(0x40632CB5), blurRadius: 16, offset: Offset(0, 8)),
-  ];
-
   /// Ombre colorée des grandes cartes d'univers (Figma : flou 24, y 12)
   static List<BoxShadow> universeCard(Color color) {
     return [

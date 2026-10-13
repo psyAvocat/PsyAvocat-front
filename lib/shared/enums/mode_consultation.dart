@@ -1,3 +1,5 @@
+import '../../core/l10n/app_strings.dart';
+
 /// Modes de consultation proposés par les professionnels.
 enum ModeConsultation {
   cabinet('CABINET', 'En cabinet'),
@@ -5,14 +7,10 @@ enum ModeConsultation {
   domicile('DOMICILE', 'À domicile');
 
   final String code;
-  final String label;
+  final String _label;
 
-  const ModeConsultation(this.code, this.label);
+  const ModeConsultation(this.code, this._label);
 
-  static ModeConsultation fromCode(String? code) {
-    return ModeConsultation.values.firstWhere(
-      (m) => m.code == code,
-      orElse: () => ModeConsultation.visio,
-    );
-  }
+  /// Libellé dans la langue de l'interface.
+  String get label => tr(_label);
 }

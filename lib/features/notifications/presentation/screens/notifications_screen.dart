@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/universe_provider.dart';
 import '../../data/models/notification_model.dart';
 import '../controllers/notifications_controller.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/theme/app_palette.dart';
+import '../../../../core/l10n/app_strings.dart';
+import '../../../../core/utils/formatters.dart';
 
 /// Centre de notifications PsyAvocat — liste des rappels, alertes et messages récents.
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
@@ -31,22 +35,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final universe = ref.watch(currentUniverseProvider);
-    final primaryColor = universe.primaryColor;
+    final primaryColor = Theme.of(context).colorScheme.primary;
     final notifsAsync = ref.watch(notificationsListProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFC),
+      backgroundColor: context.palette.page,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.palette.card,
         elevation: 0,
         centerTitle: false,
-        title: const Text(
-          'Notifications',
+        title: Text(
+          tr('Notifications'),
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
-            color: Color(0xFF1E2432),
+            color: context.palette.textStrong,
           ),
         ),
         actions: [
@@ -54,16 +57,22 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             onPressed: () {
               ref.read(notificationsListProvider.notifier).markAllAsRead();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Toutes les notifications ont été marquées comme lues.'),
+                SnackBar(
+                  content: Text(
+                    tr('Toutes les notifications ont été marquées comme lues.'),
+                  ),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
             },
             icon: Icon(Icons.done_all_rounded, size: 18, color: primaryColor),
             label: Text(
-              'Tout lire',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: primaryColor),
+              tr('Tout lire'),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: primaryColor,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -71,14 +80,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         bottom: TabBar(
           controller: _tabController,
           labelColor: primaryColor,
-          unselectedLabelColor: const Color(0xFF9CA3AF),
+          unselectedLabelColor: context.palette.textSubtle,
           indicatorColor: primaryColor,
           indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-          tabs: const [
-            Tab(text: 'Toutes'),
-            Tab(text: 'Rendez-vous'),
-            Tab(text: 'Dossiers'),
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+          tabs: [
+            Tab(text: tr('Toutes')),
+            Tab(text: tr('Rendez-vous')),
+            Tab(text: tr('Dossiers')),
           ],
         ),
       ),
@@ -88,13 +100,19 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline_rounded, size: 48, color: Colors.redAccent),
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: Colors.redAccent,
+              ),
               const SizedBox(height: 12),
-              const Text('Impossible de charger les notifications'),
+              Text(tr('Impossible de charger les notifications')),
               const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: () => ref.read(notificationsListProvider.notifier).refresh(),
-                child: const Text('Réessayer'),
+              AppButton(
+                text: tr('Réessayer'),
+                isFullWidth: false,
+                onPressed: () =>
+                    ref.read(notificationsListProvider.notifier).refresh(),
               ),
             ],
           ),
@@ -104,8 +122,16 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             controller: _tabController,
             children: [
               _buildList(context, notifications, primaryColor),
-              _buildList(context, notifications.where((n) => n.type == 'RDV').toList(), primaryColor),
-              _buildList(context, notifications.where((n) => n.type == 'DOSSIER').toList(), primaryColor),
+              _buildList(
+                context,
+                notifications.where((n) => n.type == 'RDV').toList(),
+                primaryColor,
+              ),
+              _buildList(
+                context,
+                notifications.where((n) => n.type == 'DOSSIER').toList(),
+                primaryColor,
+              ),
             ],
           );
         },
@@ -113,7 +139,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     );
   }
 
-  Widget _buildList(BuildContext context, List<NotificationModel> list, Color primaryColor) {
+  Widget _buildList(
+    BuildContext context,
+    List<NotificationModel> list,
+    Color primaryColor,
+  ) {
     if (list.isEmpty) {
       return Center(
         child: Column(
@@ -125,21 +155,25 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                 color: primaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.notifications_none_rounded, size: 44, color: primaryColor),
+              child: Icon(
+                Icons.notifications_none_rounded,
+                size: 44,
+                color: primaryColor,
+              ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Aucune notification',
+            Text(
+              tr('Aucune notification'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF374151),
+                color: context.palette.text,
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Vous êtes à jour avec vos rappels et messages.',
-              style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+            Text(
+              tr('Vous êtes à jour avec vos rappels et messages.'),
+              style: TextStyle(fontSize: 13, color: context.palette.textSubtle),
             ),
           ],
         ),
@@ -162,7 +196,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             }
           },
           onDismissed: () {
-            ref.read(notificationsListProvider.notifier).deleteNotification(notif.id);
+            ref
+                .read(notificationsListProvider.notifier)
+                .deleteNotification(notif.id);
           },
         );
       },
@@ -225,10 +261,14 @@ class _NotificationCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: notification.isRead ? Colors.white : primaryColor.withValues(alpha: 0.04),
+            color: notification.isRead
+                ? Colors.white
+                : primaryColor.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: notification.isRead ? const Color(0xFFE5E7EB) : primaryColor.withValues(alpha: 0.3),
+              color: notification.isRead
+                  ? context.palette.border
+                  : primaryColor.withValues(alpha: 0.3),
               width: notification.isRead ? 1 : 1.5,
             ),
             boxShadow: [
@@ -263,8 +303,10 @@ class _NotificationCard extends StatelessWidget {
                             notification.titre,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.w800,
-                              color: const Color(0xFF1E2432),
+                              fontWeight: notification.isRead
+                                  ? FontWeight.w600
+                                  : FontWeight.w800,
+                              color: context.palette.textStrong,
                             ),
                           ),
                         ),
@@ -272,19 +314,30 @@ class _NotificationCard extends StatelessWidget {
                           Container(
                             width: 8,
                             height: 8,
-                            decoration: BoxDecoration(color: primaryColor, shape: BoxShape.circle),
+                            decoration: BoxDecoration(
+                              color: primaryColor,
+                              shape: BoxShape.circle,
+                            ),
                           ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       notification.message,
-                      style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563), height: 1.3),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: context.palette.text,
+                        height: 1.3,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _formatDate(notification.date),
-                      style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: context.palette.textSubtle,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
@@ -296,10 +349,17 @@ class _NotificationCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
     final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
-    if (diff.inHours < 24) return 'Il y a ${diff.inHours} h';
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')} à ${date.hour}h${date.minute.toString().padLeft(2, '0')}';
+    if (diff.inMinutes < 60) {
+      return tr('Il y a {n} min', {'n': diff.inMinutes});
+    }
+    if (diff.inHours < 24) return tr('Il y a {n} h', {'n': diff.inHours});
+    return tr('{date} à {heure}', {
+      'date':
+          '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}',
+      'heure': Formatters.formatHeure(date),
+    });
   }
 }

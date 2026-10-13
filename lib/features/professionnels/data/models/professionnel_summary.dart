@@ -15,6 +15,12 @@ class ProfessionnelSummary {
   final int nombreAvis;
   final String? modeConsultation;
 
+  /// AVOCAT ou PSYCHOLOGUE.
+  final String? type;
+
+  /// Indicateur « en ligne » renseigné par le backend.
+  final bool enLigne;
+
   const ProfessionnelSummary({
     required this.id,
     required this.fullName,
@@ -24,6 +30,8 @@ class ProfessionnelSummary {
     this.noteMoyenne,
     this.nombreAvis = 0,
     this.modeConsultation,
+    this.type,
+    this.enLigne = false,
   });
 
   factory ProfessionnelSummary.fromJson(Map<String, dynamic> json) {
@@ -48,11 +56,22 @@ class ProfessionnelSummary {
       noteMoyenne: (json['noteMoyenne'] as num?)?.toDouble(),
       nombreAvis: (json['nombreAvis'] as num?)?.toInt() ?? 0,
       modeConsultation: json['modeConsultation'] as String?,
+      type: json['type'] as String?,
+      enLigne: json['enLigne'] as bool? ?? false,
     );
   }
 
   /// La note n'a de sens que si au moins un avis existe.
   bool get hasRating => noteMoyenne != null && nombreAvis > 0;
+
+  bool get isAvocat => type == 'AVOCAT';
+
+  /// « Me » pour un avocat, « Dr » pour un psychologue (usage professionnel).
+  String get displayName {
+    if (type == 'AVOCAT') return 'Me $fullName';
+    if (type == 'PSYCHOLOGUE') return 'Dr $fullName';
+    return fullName;
+  }
 
   /// Libellé lisible du mode de consultation (valeur brute si code inconnu).
   String? get modeConsultationLabel {

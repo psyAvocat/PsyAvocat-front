@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/questionnaire_model.dart';
 import '../../data/repositories/orientation_repository.dart';
+import '../../../auth/presentation/controllers/session_controller.dart';
 
 /// État du questionnaire en cours de remplissage.
 ///
@@ -156,6 +157,8 @@ final lastOrientationResultProvider =
 final mesResultatsProvider = FutureProvider<List<ResultatOrientationModel>>((
   ref,
 ) async {
+  // Mode invité : le questionnaire reste accessible, mais aucun historique n'est conservé.
+  if (ref.watch(signedInAccountProvider) == null) return const [];
   final results = await ref
       .read(orientationRepositoryProvider)
       .getMesResultats();

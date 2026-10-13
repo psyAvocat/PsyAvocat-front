@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../errors/user_message.dart';
 import '../theme/design_system.dart';
 import 'app_state_views.dart';
+import '../../core/l10n/app_strings.dart';
 
 /// Affiche les 4 états d'une donnée chargée depuis l'API :
 /// LOADING → indicateur, ERROR → message + « Réessayer »,
@@ -57,13 +58,13 @@ class AppAsyncView<T> extends StatelessWidget {
           return _InlineMessage(
             icon: AppIcons.danger,
             message: message,
-            actionLabel: onRetry == null ? null : 'Réessayer',
+            actionLabel: onRetry == null ? null : tr('Réessayer'),
             onAction: onRetry,
             isError: true,
           );
         }
         return AppErrorStateView(
-          title: 'Chargement impossible',
+          title: tr('Chargement impossible'),
           message: message,
           onRetry: onRetry,
         );
@@ -90,7 +91,7 @@ class AppAsyncView<T> extends StatelessWidget {
   Widget _buildLoading() {
     return compact
         ? const _CompactBox(child: CircularProgressIndicator())
-        : const AppLoadingView(message: 'Chargement…');
+        : AppLoadingView(message: tr('Chargement…'));
   }
 }
 

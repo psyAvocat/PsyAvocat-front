@@ -10,9 +10,9 @@ enum AppButtonSize { compact, standard, large }
 /// Bouton principal et réutilisable de PsyAvocat.
 ///
 /// Respecte scrupuleusement les spécifications :
-/// - Hauteur cohérente sur toute l'application (52 px par défaut).
+/// - Forme pilule (bords entièrement arrondis), 58 px de haut par défaut :
+///   le même bouton partout dans l'application.
 /// - Texte toujours blanc (#FFFFFF) pour les boutons colorés.
-/// - Coins arrondis modernes (16 px).
 /// - États normal, pressed, disabled et loading.
 /// - Ombre légère uniquement lorsque demandée (`hasShadow`).
 /// - Support des univers (Psychologue, Avocat, Transition gradient).
@@ -121,7 +121,6 @@ class _AppButtonState extends State<AppButton> {
       case AppButtonSize.compact:
         return AppButtonSizes.heightCompact;
       case AppButtonSize.standard:
-        return AppButtonSizes.heightDefault;
       case AppButtonSize.large:
         return AppButtonSizes.heightLarge;
     }
@@ -145,7 +144,10 @@ class _AppButtonState extends State<AppButton> {
         );
       case AppButtonSize.standard:
       case AppButtonSize.large:
-        return AppTypography.buttonText.copyWith(color: effectiveTextColor);
+        return AppTypography.buttonText.copyWith(
+          color: effectiveTextColor,
+          fontSize: 17,
+        );
     }
   }
 
@@ -173,10 +175,10 @@ class _AppButtonState extends State<AppButton> {
         backgroundColor = Colors.transparent;
         effectiveTextColor = AppColors.buttonDisabledText;
         border = isEffectiveOutlined
-            ? Border.all(color: AppColors.border, width: 1.2)
+            ? Border.all(color: context.palette.border, width: 1.2)
             : null;
       } else if (isSecondary) {
-        backgroundColor = AppColors.neutralSurfaceSecondary;
+        backgroundColor = context.palette.muted;
         effectiveTextColor = AppColors.buttonDisabledText;
         border = null;
       } else {
@@ -189,13 +191,13 @@ class _AppButtonState extends State<AppButton> {
         backgroundColor = _isPressed
             ? primaryColor.withValues(alpha: 0.08)
             : Colors.transparent;
-        effectiveTextColor = widget.textColor ?? primaryColor;
-        border = Border.all(color: primaryColor, width: 1.5);
+        effectiveTextColor = context.readable(widget.textColor ?? primaryColor);
+        border = Border.all(color: context.readable(primaryColor), width: 1.5);
       } else if (isSecondary) {
         backgroundColor = _isPressed
             ? universeColors.surfaceSelected
             : universeColors.surface;
-        effectiveTextColor = widget.textColor ?? primaryColor;
+        effectiveTextColor = context.readable(widget.textColor ?? primaryColor);
         border = Border.all(
           color: universeColors.border.withValues(alpha: 0.5),
           width: 1,
@@ -204,7 +206,7 @@ class _AppButtonState extends State<AppButton> {
         backgroundColor = _isPressed
             ? primaryColor.withValues(alpha: 0.08)
             : Colors.transparent;
-        effectiveTextColor = widget.textColor ?? primaryColor;
+        effectiveTextColor = context.readable(widget.textColor ?? primaryColor);
         border = null;
       } else {
         // Bouton principal coloré : texte TOUJOURS blanc #FFFFFF
@@ -216,7 +218,7 @@ class _AppButtonState extends State<AppButton> {
       }
     }
 
-    final radius = widget.borderRadius ?? AppRadii.r16;
+    final radius = widget.borderRadius ?? AppRadii.pill;
 
     // Ombre légère uniquement lorsque nécessaire
     final List<BoxShadow> boxShadows =
@@ -234,9 +236,12 @@ class _AppButtonState extends State<AppButton> {
         boxShadow: boxShadows,
       ),
       padding: EdgeInsets.symmetric(
-        horizontal: widget.size == AppButtonSize.compact ? 16 : 24,
+        horizontal: widget.size == AppButtonSize.compact ? 20 : 28,
       ),
+      // Hors pleine largeur, le bouton épouse son libellé au lieu de
+      // s'étirer sur toute la largeur disponible.
       child: Center(
+        widthFactor: widget.isFullWidth ? null : 1,
         child: widget.isLoading
             ? SizedBox(
                 height: _loaderSize,
@@ -300,12 +305,18 @@ class _AppButtonState extends State<AppButton> {
       return textWidget;
     }
 
+    // Avec une icône, le libellé se réduit légèrement plutôt que de déborder
+    // sur un écran étroit (ex. « Modifier mes informations »).
+    final libelle = Flexible(
+      child: FittedBox(fit: BoxFit.scaleDown, child: textWidget),
+    );
+
     if (widget.isTrailingIcon) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          textWidget,
+          libelle,
           const SizedBox(width: AppButtonSizes.iconGap),
           iconWidget,
         ],
@@ -318,7 +329,7 @@ class _AppButtonState extends State<AppButton> {
       children: [
         iconWidget,
         const SizedBox(width: AppButtonSizes.iconGap),
-        textWidget,
+        libelle,
       ],
     );
   }

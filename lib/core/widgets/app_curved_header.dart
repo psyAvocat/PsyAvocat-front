@@ -20,9 +20,7 @@ class AppCurvedHeader extends StatelessWidget {
       child: ClipPath(
         clipper: const TopArchClipper(),
         child: DecoratedBox(
-          decoration: const BoxDecoration(
-            gradient: AppColors.authHeaderGradient,
-          ),
+          decoration: const BoxDecoration(color: AppColors.lawyer),
           child: SafeArea(
             bottom: false,
             // Le logo est décalé vers la gauche, comme sur la maquette.

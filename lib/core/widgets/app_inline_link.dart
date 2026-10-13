@@ -29,7 +29,9 @@ class AppInlineLink extends StatelessWidget {
         children: [
           Text(
             '$text ',
-            style: AppTypography.texte.copyWith(color: AppColors.formHint),
+            style: AppTypography.texte.copyWith(
+              color: context.palette.textSubtle,
+            ),
           ),
           InkWell(
             onTap: onTap,

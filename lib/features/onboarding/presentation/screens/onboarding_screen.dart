@@ -2,13 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/services/app_preferences_service.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../widgets/onboarding_slide.dart';
+import '../widgets/auto_crossfade_images.dart';
+import '../widgets/onboarding_page.dart';
+import '../../../../core/l10n/app_strings.dart';
 
-/// Onboarding en 2 pages (maquette fournie, fond sombre) :
-/// 1. Avocats — 2. Psychologues.
+/// Onboarding en 2 pages — maquettes « Splash screen psychologue » puis
+/// « Splash screen avocat ». Sur chaque page, les photos de l'univers défilent
+/// automatiquement l'une après l'autre.
+///
+/// Transition fluide : photos préchargées avant l'affichage (aucun décodage
+/// pendant le glissement), courbe douce et effet de profondeur (parallaxe).
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -17,44 +24,72 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
-  /// Pour ajouter une page à l'onboarding, il suffit d'ajouter un élément ici.
-  static const List<OnboardingSlideData> _slides = [
-    OnboardingSlideData(
-      universe: AppUniverse.lawyer,
-      firstImage: 'assets/images/lawyer_1.jpg',
-      secondImage: 'assets/images/lawyer_2.jpg',
-      icon: Icons.balance_rounded,
-      titleStart: 'Trouvez un avocat\n',
-      titleHighlight: 'à votre écoute',
-      description:
-          "Bénéficiez d'un accompagnement juridique personnalisé, en toute confidentialité.",
-      highlights: [
-        'Des avocats vérifiés',
-        'Un conseil adapté à votre situation',
-        'En toute confidentialité',
+  /// Violet et bleu lisibles sur le fond sombre de l'onboarding.
+  static const Color _violet = Color(0xFFA36BEB);
+  static const Color _bleu = Color(0xFF6B9BFF);
+
+  static const List<OnboardingContent> _pages = [
+    OnboardingContent(
+      images: [
+        'assets/images/psychologist 1.jpg',
+        'assets/images/psychologist 2.jpg',
+        'assets/images/psychologist 3.jpg',
+        'assets/images/psychologist 4.jpg',
       ],
-    ),
-    OnboardingSlideData(
-      universe: AppUniverse.psychologist,
-      firstImage: 'assets/images/psychologist_1.jpg',
-      secondImage: 'assets/images/psychologist_2.jpg',
-      icon: Icons.psychology_rounded,
-      titleStart: 'Prenez soin de votre\n',
-      titleHighlight: 'santé mentale',
-      description:
-          'Échangez avec un psychologue qualifié et avancez à votre rythme.',
-      highlights: [
+      titleBefore: 'Bénéficiez\nd’un soutien\n',
+      highlight: 'psychologique',
+      titleAfter: '\nà votre écoute',
+      highlightColor: _violet,
+
+      points: [
         'Écoute bienveillante',
         'Suivi personnalisé',
         'En toute confidentialité',
+      ],
+    ),
+    OnboardingContent(
+      images: [
+        'assets/images/lawyer 1.jpg',
+        'assets/images/lawyer 2.jpg',
+        'assets/images/lawyer 3.jpg',
+        'assets/images/lawyer 4.jpg',
+        'assets/images/lawyer 5.jpg',
+      ],
+      titleBefore: 'Trouvez un ',
+      highlight: 'avocat',
+      titleAfter: '\npour vous\nconseiller et vous\naccompagner',
+      highlightColor: _bleu,
+      subtitle: '',
+      points: [
+        'Avocats vérifiés',
+        'Dossier confidentiel',
+        'Accompagnement sur mesure',
       ],
     ),
   ];
 
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  bool _imagesPrechargees = false;
 
-  bool get _isLastPage => _currentPage == _slides.length - 1;
+  bool get _isLastPage => _currentPage == _pages.length - 1;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Décodage de la première photo de chaque page avant son apparition :
+    // pas d'à-coup au glissement. Les suivantes sont préchargées au fil du
+    // défilement (AutoCrossfadeImages), sans garder toutes les photos en mémoire.
+    if (!_imagesPrechargees) {
+      _imagesPrechargees = true;
+      for (final page in _pages) {
+        precacheImage(
+          AutoCrossfadeImages.provider(context, page.images.first),
+          context,
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -62,68 +97,75 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
-  void _onContinuePressed() {
-    if (_isLastPage) {
-      _finishOnboarding();
-    } else {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 450),
+  Future<void> _onContinue() async {
+    if (!_isLastPage) {
+      await _pageController.nextPage(
+        duration: const Duration(milliseconds: 650),
         curve: Curves.easeInOutCubic,
       );
+      return;
     }
-  }
-
-  Future<void> _finishOnboarding() async {
     await ref.read(appPreferencesServiceProvider).setHasSeenOnboarding(true);
-    if (mounted) context.go('/login');
+    // Connexion / inscription obligatoires, puis choix de l'univers.
+    if (mounted) context.go(AppRoutes.login);
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentSlide = _slides[_currentPage];
-
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      // Icônes de la barre d'état en blanc sur le fond sombre.
+      // Icônes de la barre d'état en blanc sur les photos.
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: AppColors.onboardingBackground,
-        body: Column(
+        body: Stack(
           children: [
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: _slides.length,
-                onPageChanged: (index) => setState(() => _currentPage = index),
-                itemBuilder: (context, index) =>
-                    OnboardingSlide(data: _slides[index]),
+            PageView.builder(
+              controller: _pageController,
+              itemCount: _pages.length,
+              // Pages fixes : on ne passe à la suivante que par le bouton.
+              physics: const NeverScrollableScrollPhysics(),
+              onPageChanged: (index) => setState(() => _currentPage = index),
+              itemBuilder: (_, index) => AnimatedBuilder(
+                animation: _pageController,
+                builder: (context, _) {
+                  final position =
+                      _pageController.hasClients &&
+                          _pageController.position.haveDimensions
+                      ? (_pageController.page ?? 0)
+                      : _currentPage.toDouble();
+                  return OnboardingPage(
+                    content: _pages[index],
+                    pageOffset: (index - position).clamp(-1.0, 1.0),
+                  );
+                },
               ),
             ),
-            // Le bouton reste toujours visible, sous le contenu défilant.
-            SafeArea(
-              top: false,
-              minimum: const EdgeInsets.fromLTRB(
-                AppSpacing.s24,
-                AppSpacing.s8,
-                AppSpacing.s24,
-                AppSpacing.s24,
-              ),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                decoration: BoxDecoration(
-                  borderRadius: AppRadii.pill,
-                  boxShadow: [
-                    BoxShadow(
-                      color: currentSlide.accentColor.withValues(alpha: 0.4),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
+            // Bouton et points fixes, communs aux deux pages.
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: SafeArea(
+                minimum: const EdgeInsets.fromLTRB(
+                  AppSpacing.s24,
+                  0,
+                  AppSpacing.s24,
+                  AppSpacing.s16,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AppButton(
+                      text: _isLastPage ? tr('Commencer') : tr('Continuer'),
+                      // Même bleu sur les deux pages.
+                      color: AppColors.lawyerSecondary,
+                      onPressed: _onContinue,
+                    ),
+                    AppSpacing.vGap20,
+                    AppPageDots(
+                      count: _pages.length,
+                      activeIndex: _currentPage,
+                      color: AppColors.textOnColor,
                     ),
                   ],
-                ),
-                child: AppPrimaryButton(
-                  label: _isLastPage ? 'Commencer' : 'Continuer',
-                  trailingIcon: Icons.arrow_forward_rounded,
-                  backgroundColor: currentSlide.accentColor,
-                  onPressed: _onContinuePressed,
                 ),
               ),
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/design_system.dart';
+import '../../core/l10n/app_strings.dart';
 
 /// AppBar standardisée pour PsyAvocat.
 class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -45,13 +46,13 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     final Color foregroundColor = useGradient
         ? AppColors.textOnColor
-        : AppColors.textPrimary;
+        : context.palette.textStrong;
 
     Widget? effectiveLeading = leading;
     if (effectiveLeading == null && shouldShowBack) {
       effectiveLeading = IconButton(
         icon: Icon(AppIcons.back, size: 20, color: foregroundColor),
-        tooltip: 'Retour',
+        tooltip: tr('Retour'),
         onPressed: onBackPressed ?? () => Navigator.of(context).maybePop(),
       );
     }
@@ -71,12 +72,12 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
       decoration: BoxDecoration(
         color: isTransparent
             ? Colors.transparent
-            : (useGradient ? null : AppColors.neutralSurface),
+            : (useGradient ? null : context.palette.card),
         gradient: useGradient ? universeColors.gradient : null,
         border: (isTransparent || useGradient)
             ? null
-            : const Border(
-                bottom: BorderSide(color: AppColors.border, width: 1),
+            : Border(
+                bottom: BorderSide(color: context.palette.border, width: 1),
               ),
       ),
       child: AppBar(
@@ -110,9 +111,9 @@ class AppUniverseSwitch extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.neutralSurfaceSecondary,
+        color: context.palette.muted,
         borderRadius: AppRadii.r16,
-        border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(color: context.palette.border, width: 1),
       ),
       child: Row(
         children: [
@@ -120,7 +121,7 @@ class AppUniverseSwitch extends StatelessWidget {
             child: _buildUniverseTab(
               context: context,
               universe: AppUniverse.lawyer,
-              title: 'Avocat',
+              title: tr('Avocat'),
               icon: AppIcons.lawyer,
               activeColor: AppColors.lawyer,
               isSelected: currentUniverse == AppUniverse.lawyer,
@@ -131,7 +132,7 @@ class AppUniverseSwitch extends StatelessWidget {
             child: _buildUniverseTab(
               context: context,
               universe: AppUniverse.psychologist,
-              title: 'Psychologue',
+              title: tr('Psychologue'),
               icon: AppIcons.psychologist,
               activeColor: AppColors.psychologist,
               isSelected: currentUniverse == AppUniverse.psychologist,
@@ -171,7 +172,7 @@ class AppUniverseSwitch extends StatelessWidget {
               size: AppIcons.sizeSm,
               color: isSelected
                   ? AppColors.textOnColor
-                  : AppColors.textSecondary,
+                  : context.palette.textMuted,
             ),
             const SizedBox(width: 8),
             Text(
@@ -180,7 +181,7 @@ class AppUniverseSwitch extends StatelessWidget {
                 fontSize: 14,
                 color: isSelected
                     ? AppColors.textOnColor
-                    : AppColors.textSecondary,
+                    : context.palette.textMuted,
               ),
             ),
           ],

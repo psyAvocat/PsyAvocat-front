@@ -66,7 +66,7 @@ class AppBadge extends StatelessWidget {
     this.onTap,
   }) : type = AppBadgeType.danger;
 
-  /// Constructeur pour l'univers Psychologue (#45088E)
+  /// Constructeur pour l'univers Psychologue (#522578)
   const AppBadge.psychologist({
     super.key,
     required this.label,
@@ -120,9 +120,9 @@ class AppBadge extends StatelessWidget {
         borderColor = AppColors.psychologistBorder;
         break;
       case AppBadgeType.neutral:
-        backgroundColor = AppColors.neutralSurfaceSecondary;
-        textColor = AppColors.textSecondary;
-        borderColor = AppColors.border;
+        backgroundColor = context.palette.muted;
+        textColor = context.palette.textMuted;
+        borderColor = context.palette.border;
         break;
     }
 

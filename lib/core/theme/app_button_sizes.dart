@@ -11,8 +11,8 @@ class AppButtonSizes {
   /// Hauteur standard par défaut : 52 px (ergonomie tactile optimale sur mobile)
   static const double heightDefault = 52.0;
 
-  /// Hauteur compacte : 42 px (dialogues restreints, boutons de listes)
-  static const double heightCompact = 42.0;
+  /// Hauteur compacte : 46 px (dialogues restreints, boutons de listes)
+  static const double heightCompact = 46.0;
 
   /// Hauteur large : 58 px (actions hero / call-to-action majeurs)
   static const double heightLarge = 58.0;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/design_system.dart';
+import '../../core/l10n/app_strings.dart';
 
 /// Photo ronde d'une personne, avec ses initiales si aucune photo n'est disponible.
 ///
@@ -38,7 +39,7 @@ class AppAvatar extends StatelessWidget {
     final hasPhoto = photoUrl != null && photoUrl!.isNotEmpty;
 
     return Semantics(
-      label: 'Photo de $name',
+      label: tr('Photo de {nom}', {'nom': name}),
       image: true,
       child: Container(
         width: size,

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
+import '../l10n/app_strings.dart';
 
 /// Univers de l'application PsyAvocat.
-/// - [neutral] : état avant l'entrée dans un univers (utilise le gradient #0C2659 → #45088E)
-/// - [psychologist] : univers Psychologue (#45088E)
+/// - [neutral] : état avant l'entrée dans un univers (utilise le gradient #0C2659 → #522578)
+/// - [psychologist] : univers Psychologue (#522578)
 /// - [lawyer] : univers Avocat (#0C2659)
 enum AppUniverse {
   neutral,
@@ -18,9 +19,9 @@ enum AppUniverse {
   String get displayName {
     switch (this) {
       case AppUniverse.psychologist:
-        return 'Psychologue';
+        return tr('Psychologue');
       case AppUniverse.lawyer:
-        return 'Avocat';
+        return tr('Avocat');
       case AppUniverse.neutral:
         return 'PsyAvocat';
     }
@@ -39,17 +40,13 @@ enum AppUniverse {
     }
   }
 
-  /// Type de questionnaire d'orientation attendu par l'API
-  /// (uniquement 'PSYCHOLOGIQUE', réservé aux patients).
-  String get apiQuestionnaireType => 'PSYCHOLOGIQUE';
-
   /// Libellé pluriel des professionnels de l'univers.
   String get professionalsLabel {
     switch (this) {
       case AppUniverse.psychologist:
-        return 'Psychologues';
+        return tr('Psychologues');
       case AppUniverse.lawyer:
-        return 'Avocats';
+        return tr('Avocats');
       case AppUniverse.neutral:
         return 'Professionnels';
     }
@@ -64,30 +61,6 @@ enum AppUniverse {
         return AppColors.lawyer;
       case AppUniverse.neutral:
         return AppColors.lawyer; // Base élégante
-    }
-  }
-
-  /// Nuance claire pour les surfaces et fonds de l'univers
-  Color get surfaceLight {
-    switch (this) {
-      case AppUniverse.psychologist:
-        return AppColors.psychologistSurface;
-      case AppUniverse.lawyer:
-        return AppColors.lawyerSurface;
-      case AppUniverse.neutral:
-        return AppColors.neutralSurface;
-    }
-  }
-
-  /// Nuance pour les états sélectionnés de l'univers
-  Color get selectedSurface {
-    switch (this) {
-      case AppUniverse.psychologist:
-        return AppColors.psychologistSurfaceSelected;
-      case AppUniverse.lawyer:
-        return AppColors.lawyerSurfaceSelected;
-      case AppUniverse.neutral:
-        return AppColors.lawyerSurfaceSelected;
     }
   }
 

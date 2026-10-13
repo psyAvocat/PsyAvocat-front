@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/design_system.dart';
+import '../../core/l10n/app_strings.dart';
 
 /// Progression d'un parcours en plusieurs étapes : « Question 3 / 20 » + barre.
 ///
@@ -25,12 +26,16 @@ class AppStepProgress extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Semantics(
-      label: '$label $currentStep sur $totalSteps',
+      label: tr('{etape} {n} sur {total}', {
+        'etape': tr(label),
+        'n': currentStep,
+        'total': totalSteps,
+      }),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '$label $currentStep / $totalSteps',
+            '${tr(label)} $currentStep / $totalSteps',
             style: AppTypography.texteSecondaire.copyWith(
               fontWeight: FontWeight.w600,
               color: scheme.primary,

@@ -6,6 +6,10 @@ import 'app_colors.dart';
 ///
 /// Police principale : Montserrat.
 ///
+/// Les styles de titre et de corps n'imposent PAS de couleur : ils héritent de
+/// `colorScheme.onSurface` (thème clair ou sombre). Les styles « secondaires »
+/// gardent un gris ; dans les écrans, préférer `colorScheme.onSurfaceVariant`.
+///
 /// Échelle demandée :
 /// - Grand titre : 32 px, Bold (FontWeight.w700)
 /// - Titre moyen : 24 px, SemiBold (FontWeight.w600)
@@ -27,7 +31,6 @@ class AppTypography {
     fontWeight: FontWeight.w700,
     height: 1.25,
     letterSpacing: -0.5,
-    color: AppColors.textPrimary,
   );
 
   /// Titre moyen : 24 px, SemiBold
@@ -36,7 +39,6 @@ class AppTypography {
     fontWeight: FontWeight.w600,
     height: 1.3,
     letterSpacing: -0.2,
-    color: AppColors.textPrimary,
   );
 
   /// Petit titre : 20 px, SemiBold
@@ -44,7 +46,6 @@ class AppTypography {
     fontSize: 20,
     fontWeight: FontWeight.w600,
     height: 1.35,
-    color: AppColors.textPrimary,
   );
 
   /// Texte standard : 16 px, Regular
@@ -52,7 +53,6 @@ class AppTypography {
     fontSize: 16,
     fontWeight: FontWeight.w400,
     height: 1.5,
-    color: AppColors.textPrimary,
   );
 
   /// Variante Texte Medium : 16 px, Medium
@@ -60,7 +60,6 @@ class AppTypography {
     fontSize: 16,
     fontWeight: FontWeight.w500,
     height: 1.5,
-    color: AppColors.textPrimary,
   );
 
   /// Variante Texte SemiBold : 16 px, SemiBold
@@ -68,7 +67,6 @@ class AppTypography {
     fontSize: 16,
     fontWeight: FontWeight.w600,
     height: 1.5,
-    color: AppColors.textPrimary,
   );
 
   /// Texte d'appoint / description : 14 px, Regular
@@ -84,7 +82,6 @@ class AppTypography {
     fontSize: 14,
     fontWeight: FontWeight.w600,
     height: 1.4,
-    color: AppColors.textPrimary,
   );
 
   /// Mini texte : 12 px, Regular

@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import '../../../../core/theme/design_system.dart';
 import '../../../../core/theme/universe_provider.dart';
-import '../../../../core/widgets/widgets.dart';
-import '../../../auth/data/repositories/session_repository.dart';
+import '../../../contenus/presentation/controllers/contenus_controller.dart';
 import '../../../notifications/presentation/controllers/notifications_controller.dart';
-import '../../../orientation/presentation/controllers/orientation_controller.dart';
-import '../../../professionnels/data/models/professionnel_summary.dart';
-import '../../../professionnels/presentation/controllers/professionnels_controller.dart';
-import '../../../professionnels/presentation/widgets/professionnel_card.dart';
 import '../../../rendez_vous/presentation/controllers/rendez_vous_controller.dart';
-import '../widgets/home_cards.dart';
-import '../widgets/home_header.dart';
+import '../../../../core/theme/design_system.dart';
+import '../widgets/home_top_bar.dart';
+import '../widgets/lawyer_home_view.dart';
+import '../widgets/psychologist_home_view.dart';
 
 /// Accueil : uniquement des données réelles (rendez-vous, orientation,
 /// professionnels de l'univers). Chaque section gère ses propres états
@@ -20,75 +15,49 @@ import '../widgets/home_header.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  /// Nombre de professionnels mis en avant sur l'accueil.
-  static const int _featuredCount = 3;
-
+  /// Glisser vers le bas : recharge les données affichées sur l'accueil.
+  /// L'indicateur se ferme au plus tard après 15 s (jamais de blocage), même si
+  /// le réseau ne répond pas ; chaque section affiche ensuite son propre état.
   Future<void> _refresh(WidgetRef ref) async {
     ref
-      ..invalidate(currentUserProvider)
-      ..invalidate(rendezVousListProvider)
-      ..invalidate(mesResultatsProvider)
-      ..invalidate(notificationsListProvider)
-      ..invalidate(professionnelsByUniverseProvider);
-    // L'indicateur de rafraîchissement reste affiché jusqu'au rechargement de la liste.
-    await ref.read(professionnelsByUniverseProvider.future);
+      ..invalidate(notificationsControllerProvider)
+      ..invalidate(popularPublicationsProvider);
+    try {
+      await ref
+          .refresh(rendezVousControllerProvider.future)
+          .timeout(const Duration(seconds: 15));
+    } catch (_) {
+      // Erreur ou délai dépassé : affichés par la section concernée.
+    }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final universe = ref.watch(currentUniverseProvider);
 
+    // Photo et notifications restent fixes en haut : seul le contenu défile.
     return Scaffold(
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () => _refresh(ref),
-          child: ListView(
-            padding: AppSpacing.screenPadding,
-            children: [
-              const HomeHeader(),
-              AppSpacing.vGap32,
-              const AppSectionHeader(title: 'Prochain rendez-vous'),
-              AppSpacing.vGap12,
-              const NextAppointmentCard(),
-              AppSpacing.vGap32,
-              if (universe.isPsychologist) ...[
-                const OrientationSummaryCard(),
-                AppSpacing.vGap32,
-              ] else if (universe.isLawyer) ...[
-                const DossiersSummaryCard(),
-                AppSpacing.vGap32,
-              ],
-              AppSectionHeader(
-                title: universe.professionalsLabel,
-                actionLabel: 'Voir tout',
-                onAction: () => context.go('/professionnels'),
+        child: Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.s20,
+                AppSpacing.s12,
+                AppSpacing.s12,
+                AppSpacing.s8,
               ),
-              AppSpacing.vGap12,
-              AppAsyncView<List<ProfessionnelSummary>>(
-                compact: true,
-                value: ref.watch(professionnelsByUniverseProvider),
-                isEmpty: (list) => list.isEmpty,
-                emptyMessage:
-                    'Aucun ${universe.professionalsLabel.toLowerCase()} disponible pour le moment.',
-                emptyIcon: Icons.person_search_outlined,
-                onRetry: () => ref.invalidate(professionnelsByUniverseProvider),
-                builder: (list) => Column(
-                  children: [
-                    for (final pro in list.take(_featuredCount))
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.s12),
-                        child: ProfessionnelCard(
-                          professionnel: pro,
-                          onTap: () =>
-                              context.push('/professionnels/${pro.id}'),
-                        ),
-                      ),
-                  ],
-                ),
+              child: HomeTopBar(),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () => _refresh(ref),
+                child: universe.isPsychologist
+                    ? const PsychologistHomeView()
+                    : const LawyerHomeView(),
               ),
-              AppSpacing.vGap16,
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

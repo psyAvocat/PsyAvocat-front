@@ -6,6 +6,8 @@ import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../data/models/questionnaire_model.dart';
 import '../controllers/orientation_controller.dart';
+import '../../../../core/router/app_routes.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Questionnaire d'orientation — maquettes Figma « Qst 1 Psy » / « Qst 3 Psy ».
 ///
@@ -20,11 +22,12 @@ class OrientationQuestionnaireScreen extends ConsumerWidget {
         .goToPreviousQuestion();
     if (wentBack) return;
 
-    // Première question : on quitte le questionnaire.
+    // Première question : on quitte le questionnaire (ouvert depuis l'accueil,
+    // la fiche patient ou la proposition qui suit le choix de l'univers).
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go('/orientation/intro');
+      context.go(AppRoutes.home);
     }
   }
 
@@ -43,19 +46,15 @@ class OrientationQuestionnaireScreen extends ConsumerWidget {
                 children: [
                   IconButton.outlined(
                     onPressed: () => _goBack(context, ref),
-                    tooltip: 'Retour',
+                    tooltip: tr('Retour'),
                     icon: const Icon(Icons.chevron_left_rounded),
                   ),
                   const Spacer(),
-                  OutlinedButton(
-                    onPressed: () => context.go('/home'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(48, 44),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.s20,
-                      ),
-                    ),
-                    child: const Text('Ignorer'),
+                  AppButton.outline(
+                    text: tr('Ignorer'),
+                    size: AppButtonSize.compact,
+                    isFullWidth: false,
+                    onPressed: () => context.go(AppRoutes.home),
                   ),
                 ],
               ),
@@ -64,10 +63,11 @@ class OrientationQuestionnaireScreen extends ConsumerWidget {
                 child: AppAsyncView<OrientationState>(
                   value: orientation,
                   isEmpty: (state) => state.isEmpty,
-                  emptyTitle: 'Aucun questionnaire disponible',
-                  emptyMessage:
-                      "Le questionnaire d'orientation n'est pas encore publié. "
-                      'Appuyez sur « Ignorer » pour accéder directement aux professionnels.',
+                  emptyTitle: tr('Aucun questionnaire disponible'),
+                  emptyMessage: tr(
+                    "Le questionnaire d'orientation n'est pas encore publié. "
+                    'Appuyez sur « Ignorer » pour accéder directement aux professionnels.',
+                  ),
                   emptyIcon: Icons.quiz_outlined,
                   onRetry: () => ref.invalidate(orientationControllerProvider),
                   builder: (state) => _QuestionnaireContent(state: state),
@@ -96,7 +96,7 @@ class _QuestionnaireContent extends ConsumerWidget {
 
     try {
       await controller.submit();
-      if (context.mounted) context.go('/orientation/resultat');
+      if (context.mounted) context.go(AppRoutes.orientationResult);
     } catch (error) {
       if (context.mounted) {
         AppNotification.showError(context, userMessageFor(error));
@@ -113,7 +113,7 @@ class _QuestionnaireContent extends ConsumerWidget {
         AppStepProgress(
           currentStep: state.currentIndex + 1,
           totalSteps: state.totalQuestions,
-          label: 'Question',
+          label: tr('Question'),
         ),
         AppSpacing.vGap24,
         Expanded(
@@ -135,8 +135,8 @@ class _QuestionnaireContent extends ConsumerWidget {
           ),
         ),
         AppSpacing.vGap16,
-        AppPrimaryButton(
-          label: state.isLastQuestion ? 'Voir mon orientation' : 'Suivant',
+        AppButton(
+          text: state.isLastQuestion ? tr('Voir mon orientation') : 'Suivant',
           isLoading: state.isSubmitting,
           onPressed: state.canGoNext
               ? () => _onNextPressed(context, ref)
@@ -148,7 +148,6 @@ class _QuestionnaireContent extends ConsumerWidget {
   }
 }
 
-/// Une question et ses réponses, affichées selon le type défini par l'Admin.
 class _QuestionView extends StatelessWidget {
   final QuestionModel question;
   final Set<String> selectedIds;
@@ -167,34 +166,67 @@ class _QuestionView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          AppSpacing.vGap24,
           Text(
             question.texte,
-            textAlign: TextAlign.center,
-            style: AppTypography.petitTitre,
+            textAlign: TextAlign.left,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: context.palette.textStrong,
+              height: 1.3,
+            ),
           ),
           if (question.contexte != null &&
               question.contexte!.trim().isNotEmpty) ...[
-            AppSpacing.vGap8,
+            AppSpacing.vGap12,
             Text(
               question.contexte!,
-              textAlign: TextAlign.center,
-              style: AppTypography.texteSecondaire,
+              textAlign: TextAlign.left,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                color: context.palette.textMuted,
+                height: 1.5,
+              ),
             ),
           ],
-          AppSpacing.vGap12,
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: AppSpacing.s8,
-            runSpacing: AppSpacing.s8,
-            children: [
-              if (question.allowsMultiple)
-                const Chip(label: Text('Plusieurs réponses possibles')),
-              if (!question.obligatoire) const Chip(label: Text('Facultatif')),
-            ],
-          ),
           AppSpacing.vGap24,
+          if (question.allowsMultiple || !question.obligatoire) ...[
+            Wrap(
+              spacing: AppSpacing.s8,
+              runSpacing: AppSpacing.s8,
+              children: [
+                if (question.allowsMultiple)
+                  Chip(
+                    label: Text(
+                      tr('Plusieurs réponses possibles'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    backgroundColor: context.palette.muted,
+                    side: BorderSide.none,
+                  ),
+                if (!question.obligatoire)
+                  Chip(
+                    label: Text(
+                      tr('Facultatif'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    backgroundColor: context.palette.muted,
+                    side: BorderSide.none,
+                  ),
+              ],
+            ),
+            AppSpacing.vGap24,
+          ],
           _buildAnswers(),
-          AppSpacing.vGap16,
+          AppSpacing.vGap32,
         ],
       ),
     );
@@ -212,10 +244,8 @@ class _QuestionView extends StatelessWidget {
         ),
     ];
 
-    // Choix multiple : des cases à cocher, pas de groupe radio.
     if (question.allowsMultiple) return _spacedColumn(tiles);
 
-    // Oui / Non avec exactement deux réponses : côte à côte.
     final layout = question.isYesNo && tiles.length == 2
         ? Row(
             children: [
@@ -237,10 +267,11 @@ class _QuestionView extends StatelessWidget {
 
   Widget _spacedColumn(List<Widget> tiles) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final tile in tiles)
           Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.s12),
+            padding: const EdgeInsets.only(bottom: AppSpacing.s16),
             child: tile,
           ),
       ],

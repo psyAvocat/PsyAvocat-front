@@ -1,5 +1,3 @@
-import '../../../../core/errors/app_exception.dart';
-import '../../../../core/theme/app_universe.dart';
 import '../../data/models/current_user.dart';
 
 /// Message affiché à un professionnel ou administrateur qui se connecte sur l'app mobile.
@@ -7,21 +5,42 @@ const professionalAccountMessage =
     "L'application mobile est réservée aux particuliers. "
     "Les professionnels et administrateurs utilisent l'espace web PsyAvocat.";
 
-/// Détermine la page à ouvrir après une connexion (ou une session restaurée),
-/// à partir du rôle RÉEL renvoyé par `GET /me`.
-///
-/// - professionnel / administrateur → refus ([AuthException]) ;
-/// - pas encore de profil métier → choix de l'univers (le profil y est créé) ;
-/// - univers déjà choisi lors d'une session précédente → accueil ;
-/// - sinon → choix de l'univers.
-String resolvePostAuthRoute({
-  required CurrentUser user,
-  required AppUniverse? savedUniverse,
-}) {
-  if (user.isProfessionalOrAdmin) {
-    throw const AuthException(professionalAccountMessage);
-  }
-  if (!user.hasMetierProfile) return '/selection-univers';
-  if (savedUniverse != null && !savedUniverse.isNeutral) return '/home';
-  return '/selection-univers';
+/// Message affiché à un compte désactivé par l'administration.
+const deactivatedAccountMessage =
+    "Votre compte a été désactivé. Contactez le support PsyAvocat pour plus d'informations.";
+
+/// Message affiché quand un compte n'a pas de profil et que les informations
+/// d'inscription ne sont plus disponibles sur l'appareil.
+const incompleteRegistrationMessage =
+    "Votre inscription n'a pas été finalisée. Inscrivez-vous à nouveau avec "
+    'la même adresse e-mail et le même mot de passe.';
+
+/// Verdict d'accès à l'app mobile, calculé UNIQUEMENT à partir de `GET /me`.
+enum AccessDecision {
+  /// Client avec profil métier : accès autorisé.
+  authorized,
+
+  /// Compte Firebase sans profil métier : inscription interrompue, le profil
+  /// est créé avec les informations d'inscription gardées sur l'appareil.
+  profileIncomplete,
+
+  /// Client dont l'adresse email n'est pas encore confirmée.
+  emailNotVerified,
+
+  /// Professionnel ou administrateur : refusé sur le mobile.
+  deniedProfessional,
+
+  /// Compte désactivé : refusé.
+  deniedDeactivated,
+}
+
+/// Règle unique d'accès à l'application mobile.
+AccessDecision evaluateAccess(CurrentUser user) {
+  if (!user.actif) return AccessDecision.deniedDeactivated;
+  if (user.isProfessionalOrAdmin) return AccessDecision.deniedProfessional;
+  if (!user.hasMetierProfile) return AccessDecision.profileIncomplete;
+  // Rôle inconnu : on refuse plutôt que d'autoriser par défaut.
+  if (!user.isClient) return AccessDecision.deniedProfessional;
+  // La confirmation de l'adresse e-mail n'est plus exigée : accès dès l'inscription.
+  return AccessDecision.authorized;
 }

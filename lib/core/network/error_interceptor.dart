@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../errors/app_exception.dart';
+import '../../core/l10n/app_strings.dart';
 
 /// Intercepteur Dio transformant les erreurs HTTP en exceptions typées de l'application.
 class ErrorInterceptor extends Interceptor {
@@ -21,12 +22,18 @@ class ErrorInterceptor extends Interceptor {
       case DioExceptionType.badResponse:
         final statusCode = err.response?.statusCode;
         final data = err.response?.data;
-        String message = 'Une erreur est survenue';
-
-        if (data is Map<String, dynamic> && data['message'] != null) {
-          message = data['message'].toString();
-        } else if (err.message != null && err.message!.isNotEmpty) {
-          message = err.message!;
+        // Seuls les messages métier (4xx) du backend sont affichables ; jamais
+        // le message technique de Dio (il contient le code HTTP brut).
+        String message = tr('Une erreur est survenue. Veuillez réessayer.');
+        final serverMessage = data is Map<String, dynamic>
+            ? data['message']?.toString()
+            : null;
+        if (statusCode != null &&
+            statusCode >= 400 &&
+            statusCode < 500 &&
+            serverMessage != null &&
+            serverMessage.trim().isNotEmpty) {
+          message = serverMessage;
         }
 
         switch (statusCode) {
@@ -47,24 +54,33 @@ class ErrorInterceptor extends Interceptor {
           case 404:
             exception = NotFoundException(message, 404);
             break;
-          case 500:
+          case 409:
+            exception = ConflictException(message);
+            break;
           default:
-            exception = ServerException(message, statusCode ?? 500);
+            exception = (statusCode ?? 500) >= 500
+                ? ServerException(
+                    tr(
+                      'Le service est momentanément indisponible. Veuillez réessayer.',
+                    ),
+                    statusCode ?? 500,
+                  )
+                : AppException(message, statusCode);
             break;
         }
         break;
 
       case DioExceptionType.cancel:
-        exception = const AppException('La requête a été annulée');
+        exception = AppException(tr('La requête a été annulée'));
         break;
 
       case DioExceptionType.badCertificate:
-        exception = const NetworkException('Certificat SSL non valide');
+        exception = NetworkException(tr('Certificat SSL non valide'));
         break;
 
       case DioExceptionType.unknown:
       default:
-        exception = NetworkException(err.message ?? 'Erreur réseau inattendue');
+        exception = const NetworkException();
         break;
     }
 

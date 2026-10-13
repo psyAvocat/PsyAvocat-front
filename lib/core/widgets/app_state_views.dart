@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/design_system.dart';
 import 'app_button.dart';
-import 'app_progress_bar.dart';
+import '../../core/l10n/app_strings.dart';
 
 /// Vue d'état générique et harmonisée pour PsyAvocat.
 class AppFeedbackView extends StatelessWidget {
@@ -97,17 +97,11 @@ class AppLoadingView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppCircularProgress(size: 36, strokeWidth: 3.5, universe: universe),
-            if (message != null) ...[
-              AppSpacing.vGap16,
-              Text(
-                message!,
-                textAlign: TextAlign.center,
-                style: AppTypography.texteSecondaire.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+            // Indicateur Material standard ; aucun texte (interface allégée).
+            const SizedBox.square(
+              dimension: 34,
+              child: CircularProgressIndicator(strokeWidth: 3),
+            ),
           ],
         ),
       ),
@@ -219,16 +213,54 @@ class AppEmptyStateView extends StatelessWidget {
     this.icon = Icons.inbox_outlined,
   });
 
+  /// Liste vide : un message discret, centré et très atténué. Rien d'alarmant :
+  /// il n'y a simplement rien à afficher pour l'instant.
   @override
   Widget build(BuildContext context) {
-    return AppFeedbackView(
-      icon: icon,
-      iconColor: AppColors.textTertiary,
-      iconBackgroundColor: AppColors.neutralSurfaceSecondary,
-      title: title,
-      message: message,
-      actionText: actionText,
-      onAction: onAction,
+    final muted = context.palette.textMuted;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Opacity(
+              opacity: 0.45,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 30, color: muted),
+                  const SizedBox(height: 10),
+                  Text(
+                    tr(title),
+                    textAlign: TextAlign.center,
+                    style: AppTypography.texteSecondaire.copyWith(
+                      color: muted,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (message != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      tr(message!),
+                      textAlign: TextAlign.center,
+                      style: AppTypography.texteSecondaire.copyWith(
+                        color: muted,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (actionText != null && onAction != null) ...[
+              const SizedBox(height: 16),
+              AppButton.ghost(text: tr(actionText!), onPressed: onAction),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

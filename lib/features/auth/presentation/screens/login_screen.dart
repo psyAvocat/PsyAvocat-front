@@ -6,6 +6,9 @@ import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/auth_controller.dart';
+import '../controllers/session_controller.dart';
+import '../../../../core/router/app_routes.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Écran de connexion — interface fixe, stable et réactive.
 ///
@@ -33,39 +36,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final route = await ref
+    // Firebase uniquement : la suite (GET /me, rôle, univers) est décidée
+    // par la session et le routeur, pas par cet écran.
+    await ref
         .read(authControllerProvider.notifier)
         .signIn(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
-
-    if (route != null && mounted) {
-      AppNotification.showSuccess(context, 'Connexion réussie !');
-      context.go(route);
-    }
-  }
-
-  void _signInWithGoogle() {
-    AppNotification.showInfo(
-      context,
-      'Connexion Google disponible dans une prochaine version.',
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(authControllerProvider).isLoading;
+    // Chargement : connexion Firebase, puis vérification du compte (GET /me).
+    // L'écran de connexion reste affiché pendant ce temps (pas de splash).
+    final isLoading =
+        ref.watch(authControllerProvider).isLoading ||
+        ref.watch(sessionControllerProvider).status == SessionStatus.loading;
 
-    // Erreurs Firebase (identifiants…) ou API (/me injoignable, compte pro…).
+    // Erreurs Firebase (identifiants incorrects, réseau…).
     ref.listen<AsyncValue<void>>(authControllerProvider, (_, next) {
       if (next.hasError && !next.isLoading) {
         AppNotification.showError(context, userMessageFor(next.error!));
       }
     });
 
+    ref.listen<SessionState>(sessionControllerProvider, (previous, next) {
+      // Déconnexion expliquée (inscription à refaire…) : message affiché ici.
+      if (next.status == SessionStatus.unauthenticated &&
+          next.message != null &&
+          previous?.message != next.message) {
+        AppNotification.showError(context, tr(next.message!));
+      }
+      // Serveur injoignable pendant la vérification du compte : message clair.
+      if (next.status == SessionStatus.error &&
+          previous?.status != SessionStatus.error) {
+        AppNotification.showError(
+          context,
+          next.message ?? tr('Connexion au serveur impossible. Réessayez.'),
+        );
+      }
+    });
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.palette.card,
       resizeToAvoidBottomInset: true,
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -89,14 +103,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             children: [
                               AppSpacing.vGap24,
                               Text(
-                                'Connexion',
+                                tr('Connexion'),
                                 style: AppTypography.grandTitre,
                               ),
                               AppSpacing.vGap16,
                               AppTextField(
                                 controller: _emailController,
-                                label: 'Email ou numéro de téléphone',
-                                hint: 'Ex: ramla@gmail.com',
+                                label: tr('Email'),
+                                hint: tr('Ex: ramla@gmail.com'),
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
                                 validator: Validators.email,
@@ -104,7 +118,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               AppSpacing.vGap20,
                               AppTextField(
                                 controller: _passwordController,
-                                label: 'Mot de passe',
+                                label: tr('Mot de passe'),
                                 hint: '••••••••',
                                 obscureText: true,
                                 textInputAction: TextInputAction.done,
@@ -113,40 +127,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               Align(
                                 alignment: Alignment.centerRight,
-                                child: TextButton(
+                                child: AppButton.ghost(
+                                  text: tr('Mot de passe oublié ?'),
+                                  color: context.colors.primary,
+                                  size: AppButtonSize.compact,
                                   onPressed: () =>
-                                      context.push('/forgot-password'),
-                                  child: Text(
-                                    'Mot de passe oublié ?',
-                                    style: AppTypography.lien,
-                                  ),
+                                      context.push(AppRoutes.forgotPassword),
                                 ),
                               ),
                               AppSpacing.vGap8,
-                              AppGradientButton(
-                                label: 'Se connecter',
+                              AppButton(
+                                text: tr('Se connecter'),
+                                color: AppColors.lawyer,
                                 isLoading: isLoading,
                                 onPressed: _submit,
-                              ),
-                              AppSpacing.vGap20,
-                              const Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.s24,
-                                ),
-                                child: AppTextDivider(),
-                              ),
-                              AppSpacing.vGap16,
-                              Center(
-                                child: GoogleSignInButton(
-                                  onPressed: _signInWithGoogle,
-                                ),
                               ),
                               const Spacer(),
                               AppSpacing.vGap24,
                               AppInlineLink(
-                                text: 'Pas encore de compte ?',
-                                linkText: "S'inscrire",
-                                onTap: () => context.push('/register'),
+                                text: tr('Pas encore de compte ?'),
+                                linkText: tr("S'inscrire"),
+                                onTap: () => context.push(AppRoutes.register),
                               ),
                               AppSpacing.vGap24,
                             ],
