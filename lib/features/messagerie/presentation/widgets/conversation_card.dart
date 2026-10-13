@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/models/messagerie_model.dart';
+import '../../../../core/widgets/app_avatar.dart';
 import '../../../../core/theme/app_palette.dart';
 import '../../../../core/l10n/app_strings.dart';
 
@@ -45,27 +46,10 @@ class ConversationCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Avatar Placeholder
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: primaryColor.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      conversation.correspondantDisplayName.isNotEmpty
-                          ? conversation.correspondantDisplayName[0]
-                                .toUpperCase()
-                          : '?',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: primaryColor,
-                      ),
-                    ),
-                  ),
+                AppAvatar(
+                  name: conversation.correspondantDisplayName,
+                  photoUrl: conversation.correspondantPhotoUrl,
+                  size: 52,
                 ),
                 const SizedBox(width: 14),
                 Expanded(

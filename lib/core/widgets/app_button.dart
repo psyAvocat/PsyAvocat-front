@@ -238,7 +238,10 @@ class _AppButtonState extends State<AppButton> {
       padding: EdgeInsets.symmetric(
         horizontal: widget.size == AppButtonSize.compact ? 20 : 28,
       ),
+      // Hors pleine largeur, le bouton épouse son libellé au lieu de
+      // s'étirer sur toute la largeur disponible.
       child: Center(
+        widthFactor: widget.isFullWidth ? null : 1,
         child: widget.isLoading
             ? SizedBox(
                 height: _loaderSize,
@@ -302,12 +305,18 @@ class _AppButtonState extends State<AppButton> {
       return textWidget;
     }
 
+    // Avec une icône, le libellé se réduit légèrement plutôt que de déborder
+    // sur un écran étroit (ex. « Modifier mes informations »).
+    final libelle = Flexible(
+      child: FittedBox(fit: BoxFit.scaleDown, child: textWidget),
+    );
+
     if (widget.isTrailingIcon) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          textWidget,
+          libelle,
           const SizedBox(width: AppButtonSizes.iconGap),
           iconWidget,
         ],
@@ -320,7 +329,7 @@ class _AppButtonState extends State<AppButton> {
       children: [
         iconWidget,
         const SizedBox(width: AppButtonSizes.iconGap),
-        textWidget,
+        libelle,
       ],
     );
   }

@@ -663,4 +663,22 @@ const Map<String, String> enStrings = {
   "Étape": "Step",
   "Êtes-vous sûr de vouloir vous déconnecter de votre compte PsyAvocat ?":
       "Are you sure you want to sign out of your PsyAvocat account?",
+  "Mois précédent": "Previous month",
+  "Mois suivant": "Next month",
+  "Semaine": "Week",
+  "Mois": "Month",
+  "Aucun créneau ce jour-là. Choisissez une date marquée d’un point vert.":
+      "No slots that day. Pick a date marked with a green dot.",
+  "Aucun créneau libre ce mois-ci.": "No free slots this month.",
+  "{n} créneau(x) libre(s) ce mois-ci": "{n} free slot(s) this month",
+  "Choisissez une date (les jours marqués d’un point vert ont des créneaux libres), puis touchez l’heure qui vous convient.":
+      "Pick a date (days marked with a green dot have free slots), then tap the time that suits you.",
+  "Choisissez une date marquée d’un point vert, puis touchez un créneau vert pour le réserver.":
+      "Pick a date marked with a green dot, then tap a green slot to book it.",
+  "Choisissez une consultation": "Choose a consultation",
+  "Le prix est celui publié par le professionnel.":
+      "The price is the one published by the professional.",
+  "Un dossier d’abord": "A case first",
+  "Soumettez votre dossier à {nom}. Dès qu’il l’accepte, vous choisissez l’un de ces créneaux pour votre rendez-vous.":
+      "Submit your case to {nom}. As soon as it is accepted, you choose one of these slots for your appointment.",
 };

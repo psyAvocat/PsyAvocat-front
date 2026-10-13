@@ -36,7 +36,7 @@ class ChoixCreneauScreen extends ConsumerStatefulWidget {
 }
 
 class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
-  Creneau? _creneau;
+  late Creneau? _creneau = widget.contexte?.creneauPropose;
   String? _mode;
   final _motifController = TextEditingController();
 
@@ -174,7 +174,7 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                 creneaux: creneaux,
                 primaryColor: primaryColor,
                 guide: tr(
-                  'Choisissez une date (les jours marqués d’un point ont des '
+                  'Choisissez une date (les jours marqués d’un point vert ont des '
                   'créneaux libres), puis touchez l’heure qui vous convient.',
                 ),
                 selected: _creneau,
@@ -196,7 +196,7 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
                           title: Text(
                             m == 'VISIO'
                                 ? tr('En visioconférence')
-                                : 'Au cabinet',
+                                : tr('Au cabinet'),
                           ),
                           subtitle:
                               m == 'CABINET' &&

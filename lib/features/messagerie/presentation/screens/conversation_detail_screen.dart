@@ -3,18 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/network_providers.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/widgets/app_avatar.dart';
-import '../../data/models/messagerie_model.dart';
 import '../../data/repositories/messagerie_repository.dart';
+import '../controllers/conversations_providers.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/chat_input_bar.dart';
 import '../../../../core/l10n/app_strings.dart';
-
-final _messagesProvider = FutureProvider.family<List<Message>, String>((
-  ref,
-  convId,
-) {
-  return ref.read(messagerieRepositoryProvider).getMessages(convId);
-});
 
 /// Discussion avec un professionnel — maquettes « Conversation avocat » et
 /// « Conversation psy » : en-tête avec photo, bulles grises (professionnel)
@@ -62,7 +55,7 @@ class _ConversationDetailScreenState
       await ref
           .read(messagerieRepositoryProvider)
           .envoyer(conversationId: widget.conversationId, contenu: text);
-      ref.invalidate(_messagesProvider(widget.conversationId));
+      ref.invalidate(messagesProvider(widget.conversationId));
     } finally {
       if (mounted) setState(() => _isSending = false);
     }
@@ -70,7 +63,7 @@ class _ConversationDetailScreenState
 
   @override
   Widget build(BuildContext context) {
-    final messagesAsync = ref.watch(_messagesProvider(widget.conversationId));
+    final messagesAsync = ref.watch(messagesProvider(widget.conversationId));
     final currentUserId = ref.watch(authRepositoryProvider).currentUser?.uid;
     final isAvocat = widget.participantRole == 'AVOCAT';
     // Couleur de l'univers de la discussion (celui du professionnel).

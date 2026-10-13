@@ -15,9 +15,14 @@ class ReservationContexte {
   final String? dossierTitre;
   final double? montantDossier;
 
+  /// Créneau déjà touché sur la fiche du professionnel (présélectionné s'il est
+  /// toujours libre à l'arrivée sur l'écran de choix).
+  final Creneau? creneauPropose;
+
   const ReservationContexte.psychologue({
     required this.professionnelId,
     required Tarif this.tarif,
+    this.creneauPropose,
   }) : soumissionId = null,
        dossierTitre = null,
        montantDossier = null;
@@ -27,6 +32,7 @@ class ReservationContexte {
     required String this.soumissionId,
     required this.dossierTitre,
     required double this.montantDossier,
+    this.creneauPropose,
   }) : tarif = null;
 
   bool get viaDossier => soumissionId != null;

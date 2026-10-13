@@ -14,6 +14,7 @@ import '../../../dossiers/presentation/screens/create_dossier_wizard_screen.dart
 import '../../../messagerie/data/repositories/messagerie_repository.dart';
 import '../../../rendez_vous/data/models/reservation_contexte.dart';
 import '../../../signalements/presentation/signalement_sheet.dart';
+import '../../data/models/creneau.dart';
 import '../../data/models/professionnel_detail.dart';
 import '../controllers/professionnels_controller.dart';
 import '../widgets/availability_picker.dart';
@@ -163,6 +164,13 @@ class _ProfessionnelDetailScreenState
                 professionnelId: pro.id,
                 primaryColor: primaryColor,
                 avocat: pro.summary.isAvocat,
+                onCreneau: (c) => _reserverCreneau(
+                  context,
+                  pro,
+                  tarifChoisi,
+                  c,
+                  primaryColor,
+                ),
               ),
             ],
           ),
@@ -198,6 +206,71 @@ class _ProfessionnelDetailScreenState
         ),
       );
     }
+  }
+
+  /// Créneau vert touché dans l'onglet Disponibilités : la réservation démarre
+  /// avec ce créneau présélectionné (tarif demandé s'il y en a plusieurs).
+  /// Chez un avocat, le rendez-vous se prend après acceptation d'un dossier.
+  Future<void> _reserverCreneau(
+    BuildContext context,
+    ProfessionnelDetail pro,
+    Tarif? tarifChoisi,
+    Creneau creneau,
+    Color primaryColor,
+  ) async {
+    if (pro.summary.isAvocat) {
+      final soumettre = await showModalBottomSheet<bool>(
+        context: context,
+        showDragHandle: true,
+        builder: (_) => _InfoDossierSheet(
+          nom: pro.summary.displayName,
+          primaryColor: primaryColor,
+        ),
+      );
+      if (soumettre == true && context.mounted) {
+        _soumettreDossier(context, pro);
+      }
+      return;
+    }
+    if (pro.tarifs.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            tr(
+              'Ce professionnel n’a pas encore publié de tarif : la réservation n’est pas encore possible.',
+            ),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    final tarif =
+        tarifChoisi ??
+        await showModalBottomSheet<Tarif>(
+          context: context,
+          showDragHandle: true,
+          isScrollControlled: true,
+          builder: (_) =>
+              _ChoixTarifSheet(tarifs: pro.tarifs, primaryColor: primaryColor),
+        );
+    if (tarif == null || !context.mounted) return;
+    setState(() => _tarif = tarif);
+    context.push(
+      AppRoutes.choixCreneau(pro.id),
+      extra: ReservationContexte.psychologue(
+        professionnelId: pro.id,
+        tarif: tarif,
+        creneauPropose: creneau,
+      ),
+    );
+  }
+
+  void _soumettreDossier(BuildContext context, ProfessionnelDetail pro) {
+    ref.read(createDossierWizardProvider.notifier).preselectionner(pro.summary);
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const CreateDossierWizardScreen()),
+    );
   }
 
   /// Premier message : la conversation est créée (ou réutilisée) par le backend.
@@ -560,10 +633,12 @@ class _Disponibilites extends ConsumerWidget {
   final String professionnelId;
   final Color primaryColor;
   final bool avocat;
+  final ValueChanged<Creneau> onCreneau;
   const _Disponibilites({
     required this.professionnelId,
     required this.primaryColor,
     required this.avocat,
+    required this.onCreneau,
   });
 
   @override
@@ -598,14 +673,15 @@ class _Disponibilites extends ConsumerWidget {
             AvailabilityPicker(
               creneaux: creneaux,
               primaryColor: primaryColor,
+              onSelected: onCreneau,
               guide: avocat
                   ? tr(
                       'Parcourez les disponibilités. Le rendez-vous se réserve '
                       'une fois votre dossier accepté par l’avocat.',
                     )
                   : tr(
-                      'Parcourez les disponibilités, puis choisissez un tarif et '
-                      'appuyez sur « Prendre rendez-vous » pour réserver.',
+                      'Choisissez une date marquée d’un point vert, puis touchez '
+                      'un créneau vert pour le réserver.',
                     ),
             ),
           ],
@@ -713,6 +789,135 @@ class _BarreAction extends ConsumerWidget {
                 onPressed: action,
                 color: primaryColor,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Choix du tarif (psychologue) avant de réserver le créneau touché.
+class _ChoixTarifSheet extends StatelessWidget {
+  final List<Tarif> tarifs;
+  final Color primaryColor;
+
+  const _ChoixTarifSheet({required this.tarifs, required this.primaryColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              tr('Choisissez une consultation'),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: context.palette.textStrong,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              tr('Le prix est celui publié par le professionnel.'),
+              style: TextStyle(fontSize: 13, color: context.palette.textMuted),
+            ),
+            const SizedBox(height: 16),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final t in tarifs)
+                    Card(
+                      elevation: 0,
+                      margin: const EdgeInsets.only(bottom: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        side: BorderSide(color: context.palette.border),
+                      ),
+                      child: ListTile(
+                        onTap: () => Navigator.pop(context, t),
+                        title: Text(
+                          t.titre,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: t.dureeMinutes != null
+                            ? Text('${t.dureeMinutes} min')
+                            : null,
+                        trailing: Text(
+                          Formatters.formatFcfa(t.montant),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Chez un avocat, le créneau se réserve après acceptation d'un dossier.
+class _InfoDossierSheet extends StatelessWidget {
+  final String nom;
+  final Color primaryColor;
+
+  const _InfoDossierSheet({required this.nom, required this.primaryColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Icon(Icons.folder_shared_outlined, size: 40, color: primaryColor),
+            const SizedBox(height: 12),
+            Text(
+              tr('Un dossier d’abord'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: context.palette.textStrong,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              tr(
+                'Soumettez votre dossier à {nom}. Dès qu’il l’accepte, vous '
+                'choisissez l’un de ces créneaux pour votre rendez-vous.',
+                {'nom': nom},
+              ),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.4,
+                color: context.palette.textMuted,
+              ),
+            ),
+            const SizedBox(height: 20),
+            AppButton(
+              text: tr('Soumettre un dossier'),
+              color: primaryColor,
+              onPressed: () => Navigator.pop(context, true),
+            ),
+            const SizedBox(height: 8),
+            AppButton.ghost(
+              text: tr('Plus tard'),
+              onPressed: () => Navigator.pop(context, false),
             ),
           ],
         ),

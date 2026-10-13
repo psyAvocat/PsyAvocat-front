@@ -10,7 +10,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/errors/user_message.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/widgets/app_alert.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_state_views.dart';
 import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/theme/design_system.dart';
@@ -57,26 +56,11 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
     if (rdvAsync.hasError) {
       return Scaffold(
         backgroundColor: context.palette.page,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.wifi_off_rounded,
-                size: 60,
-                color: context.palette.borderStrong,
-              ),
-              const SizedBox(height: 16),
-              Text(tr('Impossible de charger vos rendez-vous')),
-              const SizedBox(height: 12),
-              AppButton(
-                text: tr('Réessayer'),
-                isFullWidth: false,
-                onPressed: () =>
-                    ref.read(rendezVousControllerProvider.notifier).reload(),
-              ),
-            ],
-          ),
+        body: AppErrorStateView(
+          title: tr('Impossible de charger vos rendez-vous'),
+          message: userMessageFor(rdvAsync.error!),
+          onRetry: () =>
+              ref.read(rendezVousControllerProvider.notifier).reload(),
         ),
       );
     }

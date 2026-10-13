@@ -69,5 +69,39 @@ void main() {
       expect(rdv.adresseCabinet, equals('12 rue de la Paix, 75002 Paris'));
       expect(rdv.fin, equals(DateTime.parse('2026-10-16T10:50:00Z')));
     });
+    test('réponse réelle de GET /api/rendez-vous (psychologue, heure locale)', () {
+      // Copie d'une réponse du backend après une réservation depuis l'application.
+      final json = {
+        'id': '944b99d8-9133-4af3-b812-7e1feb934eba',
+        'dateHeure': '2026-10-14T09:00:00',
+        'statut': 'CONFIRME',
+        'mode': 'VISIO',
+        'patientId': 'client-1',
+        'patientNom': 'Traoré',
+        'patientPrenom': 'Awa',
+        'professionnelId': 'psy-1',
+        'professionnelNom': 'Visuel',
+        'professionnelPrenom': 'Camille',
+        'typeProfessionnel': 'PSYCHOLOGUE',
+        'montantTotal': 15000.0,
+        'montantAcompte': 3000.0,
+        'statutPaiement': 'PAYE',
+        'dateFin': '2026-10-14T09:50:00',
+        'dureeMinutes': 50,
+        'motif': 'Premier échange',
+        'devise': 'XOF',
+        'disponibiliteId': 'dispo-1',
+        'professionnelPhotoUrl': 'https://exemple/photo.jpg',
+        'professionnelSpecialite': 'Thérapie cognitive',
+      };
+
+      final rdv = RendezVous.fromJson(json);
+
+      expect(rdv.universe, AppUniverse.psychologist);
+      expect(rdv.statut, AppointmentStatus.confirme);
+      expect(rdv.dateHeure, DateTime(2026, 10, 14, 9));
+      expect(rdv.professionnelPhotoUrl, 'https://exemple/photo.jpg');
+      expect(rdv.phaseAt(DateTime(2026, 10, 13, 18)), AppointmentPhase.aVenir);
+    });
   });
 }

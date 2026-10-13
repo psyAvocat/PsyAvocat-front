@@ -1,31 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/realtime/realtime_service.dart';
-import '../../../../core/theme/universe_provider.dart';
-import '../../data/models/messagerie_model.dart';
-import '../../data/repositories/messagerie_repository.dart';
+import '../controllers/conversations_providers.dart';
 import '../widgets/conversation_card.dart';
 import '../widgets/messagerie_empty_state.dart';
 import '../widgets/messagerie_error_state.dart';
 import 'conversation_detail_screen.dart';
 import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/theme/design_system.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Provider pour la liste des conversations
-// ─────────────────────────────────────────────────────────────────────────────
-/// Conversations de l'univers courant uniquement (cloisonnement Avocat / Psychologue),
-/// rechargées à chaque nouveau message reçu en temps réel.
-final conversationsProvider = FutureProvider.autoDispose<List<Conversation>>((
-  ref,
-) async {
-  final universe = ref.watch(currentUniverseProvider);
-  listenRealtime(ref, {RealtimeEventType.message}, (_) => ref.invalidateSelf());
-  final conversations = await ref
-      .read(messagerieRepositoryProvider)
-      .getConversations();
-  return conversations.where((c) => c.universe == universe).toList();
-});
 
 /// Écran Messagerie — liste des conversations avec les professionnels.
 /// Connecté à GET /api/conversations via ApiMessagerieRepository.
