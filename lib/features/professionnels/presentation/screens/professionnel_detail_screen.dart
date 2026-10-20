@@ -10,6 +10,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_state_views.dart';
 import '../../../../shared/enums/slot_status.dart';
 import '../../../dossiers/presentation/controllers/create_dossier_wizard_controller.dart';
+import '../../../dossiers/presentation/controllers/dossiers_controller.dart';
 import '../../../dossiers/presentation/screens/create_dossier_wizard_screen.dart';
 import '../../../messagerie/data/repositories/messagerie_repository.dart';
 import '../../../rendez_vous/data/models/reservation_contexte.dart';
@@ -20,11 +21,13 @@ import '../controllers/professionnels_controller.dart';
 import '../widgets/availability_picker.dart';
 import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/theme/design_system.dart';
+import '../../../../core/widgets/app_back_button.dart';
 
 /// Fiche détaillée d'un professionnel : uniquement des données réelles du backend.
 ///
 /// - Psychologue : choix d'un tarif publié puis réservation directe d'un créneau.
-/// - Avocat : soumission d'un dossier (le rendez-vous se prend après acceptation).
+/// - Avocat : soumission d'un dossier ; une fois le dossier accepté par cet
+///   avocat, « Prendre rendez-vous » réserve directement pour ce dossier.
 /// Un professionnel d'un autre univers n'est jamais affiché (cloisonnement).
 class ProfessionnelDetailScreen extends ConsumerStatefulWidget {
   final String professionnelId;
@@ -51,12 +54,20 @@ class _ProfessionnelDetailScreenState
     return proAsync.when(
       loading: () => Scaffold(
         backgroundColor: context.palette.page,
-        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+        appBar: AppBar(
+          leading: const AppBackButton(),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
         body: AppLoadingView(universe: universe),
       ),
       error: (e, _) => Scaffold(
         backgroundColor: context.palette.page,
-        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+        appBar: AppBar(
+          leading: const AppBackButton(),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
         body: AppErrorStateView(
           title: tr('Professionnel indisponible'),
           message: userMessageFor(e),
@@ -71,7 +82,11 @@ class _ProfessionnelDetailScreenState
         if (pro.summary.type != universe.apiProfessionalType) {
           return Scaffold(
             backgroundColor: context.palette.page,
-            appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+            appBar: AppBar(
+              leading: const AppBackButton(),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+            ),
             body: AppEmptyStateView(
               icon: Icons.swap_horiz_rounded,
               title: tr('Professionnel d’un autre univers'),
@@ -100,6 +115,11 @@ class _ProfessionnelDetailScreenState
         ? _tarif
         : (tarifs.length == 1 ? tarifs.first : null);
     final photo = pro.summary.photoUrl;
+    // Avocat : dossiers du justiciable qu'il a acceptés (rendez-vous possible).
+    final prises = pro.summary.isAvocat
+        ? (ref.watch(prisesEnChargeAvocatProvider(pro.id)).value ??
+              const <PriseEnCharge>[])
+        : const <PriseEnCharge>[];
 
     return DefaultTabController(
       length: 3,
@@ -112,6 +132,7 @@ class _ProfessionnelDetailScreenState
               pinned: true,
               backgroundColor: primaryColor,
               foregroundColor: Colors.white,
+              leading: const AppBackButton(color: Colors.white),
               actions: [
                 PopupMenuButton<String>(
                   tooltip: tr('Plus d’actions'),
@@ -146,6 +167,13 @@ class _ProfessionnelDetailScreenState
             SliverToBoxAdapter(
               child: _Identite(pro: pro, primaryColor: primaryColor),
             ),
+            if (prises.isNotEmpty)
+              SliverToBoxAdapter(
+                child: _BandeauPriseEnCharge(
+                  prises: prises,
+                  onSoumettreAutre: () => _soumettreDossier(context, pro),
+                ),
+              ),
             SliverPersistentHeader(
               pinned: true,
               delegate: _OngletsDelegate(primaryColor: primaryColor),
@@ -164,12 +192,14 @@ class _ProfessionnelDetailScreenState
                 professionnelId: pro.id,
                 primaryColor: primaryColor,
                 avocat: pro.summary.isAvocat,
+                dossierAccepte: prises.isNotEmpty,
                 onCreneau: (c) => _reserverCreneau(
                   context,
                   pro,
                   tarifChoisi,
                   c,
                   primaryColor,
+                  prises,
                 ),
               ),
             ],
@@ -179,6 +209,9 @@ class _ProfessionnelDetailScreenState
           pro: pro,
           primaryColor: primaryColor,
           tarif: tarifChoisi,
+          dossierAccepte: prises.isNotEmpty,
+          onReserverDossier: () =>
+              _reserverDossier(context, prises, null, primaryColor),
           onEcrire: () => _ecrire(context, pro),
         ),
       ),
@@ -210,14 +243,20 @@ class _ProfessionnelDetailScreenState
 
   /// Créneau vert touché dans l'onglet Disponibilités : la réservation démarre
   /// avec ce créneau présélectionné (tarif demandé s'il y en a plusieurs).
-  /// Chez un avocat, le rendez-vous se prend après acceptation d'un dossier.
+  /// Chez un avocat, le rendez-vous se prend après acceptation d'un dossier :
+  /// réservation directe si un dossier est accepté, sinon invitation à en soumettre un.
   Future<void> _reserverCreneau(
     BuildContext context,
     ProfessionnelDetail pro,
     Tarif? tarifChoisi,
     Creneau creneau,
     Color primaryColor,
+    List<PriseEnCharge> prises,
   ) async {
+    if (pro.summary.isAvocat && prises.isNotEmpty) {
+      await _reserverDossier(context, prises, creneau, primaryColor);
+      return;
+    }
     if (pro.summary.isAvocat) {
       final soumettre = await showModalBottomSheet<bool>(
         context: context,
@@ -261,6 +300,36 @@ class _ProfessionnelDetailScreenState
       extra: ReservationContexte.psychologue(
         professionnelId: pro.id,
         tarif: tarif,
+        creneauPropose: creneau,
+      ),
+    );
+  }
+
+  /// Rendez-vous pour un dossier accepté par cet avocat (choix du dossier s'il
+  /// en a accepté plusieurs) ; le montant est celui des honoraires proposés.
+  Future<void> _reserverDossier(
+    BuildContext context,
+    List<PriseEnCharge> prises,
+    Creneau? creneau,
+    Color primaryColor,
+  ) async {
+    if (prises.isEmpty) return;
+    final prise = prises.length == 1
+        ? prises.first
+        : await showModalBottomSheet<PriseEnCharge>(
+            context: context,
+            showDragHandle: true,
+            builder: (_) =>
+                _ChoixDossierSheet(prises: prises, primaryColor: primaryColor),
+          );
+    if (prise == null || !context.mounted) return;
+    context.push(
+      AppRoutes.choixCreneau(prise.soumission.avocatId),
+      extra: ReservationContexte.avocat(
+        professionnelId: prise.soumission.avocatId,
+        soumissionId: prise.soumission.id,
+        dossierTitre: prise.dossier.titre,
+        montantDossier: prise.soumission.tarifPropose!,
         creneauPropose: creneau,
       ),
     );
@@ -633,12 +702,16 @@ class _Disponibilites extends ConsumerWidget {
   final String professionnelId;
   final Color primaryColor;
   final bool avocat;
+
+  /// Avocat ayant accepté un dossier du justiciable : les créneaux se réservent.
+  final bool dossierAccepte;
   final ValueChanged<Creneau> onCreneau;
   const _Disponibilites({
     required this.professionnelId,
     required this.primaryColor,
     required this.avocat,
     required this.onCreneau,
+    this.dossierAccepte = false,
   });
 
   @override
@@ -674,7 +747,7 @@ class _Disponibilites extends ConsumerWidget {
               creneaux: creneaux,
               primaryColor: primaryColor,
               onSelected: onCreneau,
-              guide: avocat
+              guide: avocat && !dossierAccepte
                   ? tr(
                       'Parcourez les disponibilités. Le rendez-vous se réserve '
                       'une fois votre dossier accepté par l’avocat.',
@@ -717,11 +790,17 @@ class _BarreAction extends ConsumerWidget {
   final Tarif? tarif;
   final VoidCallback onEcrire;
 
+  /// Avocat : un dossier du justiciable est accepté, le rendez-vous se prend.
+  final bool dossierAccepte;
+  final VoidCallback onReserverDossier;
+
   const _BarreAction({
     required this.pro,
     required this.primaryColor,
     required this.tarif,
     required this.onEcrire,
+    required this.dossierAccepte,
+    required this.onReserverDossier,
   });
 
   @override
@@ -729,7 +808,10 @@ class _BarreAction extends ConsumerWidget {
     final avocat = pro.summary.isAvocat;
     final VoidCallback? action;
     final String libelle;
-    if (avocat) {
+    if (avocat && dossierAccepte) {
+      libelle = tr('Prendre rendez-vous');
+      action = onReserverDossier;
+    } else if (avocat) {
       libelle = tr('Soumettre un dossier');
       action = () {
         ref
@@ -860,6 +942,141 @@ class _ChoixTarifSheet extends StatelessWidget {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Dossier(s) accepté(s) par cet avocat : rappel en tête de fiche.
+class _BandeauPriseEnCharge extends StatelessWidget {
+  final List<PriseEnCharge> prises;
+  final VoidCallback onSoumettreAutre;
+
+  const _BandeauPriseEnCharge({
+    required this.prises,
+    required this.onSoumettreAutre,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final couleur = Theme.of(context).colorScheme.primary;
+    final premiere = prises.first;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+      child: Material(
+        color: couleur.withValues(alpha: 0.06),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: couleur.withValues(alpha: 0.2)),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () =>
+              context.push(AppRoutes.dossierPriseEnCharge(premiere.dossier.id)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 8, 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.verified_outlined, color: couleur, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        prises.length == 1
+                            ? tr(
+                                'Votre dossier « {titre} » est pris en charge par cet avocat.',
+                                {'titre': premiere.dossier.titre},
+                              )
+                            : tr(
+                                '{n} de vos dossiers sont pris en charge par cet avocat.',
+                                {'n': prises.length},
+                              ),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: context.palette.textStrong,
+                        ),
+                      ),
+                    ),
+                    Icon(Icons.chevron_right_rounded, color: couleur),
+                  ],
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: onSoumettreAutre,
+                    style: TextButton.styleFrom(
+                      foregroundColor: couleur,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    child: Text(tr('Soumettre un autre dossier')),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Plusieurs dossiers acceptés par cet avocat : choix du dossier du rendez-vous.
+class _ChoixDossierSheet extends StatelessWidget {
+  final List<PriseEnCharge> prises;
+  final Color primaryColor;
+
+  const _ChoixDossierSheet({required this.prises, required this.primaryColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              tr('Pour quel dossier ?'),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: context.palette.textStrong,
+              ),
+            ),
+            const SizedBox(height: 12),
+            for (final prise in prises)
+              Card(
+                elevation: 0,
+                color: context.palette.muted,
+                margin: const EdgeInsets.only(bottom: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  leading: Icon(Icons.folder_outlined, color: primaryColor),
+                  title: Text(
+                    prise.dossier.titre,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    tr('Honoraires proposés : {montant}', {
+                      'montant': Formatters.formatFcfa(
+                        prise.soumission.tarifPropose!,
+                      ),
+                    }),
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => Navigator.pop(context, prise),
+                ),
+              ),
           ],
         ),
       ),

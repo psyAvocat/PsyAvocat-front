@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import '../router/app_routes.dart';
 import '../theme/design_system.dart';
-import '../../core/l10n/app_strings.dart';
+import 'app_back_button.dart';
 
 /// En-tête des pages empilées (maquettes « Mes dossiers », « Mon dossier ») :
-/// bouton retour rond, titre à gauche, élément facultatif à droite (avatar),
-/// fine ligne de séparation en bas.
+/// bouton retour commun, titre centré (comme les AppBar du thème), élément
+/// facultatif à droite (avatar), fine ligne de séparation en bas.
 ///
 /// Exemple : `appBar: AppPageHeader(title: 'Mes dossiers', trailing: CurrentUserAvatar())`
 class AppPageHeader extends StatelessWidget implements PreferredSizeWidget {
@@ -22,68 +20,38 @@ class AppPageHeader extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(72);
-
-  void _back(BuildContext context) {
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go(AppRoutes.home);
-    }
-  }
+  Size get preferredSize => const Size.fromHeight(60);
 
   @override
   Widget build(BuildContext context) {
-    final titleColor = color ?? context.colors.primary;
     final palette = context.palette;
+    final titleColor = color ?? palette.textStrong;
+    // Même bouton, même hauteur et même titre que les barres AppBar des autres pages.
     return Material(
       color: palette.card,
       child: SafeArea(
         bottom: false,
         child: Container(
           height: preferredSize.height,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
+          padding: const EdgeInsets.only(right: AppSpacing.s16),
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: palette.border)),
           ),
-          child: Row(
-            children: [
-              Semantics(
-                button: true,
-                label: tr('Retour'),
-                child: InkWell(
-                  onTap: () => _back(context),
-                  customBorder: const CircleBorder(),
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: palette.borderStrong),
-                    ),
-                    child: Icon(
-                      Icons.chevron_left_rounded,
-                      size: 22,
-                      color: titleColor,
-                    ),
-                  ),
-                ),
-              ),
-              AppSpacing.hGap16,
-              Expanded(
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.titreMoyen.copyWith(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: titleColor,
-                  ),
-                ),
-              ),
-              ?trailing,
-            ],
+          // Même disposition qu'une AppBar : titre centré sur la largeur de l'écran.
+          child: NavigationToolbar(
+            centerMiddle: true,
+            middleSpacing: AppSpacing.s16,
+            leading: SizedBox(
+              width: kToolbarHeight,
+              child: AppBackButton(color: titleColor),
+            ),
+            middle: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.titrePage.copyWith(color: titleColor),
+            ),
+            trailing: trailing,
           ),
         ),
       ),

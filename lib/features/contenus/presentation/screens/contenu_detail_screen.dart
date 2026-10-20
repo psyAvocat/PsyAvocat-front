@@ -39,7 +39,7 @@ class ContenuDetailScreen extends ConsumerWidget {
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(leading: const AppBackButton()),
         body: error is NotFoundException
             ? AppEmptyStateView(
                 title: tr("Cette ressource n'est plus disponible"),
@@ -60,7 +60,7 @@ class ContenuDetailScreen extends ConsumerWidget {
         final universe = ref.watch(currentUniverseProvider);
         if (publication.isArticle != universe.isLawyer) {
           return Scaffold(
-            appBar: AppBar(),
+            appBar: AppBar(leading: const AppBackButton()),
             body: AppEmptyStateView(
               title: tr('Publication d’un autre univers'),
               message: publication.isArticle
@@ -109,6 +109,7 @@ class _ArticleView extends StatelessWidget {
           SliverAppBar(
             expandedHeight: 220,
             pinned: true,
+            leading: const AppBackButton(),
             flexibleSpace: FlexibleSpaceBar(
               background: PublicationImage(
                 imageUrl: pub.imageUrl,
@@ -174,17 +175,12 @@ class _ConseilView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final pub = publication;
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          tooltip: tr('Retour'),
-          onPressed: onBack,
-          icon: const Icon(Icons.chevron_left_rounded),
-        ),
-        title: Text(tr('Conseil'), style: TextStyle(color: scheme.primary)),
+        leading: AppBackButton(onPressed: onBack),
+        title: Text(tr('Conseil')),
       ),
       body: ListView(
         padding: AppSpacing.screenPadding,

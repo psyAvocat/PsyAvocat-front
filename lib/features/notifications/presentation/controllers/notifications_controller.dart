@@ -29,15 +29,21 @@ class NotificationsController extends AsyncNotifier<List<NotificationItem>> {
     await _reload();
   }
 
+  /// Marque comme lue tout de suite à l'écran ; un échec réseau est sans
+  /// conséquence (l'état serveur sera relu au prochain chargement).
   Future<void> markAsRead(String id) async {
     final current = state.value;
     if (current == null) return;
     final target = current.where((n) => n.id == id).firstOrNull;
     if (target == null || target.lu) return;
-    await ref.read(notificationsRepositoryProvider).markAsRead(id);
     state = AsyncData([
       for (final n in current) n.id == id ? n.markedRead() : n,
     ]);
+    try {
+      await ref.read(notificationsRepositoryProvider).markAsRead(id);
+    } catch (_) {
+      // Ignoré : simple indicateur de lecture.
+    }
   }
 
   Future<void> markAllAsRead() async {
@@ -47,11 +53,31 @@ class NotificationsController extends AsyncNotifier<List<NotificationItem>> {
     state = AsyncData([for (final n in current) n.markedRead()]);
   }
 
+  /// Retire la notification immédiatement (un élément balayé ne doit plus
+  /// figurer dans la liste), puis la rétablit si le serveur refuse.
   Future<void> deleteNotification(String id) async {
     final current = state.value;
     if (current == null) return;
-    await ref.read(notificationsRepositoryProvider).deleteNotification(id);
     state = AsyncData(current.where((n) => n.id != id).toList());
+    try {
+      await ref.read(notificationsRepositoryProvider).deleteNotification(id);
+    } catch (_) {
+      state = AsyncData(current);
+      rethrow;
+    }
+  }
+
+  /// Supprime toutes les notifications lues (rétablies en cas d'échec).
+  Future<void> deleteRead() async {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData(current.where((n) => !n.lu).toList());
+    try {
+      await ref.read(notificationsRepositoryProvider).deleteRead();
+    } catch (_) {
+      state = AsyncData(current);
+      rethrow;
+    }
   }
 }
 

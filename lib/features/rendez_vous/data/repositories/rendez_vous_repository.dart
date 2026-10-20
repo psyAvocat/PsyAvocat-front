@@ -36,7 +36,8 @@ abstract class RendezVousRepository {
     required String disponibiliteId,
   });
 
-  Future<RendezVous> annuler(String id);
+  /// Annulation par le client ; le [motif] facultatif est transmis au professionnel.
+  Future<RendezVous> annuler(String id, {String? motif});
 }
 
 class ApiRendezVousRepository implements RendezVousRepository {
@@ -110,8 +111,12 @@ class ApiRendezVousRepository implements RendezVousRepository {
   }
 
   @override
-  Future<RendezVous> annuler(String id) async {
-    final response = await _client.patch('/rendez-vous/$id/annuler');
+  Future<RendezVous> annuler(String id, {String? motif}) async {
+    final texte = motif?.trim() ?? '';
+    final response = await _client.patch(
+      '/rendez-vous/$id/annuler',
+      data: texte.isEmpty ? null : {'motif': texte},
+    );
     return RendezVous.fromJson(response.data as Map<String, dynamic>);
   }
 }

@@ -7,6 +7,7 @@ import '../../data/models/paiement_model.dart';
 import '../controllers/paiements_controller.dart';
 import '../../../../core/theme/app_palette.dart';
 import '../../../../core/l10n/app_strings.dart';
+import '../../../../core/widgets/app_back_button.dart';
 
 /// Historique des acomptes de l'univers courant.
 /// V1 : paiements SIMULÉS, présentés comme tels (aucune transaction réelle).
@@ -23,15 +24,8 @@ class PaiementsScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: context.palette.card,
         elevation: 0,
-        centerTitle: false,
-        title: Text(
-          tr('Mes paiements'),
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: context.palette.textStrong,
-          ),
-        ),
+        leading: const AppBackButton(),
+        title: Text(tr('Mes paiements')),
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(paiementsListProvider.notifier).refresh(),

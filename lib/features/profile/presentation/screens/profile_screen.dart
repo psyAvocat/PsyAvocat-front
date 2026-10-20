@@ -38,10 +38,7 @@ class ProfileScreen extends ConsumerWidget {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: palette.card,
-        title: Text(
-          tr('Mon profil'),
-          style: AppTypography.petitTitre.copyWith(color: palette.textStrong),
-        ),
+        title: Text(tr('Mon profil')),
       ),
       body: SafeArea(
         top: false,

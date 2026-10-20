@@ -62,8 +62,8 @@ class RendezVousController extends AsyncNotifier<List<RendezVous>> {
     return rdv;
   }
 
-  Future<void> annuler(String id) async {
-    await ref.read(rendezVousRepositoryProvider).annuler(id);
+  Future<void> annuler(String id, {String? motif}) async {
+    await ref.read(rendezVousRepositoryProvider).annuler(id, motif: motif);
     ref.invalidate(rendezVousDetailProvider(id));
     await reload();
   }

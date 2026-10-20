@@ -332,7 +332,11 @@ class _DossierCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final envoi = libelleEnvoi(dossier);
-    final avocats = dossier.soumissions.map((s) => s.displayName).join(' · ');
+    final retenue = dossier.soumissionRetenue;
+    // Dossier confié : seul l'avocat qui l'a accepté est cité.
+    final avocats = retenue != null
+        ? tr('Pris en charge par {avocat}', {'avocat': retenue.displayName})
+        : dossier.soumissions.map((s) => s.displayName).join(' · ');
     final pieces = dossier.piecesJointes.length;
 
     return DossierCardContainer(
@@ -395,8 +399,11 @@ class _DossierCard extends StatelessWidget {
                       ),
                     ),
                     FilledButton(
-                      onPressed: () =>
-                          context.push(AppRoutes.dossier(dossier.id)),
+                      onPressed: () => context.push(
+                        retenue != null
+                            ? AppRoutes.dossierPriseEnCharge(dossier.id)
+                            : AppRoutes.dossier(dossier.id),
+                      ),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.lawyer,
                         minimumSize: const Size(92, 30),

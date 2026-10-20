@@ -109,7 +109,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           Center(
             child: AppButton.ghost(
               text: tr('Retour à la connexion'),
-              onPressed: () => context.pop(),
+              onPressed: () => context.canPop()
+                  ? context.pop()
+                  : context.go(AppRoutes.login),
             ),
           ),
         ],

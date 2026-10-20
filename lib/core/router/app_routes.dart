@@ -34,6 +34,9 @@ class AppRoutes {
   static const dossiers = '/dossiers';
   static const messagerie = '/messagerie';
   static const rendezVousConfirmation = '/rendez-vous/confirmation';
+
+  /// Détail d'un rendez-vous (page plein écran, au-dessus de la barre de navigation).
+  static String rendezVousDetail(String id) => '/rendez-vous/detail/$id';
   static const paiements = '/paiements';
 
   // Sous-pages du profil
@@ -50,6 +53,10 @@ class AppRoutes {
   /// Consultation d'un dossier juridique.
   static String dossier(String id) => '$dossiers/$id';
 
+  /// Dossier pris en charge : avocat, réponse, honoraires et prise de rendez-vous.
+  static String dossierPriseEnCharge(String id) =>
+      '$dossiers/$id/prise-en-charge';
+
   /// Discussion de la messagerie.
   static String conversation(String id) => '$messagerie/$id';
 
@@ -62,6 +69,16 @@ class AppRoutes {
 
   /// Choix du créneau chez un professionnel.
   static String choixCreneau(String id) => '$professionnels/$id/creneau';
+
+  /// Pages racines des onglets : on les rejoint avec `go` (jamais empilées).
+  static const ongletsPrincipaux = {
+    home,
+    articles,
+    conseils,
+    professionnels,
+    rendezVous,
+    profil,
+  };
 
   /// Connexion, inscription et mot de passe oublié : toujours accessibles.
   static const authRoutes = {login, register, forgotPassword};

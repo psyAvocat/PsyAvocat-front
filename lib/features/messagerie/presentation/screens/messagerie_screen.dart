@@ -7,6 +7,7 @@ import '../widgets/messagerie_error_state.dart';
 import 'conversation_detail_screen.dart';
 import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/theme/design_system.dart';
+import '../../../../core/widgets/app_back_button.dart';
 
 /// Écran Messagerie — liste des conversations avec les professionnels.
 /// Connecté à GET /api/conversations via ApiMessagerieRepository.
@@ -23,22 +24,8 @@ class MessagerieScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: false,
-        title: Text(
-          tr('Messages'),
-          style: AppTypography.titreMoyen.copyWith(
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-            color: context.palette.textStrong,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search_rounded, color: primaryColor),
-            onPressed: () {},
-            tooltip: tr('Rechercher'),
-          ),
-        ],
+        leading: const AppBackButton(),
+        title: Text(tr('Messages')),
       ),
       body: SafeArea(
         child: conversationsAsync.when(

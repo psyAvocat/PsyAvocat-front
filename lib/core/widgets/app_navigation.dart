@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_back_button.dart';
 import '../theme/design_system.dart';
 import '../../core/l10n/app_strings.dart';
 
@@ -50,10 +51,9 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     Widget? effectiveLeading = leading;
     if (effectiveLeading == null && shouldShowBack) {
-      effectiveLeading = IconButton(
-        icon: Icon(AppIcons.back, size: 20, color: foregroundColor),
-        tooltip: tr('Retour'),
-        onPressed: onBackPressed ?? () => Navigator.of(context).maybePop(),
+      effectiveLeading = AppBackButton(
+        color: foregroundColor,
+        onPressed: onBackPressed,
       );
     }
 
@@ -61,10 +61,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
     if (effectiveTitle == null && title != null) {
       effectiveTitle = Text(
         title!,
-        style: AppTypography.titreMoyen.copyWith(
-          fontSize: 18,
-          color: foregroundColor,
-        ),
+        style: AppTypography.titrePage.copyWith(color: foregroundColor),
       );
     }
 

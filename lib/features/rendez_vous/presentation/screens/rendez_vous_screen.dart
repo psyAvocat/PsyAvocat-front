@@ -5,11 +5,9 @@ import '../../../../core/theme/universe_provider.dart';
 import '../../data/models/rendez_vous_model.dart';
 import '../controllers/rendez_vous_controller.dart';
 import '../widgets/rendez_vous_card.dart';
-import '../widgets/rendez_vous_details_sheet.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/errors/user_message.dart';
 import '../../../../core/router/app_routes.dart';
-import '../../../../core/widgets/app_alert.dart';
 import '../../../../core/widgets/app_state_views.dart';
 import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/theme/design_system.dart';
@@ -86,15 +84,7 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: false,
-        title: Text(
-          tr('Mes rendez-vous'),
-          style: AppTypography.titreMoyen.copyWith(
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-            color: context.palette.textStrong,
-          ),
-        ),
+        title: Text(tr('Mes rendez-vous')),
       ),
       body: SafeArea(
         child: Column(
@@ -201,40 +191,9 @@ class _RendezVousScreenState extends ConsumerState<RendezVousScreen>
         final item = items[index];
         return RendezVousCard(
           item: item,
-          onTap: () => _showAppointmentDetailsSheet(context, item),
-        );
-      },
-    );
-  }
-
-  void _showAppointmentDetailsSheet(BuildContext context, RendezVous item) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: context.palette.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return RendezVousDetailsSheet(
-          item: item,
-          onCancel: () async {
-            Navigator.pop(ctx);
-            try {
-              await ref
-                  .read(rendezVousControllerProvider.notifier)
-                  .annuler(item.id);
-              if (context.mounted) {
-                AppNotification.showSuccess(
-                  context,
-                  tr('Rendez-vous annulé avec succès.'),
-                );
-              }
-            } catch (error) {
-              if (context.mounted) {
-                AppNotification.showError(context, userMessageFor(error));
-              }
-            }
-          },
+          // Page de détail plein écran (au-dessus de la barre de navigation).
+          onTap: () =>
+              context.push(AppRoutes.rendezVousDetail(item.id), extra: item),
         );
       },
     );

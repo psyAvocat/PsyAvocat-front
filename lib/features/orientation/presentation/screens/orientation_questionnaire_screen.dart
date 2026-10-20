@@ -44,11 +44,7 @@ class OrientationQuestionnaireScreen extends ConsumerWidget {
               AppSpacing.vGap12,
               Row(
                 children: [
-                  IconButton.outlined(
-                    onPressed: () => _goBack(context, ref),
-                    tooltip: tr('Retour'),
-                    icon: const Icon(Icons.chevron_left_rounded),
-                  ),
+                  AppBackButton(onPressed: () => _goBack(context, ref)),
                   const Spacer(),
                   AppButton.outline(
                     text: tr('Ignorer'),

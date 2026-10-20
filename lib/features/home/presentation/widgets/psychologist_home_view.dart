@@ -42,6 +42,7 @@ class PsychologistHomeView extends StatelessWidget {
               Expanded(
                 child: HomeActionCard(
                   title: tr('Trouver un psychologue'),
+                  icon: Icons.psychology_rounded,
                   subtitle: tr('Trouvez le professionnel qui vous correspond'),
                   highlighted: true,
                   onTap: () => context.go(AppRoutes.professionnels),
@@ -51,6 +52,7 @@ class PsychologistHomeView extends StatelessWidget {
               Expanded(
                 child: HomeActionCard(
                   title: tr('Consulter les conseils'),
+                  icon: Icons.tips_and_updates_rounded,
                   subtitle: tr('Des conseils d’experts pour mieux vivre'),
                   onTap: () => context.go(AppRoutes.conseils),
                 ),

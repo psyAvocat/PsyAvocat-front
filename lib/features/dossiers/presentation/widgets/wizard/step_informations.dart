@@ -150,32 +150,73 @@ class _StepInformationsState extends ConsumerState<StepInformations> {
                               .where((d) => d.id == _domaine!.id)
                               .firstOrNull
                         : null;
-                    return DropdownButtonFormField<SpecialiteOption?>(
-                      initialValue: selection,
-                      isExpanded: true,
-                      // Même taille que les autres champs du formulaire.
-                      style: TextStyle(
+                    // Menu Material 3 : la liste s'ouvre sous le champ, à sa
+                    // largeur exacte (pas sur toute la largeur de l'écran).
+                    return DropdownMenu<SpecialiteOption?>(
+                      initialSelection: selection,
+                      expandedInsets: EdgeInsets.zero,
+                      requestFocusOnTap: false,
+                      menuHeight: 320,
+                      hintText: tr('Sélectionner un domaine'),
+                      textStyle: TextStyle(
                         fontSize: 14,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
-                      icon: Icon(
+                      trailingIcon: Icon(
                         Icons.keyboard_arrow_down_rounded,
                         color: context.palette.textStrong,
                       ),
-                      decoration: _inputDeco(tr('Sélectionner un domaine')),
-                      items: [
-                        DropdownMenuItem<SpecialiteOption?>(
+                      selectedTrailingIcon: Icon(
+                        Icons.keyboard_arrow_up_rounded,
+                        color: context.palette.textStrong,
+                      ),
+                      inputDecorationTheme: InputDecorationThemeData(
+                        hintStyle: TextStyle(
+                          color: context.palette.textSubtle,
+                          fontSize: 14,
+                        ),
+                        filled: true,
+                        fillColor: context.palette.card,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: context.palette.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: context.palette.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: widget.primaryColor),
+                        ),
+                      ),
+                      menuStyle: MenuStyle(
+                        backgroundColor: WidgetStatePropertyAll(
+                          context.palette.card,
+                        ),
+                        shape: WidgetStatePropertyAll(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      dropdownMenuEntries: [
+                        DropdownMenuEntry<SpecialiteOption?>(
                           value: null,
-                          child: Text(tr('Je ne sais pas')),
+                          label: tr('Je ne sais pas'),
                         ),
                         ...domaines.map(
-                          (d) => DropdownMenuItem<SpecialiteOption?>(
+                          (d) => DropdownMenuEntry<SpecialiteOption?>(
                             value: d,
-                            child: Text(d.nom, overflow: TextOverflow.ellipsis),
+                            label: d.nom,
                           ),
                         ),
                       ],
-                      onChanged: (v) => setState(() => _domaine = v),
+                      onSelected: (v) => setState(() => _domaine = v),
                     );
                   },
                 ),

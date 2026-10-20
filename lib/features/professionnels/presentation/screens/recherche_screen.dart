@@ -47,6 +47,9 @@ class _RechercheScreenState extends ConsumerState<RechercheScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        // Champ de recherche : occupe toute la largeur disponible.
+        centerTitle: false,
+        leading: const AppBackButton(),
         title: TextField(
           controller: _searchController,
           autofocus: true,
