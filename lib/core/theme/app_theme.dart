@@ -263,7 +263,7 @@ class AppTheme {
       scaffoldBackgroundColor: scheme.surfaceContainerLow,
       extensions: [
         AppUniverseColors.fromUniverse(universe, brightness: brightness),
-        brightness == Brightness.dark ? AppPalette.dark : AppPalette.light,
+        AppPalette.forUniverse(universe, brightness),
       ],
       textTheme: textTheme,
 

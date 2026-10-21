@@ -9,6 +9,7 @@ import 'package:psyavocat_front/core/errors/app_exception.dart';
 import 'package:psyavocat_front/core/network/network_providers.dart';
 import 'package:psyavocat_front/core/router/app_router.dart';
 import 'package:psyavocat_front/core/router/app_routes.dart';
+import 'package:psyavocat_front/core/router/startup_splash.dart';
 import 'package:psyavocat_front/core/services/app_preferences_service.dart';
 import 'package:psyavocat_front/core/widgets/widgets.dart';
 import 'package:psyavocat_front/features/auth/data/models/current_user.dart';
@@ -169,7 +170,7 @@ Future<ProviderContainer> _startApp(WidgetTester tester) async {
     ),
   );
   // Splash (durée minimale) puis connexion.
-  await tester.pump(const Duration(seconds: 2));
+  await tester.pump(StartupSplashNotifier.minimum);
   await tester.pumpAndSettle();
   return container;
 }

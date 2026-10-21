@@ -46,11 +46,15 @@ class OrientationQuestionnaireScreen extends ConsumerWidget {
                 children: [
                   AppBackButton(onPressed: () => _goBack(context, ref)),
                   const Spacer(),
-                  AppButton.outline(
-                    text: tr('Ignorer'),
-                    size: AppButtonSize.compact,
-                    isFullWidth: false,
+                  TextButton(
                     onPressed: () => context.go(AppRoutes.home),
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(0, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      textStyle: AppTypography.buttonTextSmall,
+                    ),
+                    child: Text(tr('Ignorer')),
                   ),
                 ],
               ),

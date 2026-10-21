@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_system.dart';
 
-/// Carte d'action rapide de l'accueil (« Voir les professionnels »,
+/// Carte d'action rapide de l'accueil (« Trouver les avocats »,
 /// « Consulter les conseils »…).
 ///
 /// [highlighted] : fond plein couleur de l'univers (action principale) ;

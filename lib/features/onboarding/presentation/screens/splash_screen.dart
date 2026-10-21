@@ -49,8 +49,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final errorMessage = session.status == SessionStatus.error
         ? (session.message ?? tr('Connexion au serveur impossible.'))
         : null;
-    final ecran = MediaQuery.sizeOf(context);
-    final logoSize = (ecran.width * 0.55).clamp(140.0, 240.0);
+    final logoSize = (MediaQuery.sizeOf(context).width * 0.55).clamp(
+      140.0,
+      240.0,
+    );
     final echelle = Tween<double>(
       begin: (_largeurNative / logoSize).clamp(0.4, 1.0),
       end: 1,
@@ -74,74 +76,86 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         opacity: sortie.drive(Tween(begin: 1.0, end: 0.0)),
         child: ScaleTransition(
           scale: sortie.drive(Tween(begin: 1.0, end: 1.06)),
-          child: Stack(
-            children: [
-              // Logo au centre exact de l'écran, comme sur l'écran de lancement natif :
-              // il y est déjà visible, il grandit simplement jusqu'à sa taille finale.
-              Center(
-                child: ScaleTransition(
-                  scale: echelle,
-                  child: PsyAvocatLogo(size: logoSize, showText: false),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                // Sous le logo (hauteur réelle du dessin : 87 % de sa largeur).
-                top: ecran.height / 2 + logoSize * 0.44 + 12,
-                child: FadeTransition(
-                  opacity: texte,
-                  child: SingleChildScrollView(
-                    padding: AppSpacing.screenPadding,
-                    child: Column(
-                      children: [
-                        Text.rich(
-                          TextSpan(
-                            style: AppTypography.grandTitre.copyWith(
-                              fontSize: 40,
-                              fontWeight: FontWeight.w800,
-                            ),
-                            children: const [
-                              TextSpan(
-                                text: 'Psy',
-                                style: TextStyle(color: AppColors.logoPsy),
-                              ),
-                              TextSpan(
-                                text: 'Avocat',
-                                style: TextStyle(color: AppColors.lawyer),
-                              ),
-                            ],
-                          ),
-                        ),
-                        AppSpacing.vGap16,
-                        Text(
-                          tr('Votre solution juridique\net psychologique'),
-                          textAlign: TextAlign.center,
-                          style: AppTypography.petitTitre,
-                        ),
-                        if (errorMessage != null) ...[
-                          AppSpacing.vGap32,
-                          Text(
-                            errorMessage,
-                            textAlign: TextAlign.center,
-                            style: AppTypography.texteSecondaire,
-                          ),
-                          AppSpacing.vGap16,
-                          AppButton(
-                            text: tr('Réessayer'),
-                            isFullWidth: false,
-                            onPressed: () => ref
-                                .read(sessionControllerProvider.notifier)
-                                .resolve(),
-                          ),
-                        ],
-                      ],
+          // Logo + textes centrés comme un seul bloc. Le bloc texte s'ouvre en
+          // hauteur depuis 0 : au départ le logo est au centre exact (comme sur
+          // l'écran de lancement natif), puis il remonte en douceur à mesure
+          // que les textes apparaissent, jusqu'à ce que l'ensemble soit centré.
+          child: Center(
+            child: SingleChildScrollView(
+              padding: AppSpacing.screenPadding,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ScaleTransition(
+                    scale: echelle,
+                    // Boîte réduite à la hauteur réelle du dessin (87 % de sa
+                    // largeur) pour que l'espace sous le logo soit exact.
+                    child: SizedBox(
+                      width: logoSize,
+                      height: logoSize * 0.87,
+                      child: OverflowBox(
+                        maxHeight: logoSize,
+                        child: PsyAvocatLogo(size: logoSize, showText: false),
+                      ),
                     ),
                   ),
-                ),
+                  SizeTransition(
+                    sizeFactor: texte,
+                    alignment: Alignment.topCenter,
+                    child: FadeTransition(
+                      opacity: texte,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AppSpacing.vGap16,
+                          Text.rich(
+                            TextSpan(
+                              style: AppTypography.grandTitre.copyWith(
+                                fontSize: 40,
+                                fontWeight: FontWeight.w800,
+                              ),
+                              children: const [
+                                TextSpan(
+                                  text: 'Psy',
+                                  style: TextStyle(color: AppColors.logoPsy),
+                                ),
+                                TextSpan(
+                                  text: 'Avocat',
+                                  style: TextStyle(color: AppColors.lawyer),
+                                ),
+                              ],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          AppSpacing.vGap16,
+                          Text(
+                            tr('Votre solution juridique\net psychologique'),
+                            textAlign: TextAlign.center,
+                            style: AppTypography.petitTitre,
+                          ),
+                          if (errorMessage != null) ...[
+                            AppSpacing.vGap32,
+                            Text(
+                              errorMessage,
+                              textAlign: TextAlign.center,
+                              style: AppTypography.texteSecondaire,
+                            ),
+                            AppSpacing.vGap16,
+                            AppButton(
+                              text: tr('Réessayer'),
+                              isFullWidth: false,
+                              onPressed: () => ref
+                                  .read(sessionControllerProvider.notifier)
+                                  .resolve(),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
