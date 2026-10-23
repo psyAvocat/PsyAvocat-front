@@ -460,6 +460,9 @@ const Map<String, String> enStrings = {
   "Qui êtes-vous ?": "Who are you?",
   "Quitter": "Leave",
   "Rechercher": "Search",
+  "Effacer": "Clear",
+  "Mieux notés": "Top rated",
+  "Trier": "Sort",
   "Rechercher un article…": "Search for an article…",
   "Rechercher un avocat par nom, ville, spécialité…":
       "Search for a lawyer by name, city, specialty…",
@@ -570,7 +573,13 @@ const Map<String, String> enStrings = {
   "Voir les articles": "See articles",
   "Voir les avocats": "See lawyers",
   "Voir les conseils": "See advice",
-  "Voir les professionnels": "See professionals",
+  "Répondez à quelques questions simples : nous vous orientons vers le professionnel qui vous correspond.":
+      "Answer a few simple questions: we will guide you to the professional who suits you.",
+  "Moins de 2 min": "Under 2 min",
+  "Confidentiel": "Confidential",
+  "Pas un diagnostic": "Not a diagnosis",
+  "Une orientation, pas un diagnostic.": "A recommendation, not a diagnosis.",
+  "Trouver les avocats": "Find lawyers",
   "Voir les psychologues": "See psychologists",
   "Voir mes dossiers": "See my cases",
   "Voir mes rendez-vous": "See my appointments",
@@ -681,4 +690,115 @@ const Map<String, String> enStrings = {
   "Un dossier d’abord": "A case first",
   "Soumettez votre dossier à {nom}. Dès qu’il l’accepte, vous choisissez l’un de ces créneaux pour votre rendez-vous.":
       "Submit your case to {nom}. As soon as it is accepted, you choose one of these slots for your appointment.",
+  "Paiements": "Payments",
+  "Honoraires proposés : {montant}": "Proposed fees: {montant}",
+  "Voir les détails": "View details",
+  "Dossier pris en charge": "Case taken on",
+  "Pas encore de prise en charge": "Not taken on yet",
+  "Aucun avocat n’a encore accepté ce dossier. Vous serez prévenu dès qu’un avocat l’accepte.":
+      "No lawyer has accepted this case yet. You will be notified as soon as a lawyer accepts it.",
+  "Voir le dossier": "View case",
+  "Message de l’avocat": "Message from the lawyer",
+  "Rendez-vous pour ce dossier": "Appointments for this case",
+  "Aucun rendez-vous pour le moment. Choisissez un créneau dans les disponibilités de l’avocat.":
+      "No appointments yet. Choose a slot from the lawyer’s availability.",
+  "Et maintenant ?": "What’s next?",
+  "Choisissez un créneau libre dans l’agenda de l’avocat.":
+      "Choose a free slot in the lawyer’s calendar.",
+  "Réglez l’acompte de 20 % (paiement simulé) pour confirmer.":
+      "Pay the 20% deposit (simulated payment) to confirm.",
+  "Rencontrez votre avocat au cabinet ou en visioconférence.":
+      "Meet your lawyer at the office or by video call.",
+  "Voir le dossier complet": "View full case",
+  "Prendre un autre rendez-vous": "Book another appointment",
+  "Votre dossier est entre de bonnes mains": "Your case is in good hands",
+  "{avocat} a accepté votre dossier « {titre} ».":
+      "{avocat} accepted your case “{titre}”.",
+  "Réponse du {date}": "Replied on {date}",
+  "Honoraires totaux": "Total fees",
+  "Acompte à la réservation (20 %)": "Deposit when booking (20%)",
+  "Reste à régler à l’avocat": "Balance payable to the lawyer",
+  "Pris en charge par {avocat}": "Taken on by {avocat}",
+  "Dossier envoyé !": "Case sent!",
+  "Les avocats sélectionnés ont été notifiés. Vous serez prévenu dès que l’un d’eux accepte votre dossier.":
+      "The selected lawyers have been notified. You will be told as soon as one of them accepts your case.",
+  "Votre dossier « {titre} » est enregistré, mais certains éléments n’ont pas pu être transmis.":
+      "Your case “{titre}” is saved, but some items could not be sent.",
+  "Transmis à {n} avocats": "Sent to {n} lawyers",
+  "Transmis à {n} avocat": "Sent to {n} lawyer",
+  "Les avocats examinent votre dossier et ses pièces.":
+      "The lawyers review your case and its documents.",
+  "Vous recevez une notification dès qu’un avocat l’accepte, avec ses honoraires.":
+      "You get a notification as soon as a lawyer accepts it, with their fees.",
+  "Vous choisissez un créneau dans son agenda pour votre rendez-vous.":
+      "You choose a slot in their calendar for your appointment.",
+  "Suivre mon dossier": "Track my case",
+  "Photo ajoutée au dossier.": "Photo added to the case.",
+  "Autre photo": "Another photo",
+  "Impossible d’ouvrir l’appareil photo. Vérifiez l’autorisation dans les réglages du téléphone.":
+      "Unable to open the camera. Check the permission in your phone settings.",
+  "Prendre une photo": "Take a photo",
+  "Document papier": "Paper document",
+  "Importer un fichier": "Import a file",
+  "PDF, image, Word": "PDF, image, Word",
+  "Nombre maximal de documents atteint.":
+      "Maximum number of documents reached.",
+  "Astuce : photographiez le document à plat, en entier et bien éclairé, une page par photo.":
+      "Tip: photograph the document flat, in full and well lit, one page per photo.",
+  "Vérifiez avant d’envoyer": "Check before sending",
+  "Touchez « Modifier » pour corriger une partie. Rien n’est envoyé avant votre confirmation.":
+      "Tap “Edit” to correct a section. Nothing is sent until you confirm.",
+  "Aucune": "None",
+  "Chaque avocat pourra accepter ou décliner votre dossier. Le premier qui l’accepte le prend en charge : vous pourrez alors prendre rendez-vous avec lui.":
+      "Each lawyer can accept or decline your case. The first one to accept takes it on: you can then book an appointment with them.",
+  "Création du dossier": "Creating the case",
+  "Envoi des pièces jointes": "Uploading attachments",
+  "Transmission aux avocats": "Sending to lawyers",
+  "Modifier": "Edit",
+  "Informations": "Details",
+  "Validation": "Review",
+  "Votre dossier « {titre} » est pris en charge par cet avocat.":
+      "Your case “{titre}” is taken on by this lawyer.",
+  "{n} de vos dossiers sont pris en charge par cet avocat.":
+      "{n} of your cases are taken on by this lawyer.",
+  "Soumettre un autre dossier": "Submit another case",
+  "Pour quel dossier ?": "For which case?",
+  "{pro} a été prévenu. Un rappel vous sera envoyé avant le rendez-vous.":
+      "{pro} has been notified. You will get a reminder before the appointment.",
+  "Rendez-vous annulé. {pro} a été prévenu.":
+      "Appointment cancelled. {pro} has been notified.",
+  "Annuler ce rendez-vous ?": "Cancel this appointment?",
+  "Le créneau est libéré pour d’autres personnes.":
+      "The slot is released for other people.",
+  "{pro} est prévenu immédiatement, avec votre motif s’il est renseigné.":
+      "{pro} is notified immediately, with your reason if you give one.",
+  "L’acompte (paiement simulé) est annulé : aucune somme n’a été débitée.":
+      "The deposit (simulated payment) is cancelled: no money was charged.",
+  "Votre dossier reste confié à cet avocat : vous pourrez reprendre rendez-vous à tout moment.":
+      "Your case stays with this lawyer: you can book a new appointment at any time.",
+  "Ex. : empêchement professionnel": "E.g.: work commitment",
+  "Confirmer l’annulation": "Confirm cancellation",
+  "Garder mon rendez-vous": "Keep my appointment",
+  "Supprimer les notifications lues ?": "Delete read notifications?",
+  "Les notifications non lues sont conservées. Cette action est définitive.":
+      "Unread notifications are kept. This cannot be undone.",
+  "Supprimer": "Delete",
+  "Notifications lues supprimées.": "Read notifications deleted.",
+  "Notification supprimée.": "Notification deleted.",
+  "Tout marquer comme lu": "Mark all as read",
+  "Supprimer les lues": "Delete read",
+  "À l’instant": "Just now",
+  "Acompte réglé (20 %)": "Deposit paid (20%)",
+  "Impossible d’ouvrir le lien de visioconférence.":
+      "Unable to open the video call link.",
+  "Détail du rendez-vous": "Appointment details",
+  "Rendez-vous indisponible": "Appointment unavailable",
+  "Motif de consultation": "Reason for consultation",
+  "Acompte (20 %)": "Deposit (20%)",
+  "Acompte réglé": "Deposit paid",
+  "Acompte annulé": "Deposit cancelled",
+  "Rejoindre la visioconférence": "Join the video call",
+  "Voir le profil du professionnel": "View the professional’s profile",
+  "Lieu": "Location",
+  "Paiement": "Payment",
 };

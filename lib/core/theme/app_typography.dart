@@ -41,6 +41,13 @@ class AppTypography {
     letterSpacing: -0.2,
   );
 
+  /// Titre de page (barre d'en-tête) : 20 px, Bold. Le même sur tous les écrans.
+  static TextStyle get titrePage => GoogleFonts.montserrat(
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    height: 1.3,
+  );
+
   /// Petit titre : 20 px, SemiBold
   static TextStyle get petitTitre => GoogleFonts.montserrat(
     fontSize: 20,

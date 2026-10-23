@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
+import 'app_universe.dart';
 
 /// Couleurs neutres des écrans (fonds, cartes, textes, bordures) en clair et
 /// en sombre. En clair, les valeurs sont exactement celles des maquettes ; en
@@ -109,6 +110,54 @@ class AppPalette extends ThemeExtension<AppPalette> {
     bubbleIncoming: Color(0xFF26324D),
     onBubbleIncoming: AppColors.darkTextPrimary,
     inputFill: AppColors.darkSurfaceSecondary,
+  );
+
+  /// Palette de l'univers : les teintes « bleutées » (pastilles, carrés
+  /// d'icônes, cartes teintées) passent en variantes violettes côté Psychologue.
+  static AppPalette forUniverse(AppUniverse universe, Brightness brightness) {
+    final base = brightness == Brightness.dark ? dark : light;
+    if (!universe.isPsychologist) return base;
+    return brightness == Brightness.dark
+        ? base._tinted(
+            cardTinted: const Color(0xFF1F1636),
+            borderTinted: const Color(0xFF3D2C5E),
+            chip: const Color(0xFF2A1E47),
+            iconTile: const Color(0xFF2A1E47),
+            onIconTile: const Color(0xFFC3A8F5),
+          )
+        : base._tinted(
+            cardTinted: const Color(0xFFFAF7FE),
+            borderTinted: const Color(0xFFE6DCF5),
+            chip: const Color(0xFFF1EAFB),
+            iconTile: const Color(0xFFEDE3FA),
+            onIconTile: AppColors.psychologist,
+          );
+  }
+
+  AppPalette _tinted({
+    required Color cardTinted,
+    required Color borderTinted,
+    required Color chip,
+    required Color iconTile,
+    required Color onIconTile,
+  }) => AppPalette(
+    page: page,
+    card: card,
+    muted: muted,
+    textStrong: textStrong,
+    text: text,
+    textMuted: textMuted,
+    textSubtle: textSubtle,
+    border: border,
+    borderStrong: borderStrong,
+    cardTinted: cardTinted,
+    borderTinted: borderTinted,
+    chip: chip,
+    iconTile: iconTile,
+    onIconTile: onIconTile,
+    bubbleIncoming: bubbleIncoming,
+    onBubbleIncoming: onBubbleIncoming,
+    inputFill: inputFill,
   );
 
   @override

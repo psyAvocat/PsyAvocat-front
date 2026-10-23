@@ -9,6 +9,7 @@ import '../widgets/wizard/step_validation.dart';
 import '../widgets/wizard/step_confirmation.dart';
 import '../../../../core/theme/app_palette.dart';
 import '../../../../core/l10n/app_strings.dart';
+import '../../../../core/widgets/app_back_button.dart';
 
 /// Assistant d'envoi d'un dossier juridique (univers Avocat) :
 /// avocats → informations → pièces jointes → validation et envoi réel.
@@ -38,6 +39,16 @@ class _CreateDossierWizardScreenState
         curve: Curves.easeInOut,
       );
     }
+  }
+
+  /// « Modifier » depuis le récapitulatif : retour direct à l'étape concernée.
+  void _allerA(int etape) {
+    if (ref.read(createDossierWizardProvider).envoiEnCours) return;
+    _pageController.animateToPage(
+      etape,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+    );
   }
 
   void _previousStep() {
@@ -74,23 +85,8 @@ class _CreateDossierWizardScreenState
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          centerTitle: true,
-          leading: IconButton(
-            icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 20,
-              color: context.palette.textStrong,
-            ),
-            onPressed: _previousStep,
-          ),
-          title: Text(
-            tr('Envoyer mon dossier'),
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: context.palette.textStrong,
-            ),
-          ),
+          leading: AppBackButton(onPressed: _previousStep),
+          title: Text(tr('Envoyer mon dossier')),
         ),
         body: SafeArea(
           child: Column(
@@ -120,6 +116,7 @@ class _CreateDossierWizardScreenState
                     StepValidation(
                       onSubmitted: () => _showConfirmation(primaryColor),
                       onBack: _previousStep,
+                      onModifier: _allerA,
                       primaryColor: primaryColor,
                     ),
                   ],

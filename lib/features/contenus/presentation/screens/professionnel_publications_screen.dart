@@ -9,6 +9,7 @@ import '../../data/models/contenu_model.dart';
 import '../controllers/contenus_controller.dart';
 import '../widgets/publication_cards.dart';
 import '../../../../core/l10n/app_strings.dart';
+import '../../../../core/widgets/app_back_button.dart';
 
 /// Articles (avocat) ou conseils (psychologue) publiés par un professionnel,
 /// ouverts depuis le bouton « Voir les articles » de sa fiche.
@@ -38,10 +39,11 @@ class ProfessionnelPublicationsScreen extends ConsumerWidget {
         backgroundColor: context.palette.card,
         surfaceTintColor: context.palette.card,
         elevation: 0,
+        leading: const AppBackButton(),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: AppTypography.petitTitre),
+            Text(label),
             if (professionnelNom != null)
               Text(professionnelNom!, style: AppTypography.texteSecondaire),
           ],

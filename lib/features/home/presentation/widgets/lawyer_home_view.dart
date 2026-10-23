@@ -51,7 +51,8 @@ class LawyerHomeView extends ConsumerWidget {
             children: [
               Expanded(
                 child: HomeActionCard(
-                  title: tr('Voir les professionnels'),
+                  title: tr('Trouver les avocats'),
+                  icon: Icons.person_search_rounded,
                   highlighted: true,
                   onTap: () => context.go(AppRoutes.professionnels),
                 ),
@@ -60,6 +61,7 @@ class LawyerHomeView extends ConsumerWidget {
               Expanded(
                 child: HomeActionCard(
                   title: tr('Voir mes dossiers'),
+                  icon: Icons.folder_copy_rounded,
                   onTap: () => context.push(AppRoutes.dossiers),
                 ),
               ),

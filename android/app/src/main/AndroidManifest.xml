@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
-        android:label="psyavocat_front"
+        android:label="PsyAvocat"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <meta-data

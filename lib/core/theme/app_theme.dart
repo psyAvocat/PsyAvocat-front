@@ -263,11 +263,11 @@ class AppTheme {
       scaffoldBackgroundColor: scheme.surfaceContainerLow,
       extensions: [
         AppUniverseColors.fromUniverse(universe, brightness: brightness),
-        brightness == Brightness.dark ? AppPalette.dark : AppPalette.light,
+        AppPalette.forUniverse(universe, brightness),
       ],
       textTheme: textTheme,
 
-      // ---- Barre d'application : blanche, titre centré, fine séparation ------
+      // ---- Barre d'application : titre de page commun, aligné à gauche -------
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 1.5,
@@ -275,6 +275,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.black.withValues(alpha: 0.08),
         foregroundColor: scheme.onSurface,
+        // Titres centrés sur toutes les pages (même rendu partout).
         centerTitle: true,
         toolbarHeight: 60,
         iconTheme: IconThemeData(color: scheme.onSurface, size: 22),
@@ -283,11 +284,14 @@ class AppTheme {
             color: scheme.outlineVariant.withValues(alpha: 0.5),
           ),
         ),
-        titleTextStyle: AppTypography.petitTitre.copyWith(
+        titleTextStyle: AppTypography.titrePage.copyWith(
           color: scheme.onSurface,
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
         ),
+      ),
+      // Boutons retour automatiques : même icône que AppBackButton.
+      actionIconTheme: ActionIconThemeData(
+        backButtonIconBuilder: (_) =>
+            const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
       ),
 
       // ---- Boutons : forme pilule, hauteur tactile confortable -------------

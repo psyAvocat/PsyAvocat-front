@@ -161,7 +161,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             onPressed: isLoading ? null : _goBack,
                             tooltip: tr('Retour'),
                             color: context.colors.primary,
-                            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                            icon: const Icon(
+                              AppBackButton.icon,
+                              size: AppBackButton.iconSize,
+                            ),
                           ),
                         ),
                         AppSpacing.vGap4,

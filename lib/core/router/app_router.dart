@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +12,7 @@ import '../../features/contenus/presentation/screens/contenu_detail_screen.dart'
 import '../../features/contenus/presentation/screens/contenus_screen.dart';
 import '../../features/contenus/presentation/screens/professionnel_publications_screen.dart';
 import '../../features/dossiers/presentation/screens/dossier_detail_screen.dart';
+import '../../features/dossiers/presentation/screens/dossier_prise_en_charge_screen.dart';
 import '../../features/dossiers/presentation/screens/dossiers_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/messagerie/presentation/screens/conversation_detail_screen.dart';
@@ -34,10 +36,13 @@ import '../../features/profile/presentation/screens/settings_screen.dart';
 import '../../features/rendez_vous/data/models/reservation_contexte.dart';
 import '../../features/rendez_vous/presentation/screens/choix_creneau_screen.dart';
 import '../../features/rendez_vous/presentation/screens/rendez_vous_confirmation_screen.dart';
+import '../../features/rendez_vous/presentation/screens/rendez_vous_detail_screen.dart';
+import '../../features/rendez_vous/data/models/rendez_vous_model.dart';
 import '../../features/rendez_vous/presentation/screens/rendez_vous_screen.dart';
 import '../../features/selection_univers/presentation/screens/selection_univers_screen.dart';
 import '../services/app_preferences_service.dart';
 import '../theme/universe_provider.dart';
+import '../widgets/app_back_button.dart';
 import '../widgets/app_button.dart';
 import 'app_routes.dart';
 import 'route_guard.dart';
@@ -77,8 +82,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       // --- Entrée et statut du compte (remplacés les uns par les autres) ---
       _fadeRoute(AppRoutes.splash, (_) => const SplashScreen()),
-      _fadeRoute(AppRoutes.onboarding, (_) => const OnboardingScreen()),
-      _fadeRoute(AppRoutes.login, (_) => const LoginScreen()),
+      _entreeRoute(AppRoutes.onboarding, (_) => const OnboardingScreen()),
+      _entreeRoute(AppRoutes.login, (_) => const LoginScreen()),
       GoRoute(
         path: AppRoutes.register,
         builder: (_, _) => const RegisterScreen(),
@@ -87,9 +92,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.forgotPassword,
         builder: (_, _) => const ForgotPasswordScreen(),
       ),
-      _fadeRoute(AppRoutes.accessDenied, (_) => const AccessDeniedScreen()),
-      _fadeRoute(AppRoutes.verifyEmail, (_) => const VerifyEmailScreen()),
-      _fadeRoute(
+      _entreeRoute(AppRoutes.accessDenied, (_) => const AccessDeniedScreen()),
+      _entreeRoute(AppRoutes.verifyEmail, (_) => const VerifyEmailScreen()),
+      _entreeRoute(
         AppRoutes.universeSelection,
         (_) => const SelectionUniversScreen(),
       ),
@@ -97,7 +102,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // --- Navigation principale : 5 onglets (navigation_destinations.dart) ---
       // Chaque onglet garde son état (scroll, sous-pages) d'un passage à l'autre.
       StatefulShellRoute.indexedStack(
-        pageBuilder: (context, state, navigationShell) => _fadePage(
+        pageBuilder: (context, state, navigationShell) => _entreePage(
           state,
           MainNavigationShell(navigationShell: navigationShell),
         ),
@@ -176,6 +181,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: ':id',
             builder: (context, state) =>
                 DossierDetailScreen(dossierId: state.pathParameters['id']!),
+            routes: [
+              GoRoute(
+                path: 'prise-en-charge',
+                builder: (context, state) => DossierPriseEnChargeScreen(
+                  dossierId: state.pathParameters['id']!,
+                  depuisDossier: state.extra == true,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -220,6 +234,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/rendez-vous/detail/:id',
+        builder: (context, state) => RendezVousDetailScreen(
+          rendezVousId: state.pathParameters['id']!,
+          initial: state.extra is RendezVous ? state.extra as RendezVous : null,
+        ),
+      ),
+      GoRoute(
         path: AppRoutes.rendezVousConfirmation,
         builder: (context, state) => RendezVousConfirmationScreen(
           recap: state.extra is ReservationRecap
@@ -258,12 +279,70 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+  // Bouton retour Android : sur la dernière page d'un écran (fiche ouverte depuis
+  // une notification, onglet autre que l'accueil…), retour à l'accueil de
+  // l'univers au lieu de quitter l'application.
+  final retourSysteme =
+      router.backButtonDispatcher.createChildBackButtonDispatcher()
+        ..addCallback(() {
+          final destination = destinationRetourSysteme(
+            chemin: router.routerDelegate.currentConfiguration.uri.path,
+            peutRevenir: router.canPop(),
+          );
+          if (destination == null) return SynchronousFuture(false);
+          router.go(destination);
+          return SynchronousFuture(true);
+        });
+  // La priorité ne peut être prise qu'une fois le Router affiché (il s'inscrit
+  // alors auprès du répartiteur racine) : après la première image.
+  var actif = true;
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (actif) retourSysteme.takePriority();
+  });
+  ref.onDispose(() {
+    actif = false;
+    router.backButtonDispatcher.forget(retourSysteme);
+  });
+
   ref.onDispose(router.dispose);
   return router;
 });
 
 /// Durée commune des fondus : courte, pour une navigation fluide.
 const _fadeDuration = Duration(milliseconds: 250);
+
+/// Pages qui peuvent suivre l'écran logo (connexion, accueil, choix de
+/// l'univers…) : elles apparaissent en fondu une fois le logo effacé (voir
+/// SplashScreen), avec un très léger zoom — transition douce, sans à-coup.
+const _entreeDuration = Duration(milliseconds: 600);
+
+GoRoute _entreeRoute(String path, Widget Function(GoRouterState) builder) {
+  return GoRoute(
+    path: path,
+    pageBuilder: (context, state) => _entreePage(state, builder(state)),
+  );
+}
+
+Page<void> _entreePage(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: _entreeDuration,
+    reverseTransitionDuration: _fadeDuration,
+    transitionsBuilder: (context, animation, _, child) {
+      final entree = animation.drive(
+        CurveTween(curve: const Interval(0.25, 1, curve: Curves.easeOutCubic)),
+      );
+      return FadeTransition(
+        opacity: entree,
+        child: ScaleTransition(
+          scale: entree.drive(Tween(begin: 0.985, end: 1.0)),
+          child: child,
+        ),
+      );
+    },
+  );
+}
 
 GoRoute _fadeRoute(String path, Widget Function(GoRouterState) builder) {
   return GoRoute(

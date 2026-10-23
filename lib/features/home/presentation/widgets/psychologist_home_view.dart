@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_routes.dart';
@@ -42,6 +45,7 @@ class PsychologistHomeView extends StatelessWidget {
               Expanded(
                 child: HomeActionCard(
                   title: tr('Trouver un psychologue'),
+                  icon: Icons.person_search_outlined,
                   subtitle: tr('Trouvez le professionnel qui vous correspond'),
                   highlighted: true,
                   onTap: () => context.go(AppRoutes.professionnels),
@@ -51,6 +55,7 @@ class PsychologistHomeView extends StatelessWidget {
               Expanded(
                 child: HomeActionCard(
                   title: tr('Consulter les conseils'),
+                  icon: Icons.lightbulb_outline_rounded,
                   subtitle: tr('Des conseils d’experts pour mieux vivre'),
                   onTap: () => context.go(AppRoutes.conseils),
                 ),
@@ -69,8 +74,9 @@ class PsychologistHomeView extends StatelessWidget {
   }
 }
 
-/// Bannière « Prenez soin de votre santé mentale » : fond illustré généré
-/// (formes douces dans la couleur de l'univers). Elle ouvre le questionnaire
+/// Bannière « Prenez soin de votre santé mentale » : photo d'une séance en
+/// fond, visible en transparence sous la couleur de l'univers, et un reflet
+/// discret qui parcourt le bord de temps en temps. Elle ouvre le questionnaire
 /// d'orientation (questions et réponses chargées depuis la base).
 class _WellbeingBanner extends StatelessWidget {
   const _WellbeingBanner();
@@ -79,61 +85,73 @@ class _WellbeingBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return ClipRRect(
-      borderRadius: AppRadii.r16,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => context.push(AppRoutes.orientation),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: CustomPaint(painter: _BannerArtPainter(scheme.primary)),
-              ),
-              Padding(
-                padding: AppSpacing.cardPadding,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppSpacing.vGap16,
-                    Text(
-                      tr('Prenez soin\nde votre santé mentale'),
-                      style: AppTypography.petitTitre.copyWith(
-                        color: scheme.onPrimary,
-                      ),
-                    ),
-                    AppSpacing.vGap8,
-                    Text(
-                      tr(
-                        'Un accompagnement bienveillant pour avancer sereinement.',
-                      ),
-                      style: AppTypography.texteSecondaire.copyWith(
-                        color: scheme.onPrimary,
-                      ),
-                    ),
-                    AppSpacing.vGap16,
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.s16,
-                        vertical: AppSpacing.s8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.onPrimary,
-                        borderRadius: AppRadii.pill,
-                      ),
-                      child: Text(
-                        tr('Faire le test d’orientation'),
-                        style: AppTypography.texteSecondaire.copyWith(
-                          color: scheme.primary,
-                          fontWeight: FontWeight.w700,
+    return _OccasionalBorderGlow(
+      radius: 16,
+      child: ClipRRect(
+        borderRadius: AppRadii.r16,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.push(AppRoutes.orientation),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/images/psychologist_session.jpg',
+                    fit: BoxFit.cover,
+                    alignment: const Alignment(0.2, 0),
+                  ),
+                ),
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _BannerArtPainter(scheme.primary),
+                  ),
+                ),
+                Padding(
+                  padding: AppSpacing.cardPadding,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppSpacing.vGap16,
+                      Text(
+                        tr('Prenez soin\nde votre santé mentale'),
+                        style: AppTypography.petitTitre.copyWith(
+                          color: scheme.onPrimary,
                         ),
                       ),
-                    ),
-                    AppSpacing.vGap8,
-                  ],
+                      AppSpacing.vGap8,
+                      Text(
+                        tr(
+                          'Un accompagnement bienveillant pour avancer sereinement.',
+                        ),
+                        style: AppTypography.texteSecondaire.copyWith(
+                          color: scheme.onPrimary,
+                        ),
+                      ),
+                      AppSpacing.vGap16,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.s16,
+                          vertical: AppSpacing.s8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: scheme.onPrimary,
+                          borderRadius: AppRadii.pill,
+                        ),
+                        child: Text(
+                          tr('Faire le test d’orientation'),
+                          style: AppTypography.texteSecondaire.copyWith(
+                            color: scheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      AppSpacing.vGap8,
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -141,9 +159,8 @@ class _WellbeingBanner extends StatelessWidget {
   }
 }
 
-/// Illustration de fond de la bannière : aplat de la couleur de l'univers,
-/// halos lumineux et vague apaisante. Dessinée en vectoriel : nette sur tous
-/// les écrans, sans image à télécharger.
+/// Voile de la bannière, posé sur la photo : couleur de l'univers (la photo
+/// reste visible en transparence) et vague apaisante.
 class _BannerArtPainter extends CustomPainter {
   final Color base;
 
@@ -153,22 +170,9 @@ class _BannerArtPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    canvas.drawRect(Offset.zero & size, Paint()..color = base);
-
-    canvas.drawCircle(
-      Offset(w * 0.92, h * 0.12),
-      h * 0.62,
-      Paint()..color = Colors.white.withValues(alpha: 0.10),
-    );
-    canvas.drawCircle(
-      Offset(w * 0.80, h * 0.95),
-      h * 0.38,
-      Paint()..color = Colors.white.withValues(alpha: 0.07),
-    );
-    canvas.drawCircle(
-      Offset(w * 0.70, h * 0.30),
-      h * 0.16,
-      Paint()..color = Colors.white.withValues(alpha: 0.12),
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = base.withValues(alpha: 0.78),
     );
 
     final vague = Path()
@@ -186,4 +190,125 @@ class _BannerArtPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BannerArtPainter old) => old.base != base;
+}
+
+/// Reflet lumineux discret qui fait un tour du bord de la carte, puis
+/// disparaît : il ne revient qu'après une pause (pas d'animation continue).
+/// Désactivé si l'utilisateur a réduit les animations.
+class _OccasionalBorderGlow extends StatefulWidget {
+  final Widget child;
+  final double radius;
+
+  const _OccasionalBorderGlow({required this.child, required this.radius});
+
+  @override
+  State<_OccasionalBorderGlow> createState() => _OccasionalBorderGlowState();
+}
+
+class _OccasionalBorderGlowState extends State<_OccasionalBorderGlow>
+    with SingleTickerProviderStateMixin {
+  /// Durée d'un passage du reflet, et pause entre deux passages.
+  static const _passage = Duration(milliseconds: 2600);
+  static const _pause = Duration(seconds: 9);
+  static const _premierDelai = Duration(seconds: 2);
+
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: _passage,
+  )..addStatusListener(_onStatus);
+  Timer? _timer;
+  bool? _animationsReduites;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduites = MediaQuery.disableAnimationsOf(context);
+    if (reduites == _animationsReduites) return;
+    _animationsReduites = reduites;
+    _timer?.cancel();
+    if (reduites) {
+      _controller.reset();
+    } else {
+      _timer = Timer(_premierDelai, _lancer);
+    }
+  }
+
+  void _lancer() {
+    if (mounted) _controller.forward(from: 0);
+  }
+
+  void _onStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed) {
+      _controller.reset();
+      _timer = Timer(_pause, _lancer);
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      foregroundPainter: _GlowPainter(
+        progress: _controller,
+        radius: widget.radius,
+      ),
+      child: widget.child,
+    );
+  }
+}
+
+class _GlowPainter extends CustomPainter {
+  final Animation<double> progress;
+  final double radius;
+
+  _GlowPainter({required this.progress, required this.radius})
+    : super(repaint: progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final t = progress.value;
+    if (t == 0) return;
+    // Apparition et disparition en douceur au cours du passage.
+    final intensite = math.sin(math.pi * t);
+    final rect = (Offset.zero & size).deflate(0.75);
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius - 0.75));
+    final shader = SweepGradient(
+      colors: [
+        Colors.white.withValues(alpha: 0),
+        Colors.white.withValues(alpha: 0),
+        Colors.white.withValues(alpha: 0.55 * intensite),
+        Colors.white.withValues(alpha: 0),
+        Colors.white.withValues(alpha: 0),
+      ],
+      stops: const [0, 0.42, 0.5, 0.58, 1],
+      transform: GradientRotation(-math.pi / 2 + t * 2 * math.pi),
+    ).createShader(rect);
+
+    // Halo léger, puis trait fin par-dessus.
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..shader = shader
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..shader = shader
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _GlowPainter oldDelegate) =>
+      oldDelegate.radius != radius;
 }

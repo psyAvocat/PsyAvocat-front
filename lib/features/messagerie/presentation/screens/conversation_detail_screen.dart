@@ -8,6 +8,7 @@ import '../controllers/conversations_providers.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/chat_input_bar.dart';
 import '../../../../core/l10n/app_strings.dart';
+import '../../../../core/widgets/app_back_button.dart';
 
 /// Discussion avec un professionnel — maquettes « Conversation avocat » et
 /// « Conversation psy » : en-tête avec photo, bulles grises (professionnel)
@@ -171,12 +172,7 @@ class _EnTete extends StatelessWidget implements PreferredSizeWidget {
           ),
           child: Row(
             children: [
-              IconButton(
-                tooltip: tr('Retour'),
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                color: context.palette.textStrong,
-                onPressed: () => Navigator.of(context).maybePop(),
-              ),
+              AppBackButton(color: context.palette.textStrong),
               AppAvatar(name: nom, photoUrl: photoUrl, size: 52),
               AppSpacing.hGap16,
               Expanded(

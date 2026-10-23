@@ -1,0 +1,22 @@
+# Icône de l'application PsyAvocat (générée depuis assets/logos/PsyAvocat-logo.svg).
+# Pour régénérer après un changement de logo : dart run flutter_launcher_icons
+flutter_launcher_icons:
+  # Android : icône classique + icône adaptative (fond blanc, logo dans la zone sûre).
+  android: "ic_launcher"
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+  # La marge de la zone sûre est déjà dans l'image (logo sur 58 % de la largeur).
+  adaptive_icon_foreground_inset: 0
+  min_sdk_android: 21
+
+  # iOS : l'App Store refuse la transparence, le fond blanc est conservé.
+  ios: true
+  remove_alpha_ios: true
+
+  # Web (onglet du navigateur et installation en application).
+  web:
+    generate: true
+    image_path: "assets/icon/app_icon.png"
+    background_color: "#FFFFFF"
+    theme_color: "#0C2659"

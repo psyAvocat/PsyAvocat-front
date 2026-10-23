@@ -1,6 +1,7 @@
 /// Export centralisé des composants réutilisables du Design System PsyAvocat.
 library;
 
+export 'app_back_button.dart';
 export 'app_button.dart';
 export 'app_text_field.dart';
 export 'app_card.dart';
@@ -27,3 +28,4 @@ export 'app_section_header.dart';
 export 'app_async_view.dart';
 export 'psyavocat_logo.dart';
 export 'app_page_dots.dart';
+export 'ambient_particles.dart';

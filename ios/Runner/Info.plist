@@ -8,6 +8,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>PsyAvocat utilise l’appareil photo pour photographier les pièces de votre dossier.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>PsyAvocat accède à vos photos pour joindre des documents ou choisir une photo de profil.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>PsyAvocat se connecte au serveur de développement sur le réseau local.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
@@ -15,7 +19,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Psyavocat Front</string>
+	<string>PsyAvocat</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
