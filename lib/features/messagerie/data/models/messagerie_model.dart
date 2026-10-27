@@ -43,6 +43,9 @@ class Conversation {
   final Message? dernierMessage;
   final int messagesNonLus;
 
+  /// Le correspondant est connecté (web ou mobile) au moment de la lecture.
+  final bool correspondantEnLigne;
+
   const Conversation({
     required this.id,
     required this.correspondantNom,
@@ -52,6 +55,7 @@ class Conversation {
     this.correspondantType,
     this.correspondantPhotoUrl,
     this.dernierMessage,
+    this.correspondantEnLigne = false,
   });
 
   factory Conversation.fromJson(Map<String, dynamic> json) {
@@ -67,6 +71,7 @@ class Conversation {
           ? Message.fromJson(dernier)
           : null,
       messagesNonLus: (json['messagesNonLus'] as num?)?.toInt() ?? 0,
+      correspondantEnLigne: json['correspondantEnLigne'] == true,
     );
   }
 

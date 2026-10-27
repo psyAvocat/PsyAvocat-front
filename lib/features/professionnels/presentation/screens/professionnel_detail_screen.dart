@@ -138,8 +138,9 @@ class _ProfessionnelDetailScreenState
                   tooltip: tr('Plus d’actions'),
                   icon: const Icon(Icons.more_vert_rounded),
                   onSelected: (action) {
-                    if (action == 'signaler')
+                    if (action == 'signaler') {
                       _signaler(context, pro, primaryColor);
+                    }
                   },
                   itemBuilder: (_) => [
                     PopupMenuItem(
@@ -382,15 +383,40 @@ class _PhotoParDefaut extends StatelessWidget {
   final Color color;
   const _PhotoParDefaut({required this.pro, required this.color});
 
+  /// Sans photo : silhouette de profil dans un cercle clair, sur un dégradé
+  /// doux de la couleur de l'univers (plutôt qu'un pictogramme de métier).
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: color.withValues(alpha: 0.85),
-      alignment: Alignment.center,
-      child: Icon(
-        pro.summary.isAvocat ? Icons.gavel_rounded : Icons.psychology_rounded,
-        size: 88,
-        color: Colors.white.withValues(alpha: 0.9),
+    return Semantics(
+      label: tr('Photo de {nom}', {'nom': pro.summary.displayName}),
+      image: true,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [color, Color.lerp(color, Colors.white, 0.28)!],
+          ),
+        ),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.only(top: 24),
+        child: Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.18),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.55),
+              width: 2,
+            ),
+          ),
+          child: Icon(
+            Icons.person_rounded,
+            size: 76,
+            color: Colors.white.withValues(alpha: 0.95),
+          ),
+        ),
       ),
     );
   }

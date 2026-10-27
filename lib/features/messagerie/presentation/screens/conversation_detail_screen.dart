@@ -76,6 +76,7 @@ class _ConversationDetailScreenState
         nom: widget.participantName,
         role: isAvocat ? 'Avocat' : 'Psychologue',
         photoUrl: widget.participantPhotoUrl,
+        enLigne: ref.watch(correspondantEnLigneProvider(widget.conversationId)),
       ),
       body: Column(
         children: [
@@ -147,13 +148,20 @@ class _ConversationDetailScreenState
   }
 }
 
-/// En-tête : retour, photo du professionnel, nom en gras et métier.
+/// En-tête : retour, photo du professionnel, nom en gras et métier,
+/// suivi de « En ligne » quand le correspondant est connecté.
 class _EnTete extends StatelessWidget implements PreferredSizeWidget {
   final String nom;
   final String role;
   final String? photoUrl;
+  final bool enLigne;
 
-  const _EnTete({required this.nom, required this.role, this.photoUrl});
+  const _EnTete({
+    required this.nom,
+    required this.role,
+    this.photoUrl,
+    this.enLigne = false,
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(84);
@@ -191,12 +199,36 @@ class _EnTete extends StatelessWidget implements PreferredSizeWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      role,
-                      style: AppTypography.texte.copyWith(
-                        fontSize: 14,
-                        color: context.palette.textStrong,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          tr(role),
+                          style: AppTypography.texte.copyWith(
+                            fontSize: 14,
+                            color: context.palette.textStrong,
+                          ),
+                        ),
+                        if (enLigne) ...[
+                          const SizedBox(width: 10),
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF10B981),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            tr('En ligne'),
+                            style: AppTypography.texte.copyWith(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF0E8A63),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),

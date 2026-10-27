@@ -16,7 +16,50 @@ final conversationsProvider = FutureProvider.autoDispose<List<Conversation>>((
   final conversations = await ref
       .read(messagerieRepositoryProvider)
       .getConversations();
+  ref.read(presenceProvider.notifier).initialiser(conversations);
   return conversations.where((c) => c.universe == universe).toList();
+});
+
+/// Présence des correspondants (identifiant → en ligne) : état lu avec les
+/// conversations, puis tenu à jour par les événements temps réel `PRESENCE`.
+final presenceProvider = NotifierProvider<PresenceNotifier, Map<String, bool>>(
+  PresenceNotifier.new,
+);
+
+class PresenceNotifier extends Notifier<Map<String, bool>> {
+  @override
+  Map<String, bool> build() {
+    listenRealtime(ref, {RealtimeEventType.presence}, (event) {
+      final id = event.payload['utilisateurId'];
+      if (id is String) {
+        state = {...state, id: event.payload['enLigne'] == true};
+      }
+    });
+    return const {};
+  }
+
+  void initialiser(List<Conversation> conversations) {
+    state = {
+      ...state,
+      for (final c in conversations)
+        if (c.correspondantId != null)
+          c.correspondantId!: c.correspondantEnLigne,
+    };
+  }
+}
+
+/// Le correspondant d'une conversation est-il connecté ?
+final correspondantEnLigneProvider = Provider.autoDispose.family<bool, String>((
+  ref,
+  conversationId,
+) {
+  final conversations = ref.watch(conversationsProvider).value ?? const [];
+  String? correspondantId;
+  for (final c in conversations) {
+    if (c.id == conversationId) correspondantId = c.correspondantId;
+  }
+  if (correspondantId == null) return false;
+  return ref.watch(presenceProvider)[correspondantId] ?? false;
 });
 
 /// Messages d'une conversation, relus à chaque ouverture et à chaque nouveau

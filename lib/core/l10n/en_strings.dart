@@ -421,6 +421,11 @@ const Map<String, String> enStrings = {
   "Pièces non enregistrées": "Documents not saved",
   "Plus d’actions": "More actions",
   "Plus tard": "Later",
+  "Ouvrir les réglages": "Open settings",
+  "Notifications désactivées sur le téléphone":
+      "Notifications are turned off on this phone",
+  "Pour recevoir vos rappels de rendez-vous et vos messages, même lorsque l’application est fermée, autorisez les notifications de PsyAvocat dans les réglages du téléphone.":
+      "To receive your appointment reminders and messages, even when the app is closed, allow PsyAvocat notifications in your phone settings.",
   "Plusieurs réponses possibles": "Several answers possible",
   "Populaires": "Popular",
   "Posez votre question directement au professionnel.":

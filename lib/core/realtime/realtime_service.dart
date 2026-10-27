@@ -27,6 +27,9 @@ class RealtimeEventType {
 
   /// Le planning d'un professionnel a changé (ajout / suppression de créneaux).
   static const creneauxMisAJour = 'CRENEAUX_MIS_A_JOUR';
+
+  /// Un correspondant passe en ligne / hors ligne : `{utilisateurId, enLigne}`.
+  static const presence = 'PRESENCE';
 }
 
 /// Événement reçu du serveur : `{ "type": ..., "payload": {...} }`.
