@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/errors/user_message.dart';
 import '../../../../core/navigation/ouvrir_route.dart';
 import '../../../../core/theme/universe_provider.dart';
@@ -143,7 +144,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         title: Text(tr('Notifications')),
         actions: [
           PopupMenuButton<String>(
-            tooltip: tr('Plus d’actions'),
+            tooltip: '',
             icon: const Icon(Icons.more_vert_rounded),
             onSelected: (action) {
               if (action == 'lire') _toutLire();
@@ -300,6 +301,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
 }
 
 class _NotificationCard extends StatelessWidget {
+  static final RegExp _urlRegex = RegExp(r'https?:\/\/[^\s]+', caseSensitive: false);
+
   final NotificationItem notification;
   final Color primaryColor;
   final VoidCallback onTap;
@@ -312,6 +315,23 @@ class _NotificationCard extends StatelessWidget {
     required this.onTap,
     required this.onDelete,
   });
+
+  String? _extractUrl(String text) {
+    return _urlRegex.firstMatch(text)?.group(0);
+  }
+
+  Future<void> _openVisioUrl(String rawUrl) async {
+    final rawBase = rawUrl.contains('meet.google.com')
+        ? 'https://meet.ffmuc.net/PsyAvocat-Consultation-${notification.ressourceId ?? "Direct"}'
+        : rawUrl.trim().replaceAll('https://meet.jit.si/', 'https://meet.ffmuc.net/');
+    final target = '$rawBase#config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.prejoinPageEnabled=false&config.defaultLanguage=%22fr%22';
+    final uri = Uri.tryParse(target);
+    if (uri == null) return;
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened) {
+      await launchUrl(uri, mode: LaunchMode.platformDefault);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -408,6 +428,35 @@ class _NotificationCard extends StatelessWidget {
                           height: 1.3,
                         ),
                       ),
+                      if (_extractUrl(notification.message) != null) ...[
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () => _openVisioUrl(_extractUrl(notification.message)!),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F9D58),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.videocam_rounded, size: 15, color: Colors.white),
+                                const SizedBox(width: 5),
+                                Text(
+                                  tr('Rejoindre la visioconférence'),
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 8),
                       Text(
                         _formatDate(notification.date),
@@ -421,7 +470,6 @@ class _NotificationCard extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: tr('Supprimer'),
                   visualDensity: VisualDensity.compact,
                   icon: Icon(
                     Icons.delete_outline_rounded,

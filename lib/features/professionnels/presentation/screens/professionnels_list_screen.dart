@@ -57,7 +57,6 @@ class _ProfessionnelsListScreenState
         title: Text(label),
         actions: [
           IconButton(
-            tooltip: tr('Notifications'),
             onPressed: () => context.push(AppRoutes.notifications),
             icon: Badge(
               isLabelVisible: unreadCount > 0,

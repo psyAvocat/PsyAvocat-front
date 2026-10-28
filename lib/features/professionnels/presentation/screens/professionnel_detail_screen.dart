@@ -135,7 +135,7 @@ class _ProfessionnelDetailScreenState
               leading: const AppBackButton(color: Colors.white),
               actions: [
                 PopupMenuButton<String>(
-                  tooltip: tr('Plus d’actions'),
+                  tooltip: '',
                   icon: const Icon(Icons.more_vert_rounded),
                   onSelected: (action) {
                     if (action == 'signaler')

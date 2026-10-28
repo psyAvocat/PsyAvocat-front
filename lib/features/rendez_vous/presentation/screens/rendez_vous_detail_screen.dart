@@ -13,6 +13,7 @@ import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_state_views.dart';
 import '../../../../shared/enums/appointment_status.dart';
+import '../../../paiements/presentation/widgets/recu_paiement_sheet.dart';
 import '../../data/models/rendez_vous_model.dart';
 import '../controllers/rendez_vous_controller.dart';
 import '../widgets/annuler_rendez_vous_dialog.dart';
@@ -72,16 +73,46 @@ class _RendezVousDetailScreenState
   }
 
   Future<void> _rejoindreVisio(String lien) async {
-    final uri = Uri.tryParse(lien);
-    final ouvert =
-        uri != null &&
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final rawBase = lien.contains('meet.google.com')
+        ? 'https://meet.ffmuc.net/PsyAvocat-Consultation-${widget.rendezVousId}'
+        : lien.trim().replaceAll('https://meet.jit.si/', 'https://meet.ffmuc.net/');
+    final target = '$rawBase#config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.prejoinPageEnabled=false&config.defaultLanguage=%22fr%22';
+    final uri = Uri.tryParse(target);
+    if (uri == null) return;
+    bool ouvert = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ouvert) {
+      ouvert = await launchUrl(uri, mode: LaunchMode.platformDefault);
+    }
     if (!ouvert && mounted) {
       AppNotification.showError(
         context,
         tr('Impossible d’ouvrir le lien de visioconférence.'),
       );
     }
+  }
+
+  void _afficherRecuAcompte(RendezVous rdv) {
+    final total = rdv.montantTotal ?? 0;
+    final acompte = rdv.montantAcompte ?? (total * 0.2);
+    showRecuPaiementSheet(
+      context,
+      RecuPaiementData(
+        referenceId: rdv.id,
+        professionnelNom: rdv.professionnelDisplayName,
+        typeProfessionnel: rdv.typeProfessionnel,
+        dateRendezVous: rdv.dateHeure,
+        datePaiement: rdv.dateHeure,
+        montantAcompte: acompte,
+        montantTotal: total,
+        estAnnule:
+            rdv.statut == AppointmentStatus.annule ||
+            rdv.statutPaiement?.toUpperCase() == 'ANNULE',
+        simulation: true,
+        modeConsultation: rdv.mode == 'VISIO'
+            ? tr('Visioconférence')
+            : tr('En cabinet'),
+      ),
+    );
   }
 
   @override
@@ -179,9 +210,29 @@ class _RendezVousDetailScreenState
               _ => null,
             },
           ),
+          const SizedBox(height: 10),
+          AppButton(
+            text: tr('Voir le reçu officiel d’acompte (20 %)'),
+            icon: Icons.receipt_long_rounded,
+            isOutlined: true,
+            color: scheme.primary,
+            onPressed: () => _afficherRecuAcompte(rdv),
+          ),
         ],
         const SizedBox(height: 20),
         if (afficherVisio) ...[
+          InkWell(
+            onTap: () => _rejoindreVisio(lienVisio),
+            borderRadius: BorderRadius.circular(16),
+            child: _Bloc(
+              icone: Icons.videocam_outlined,
+              titre: tr('Salle de visioconférence PsyAvocat'),
+              texte:
+                  '${tr('À rejoindre à l\'heure du rendez-vous')} (${rdv.dateHeure.hour.toString().padLeft(2, '0')}h${rdv.dateHeure.minute.toString().padLeft(2, '0')}) :\n$lienVisio',
+              estLien: true,
+            ),
+          ),
+          const SizedBox(height: 12),
           AppButton(
             text: tr('Rejoindre la visioconférence'),
             icon: Icons.videocam_rounded,
@@ -228,11 +279,18 @@ class _Bloc extends StatelessWidget {
   final IconData icone;
   final String titre;
   final String texte;
+  final bool estLien;
 
-  const _Bloc({required this.icone, required this.titre, required this.texte});
+  const _Bloc({
+    required this.icone,
+    required this.titre,
+    required this.texte,
+    this.estLien = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -248,7 +306,7 @@ class _Bloc extends StatelessWidget {
               Icon(
                 icone,
                 size: 18,
-                color: Theme.of(context).colorScheme.primary,
+                color: primary,
               ),
               const SizedBox(width: 8),
               Text(
@@ -266,7 +324,10 @@ class _Bloc extends StatelessWidget {
             style: AppTypography.texte.copyWith(
               fontSize: 14,
               height: 1.45,
-              color: context.palette.text,
+              color: estLien ? primary : context.palette.text,
+              decoration:
+                  estLien ? TextDecoration.underline : TextDecoration.none,
+              decorationColor: primary,
             ),
           ),
         ],

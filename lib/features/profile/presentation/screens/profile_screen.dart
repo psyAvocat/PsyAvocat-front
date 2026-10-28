@@ -7,6 +7,7 @@ import '../../../../core/theme/universe_provider.dart';
 import '../../../../core/widgets/app_avatar.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../auth/presentation/controllers/session_controller.dart';
+import '../../../onboarding/presentation/widgets/first_use_tutorial_overlay.dart';
 import '../controllers/profil_controller.dart';
 import '../widgets/profile_menu.dart';
 import '../../../../core/l10n/app_strings.dart';
@@ -88,6 +89,18 @@ class ProfileScreen extends ConsumerWidget {
                       icon: Icons.help_outline_rounded,
                       label: tr('Aide et support'),
                       onTap: () => context.push(AppRoutes.aideSupport),
+                    ),
+                    ProfileMenuItem(
+                      icon: Icons.auto_awesome_outlined,
+                      label: tr('Tutoriel de première utilisation'),
+                      onTap: () async {
+                        await ref
+                            .read(showTutorialOverlayProvider.notifier)
+                            .startTutorial();
+                        if (context.mounted) {
+                          context.go(AppRoutes.home);
+                        }
+                      },
                     ),
                     ProfileMenuItem(
                       icon: Icons.settings_outlined,

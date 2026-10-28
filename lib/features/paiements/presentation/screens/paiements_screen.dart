@@ -5,6 +5,7 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_state_views.dart';
 import '../../data/models/paiement_model.dart';
 import '../controllers/paiements_controller.dart';
+import '../widgets/recu_paiement_sheet.dart';
 import '../../../../core/theme/app_palette.dart';
 import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/widgets/app_back_button.dart';
@@ -42,15 +43,15 @@ class PaiementsScreen extends ConsumerWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.science_outlined, color: Color(0xFFC2410C)),
-                  SizedBox(width: 12),
+                  const Icon(Icons.science_outlined, color: Color(0xFFC2410C)),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       tr(
                         'Paiements simulés : l’acompte de 20 % valide votre rendez-vous, mais aucune '
                         'somme n’est réellement débitée. Le paiement en ligne sera disponible ultérieurement.',
                       ),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                         color: Color(0xFF7C2D12),
                         height: 1.4,
@@ -108,6 +109,27 @@ class _PaiementCard extends StatelessWidget {
 
   const _PaiementCard({required this.item, required this.primaryColor});
 
+  void _ouvrirRecu(BuildContext context) {
+    showRecuPaiementSheet(
+      context,
+      RecuPaiementData(
+        referenceId: item.id.isNotEmpty
+            ? item.id
+            : (item.rendezVousId ?? 'PSYAVOCAT'),
+        professionnelNom: item.professionnel.isNotEmpty
+            ? item.professionnel
+            : tr('Professionnel PsyAvocat'),
+        typeProfessionnel: item.typeProfessionnel,
+        dateRendezVous: item.rendezVousDate,
+        datePaiement: item.datePaiement,
+        montantAcompte: item.montant,
+        montantTotal: item.montantTotalRendezVous,
+        estAnnule: item.estAnnule,
+        simulation: item.simulation,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final couleurStatut = item.estAnnule
@@ -115,98 +137,140 @@ class _PaiementCard extends StatelessWidget {
         : const Color(0xFF059669);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.palette.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.palette.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  item.professionnel.isNotEmpty
-                      ? item.professionnel
-                      : 'Rendez-vous',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: context.palette.textStrong,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _ouvrirRecu(context),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.professionnel.isNotEmpty
+                            ? item.professionnel
+                            : 'Rendez-vous',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: context.palette.textStrong,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: couleurStatut.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        item.estAnnule
+                            ? tr('Annulé')
+                            : (item.simulation
+                                  ? tr('Acompte simulé')
+                                  : tr('Payé')),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: couleurStatut,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                if (item.rendezVousDate != null)
+                  Text(
+                    tr('Rendez-vous du {date} à {heure}', {
+                      'date': Formatters.formatJourLong(item.rendezVousDate!),
+                      'heure': Formatters.formatHeure(item.rendezVousDate!),
+                    }),
+                    style: TextStyle(fontSize: 13, color: context.palette.text),
                   ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: couleurStatut.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  item.estAnnule
-                      ? tr('Annulé')
-                      : (item.simulation ? tr('Acompte simulé') : tr('Payé')),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: couleurStatut,
+                if (item.datePaiement != null)
+                  Text(
+                    tr('Enregistré le {date}', {
+                      'date': Formatters.formatLongDate(item.datePaiement),
+                    }),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.palette.textSubtle,
+                    ),
                   ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.montantTotalRendezVous != null
+                            ? tr('Total du rendez-vous : {montant}', {
+                                'montant': Formatters.formatFcfa(
+                                  item.montantTotalRendezVous!,
+                                ),
+                              })
+                            : '',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.palette.textMuted,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      Formatters.formatFcfa(item.montant),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          if (item.rendezVousDate != null)
-            Text(
-              tr('Rendez-vous du {date} à {heure}', {
-                'date': Formatters.formatJourLong(item.rendezVousDate!),
-                'heure': Formatters.formatHeure(item.rendezVousDate!),
-              }),
-              style: TextStyle(fontSize: 13, color: context.palette.text),
+                const SizedBox(height: 12),
+                Divider(height: 1, color: context.palette.border),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Icon(
+                      Icons.receipt_long_rounded,
+                      size: 16,
+                      color: primaryColor,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      tr('Voir le reçu officiel (20 %)'),
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: primaryColor,
+                    ),
+                  ],
+                ),
+              ],
             ),
-          if (item.datePaiement != null)
-            Text(
-              tr('Enregistré le {date}', {
-                'date': Formatters.formatLongDate(item.datePaiement),
-              }),
-              style: TextStyle(fontSize: 12, color: context.palette.textSubtle),
-            ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  item.montantTotalRendezVous != null
-                      ? tr('Total du rendez-vous : {montant}', {
-                          'montant': Formatters.formatFcfa(
-                            item.montantTotalRendezVous!,
-                          ),
-                        })
-                      : '',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: context.palette.textMuted,
-                  ),
-                ),
-              ),
-              Text(
-                Formatters.formatFcfa(item.montant),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: primaryColor,
-                ),
-              ),
-            ],
           ),
-        ],
+        ),
       ),
     );
   }

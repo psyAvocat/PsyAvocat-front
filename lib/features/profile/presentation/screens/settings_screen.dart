@@ -9,6 +9,7 @@ import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../../../core/widgets/app_page_header.dart';
+import '../../../onboarding/presentation/widgets/first_use_tutorial_overlay.dart';
 import '../../../selection_univers/presentation/widgets/universe_switch_dialog.dart';
 import '../widgets/profile_menu.dart';
 
@@ -146,6 +147,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             icon: Icons.receipt_long_outlined,
             label: tr('Mes paiements'),
             onTap: () => context.push(AppRoutes.paiements),
+          ),
+          ProfileMenuItem(
+            icon: Icons.auto_awesome_outlined,
+            label: tr('Revoir le tutoriel de première utilisation'),
+            onTap: () async {
+              await ref
+                  .read(showTutorialOverlayProvider.notifier)
+                  .startTutorial();
+              if (context.mounted) {
+                context.go(AppRoutes.home);
+              }
+            },
           ),
         ],
       ),

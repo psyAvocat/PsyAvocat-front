@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../l10n/app_strings.dart';
 import '../router/app_routes.dart';
 
 /// Retour standard de l'application : page précédente s'il y en a une, sinon
@@ -49,7 +48,6 @@ class AppBackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      tooltip: tr('Retour'),
       icon: Icon(icon, size: iconSize, color: color),
       onPressed: onPressed ?? () => retourOuAccueil(context),
     );

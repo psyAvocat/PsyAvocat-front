@@ -88,6 +88,10 @@ class PsyAvocatApp extends ConsumerWidget {
       supportedLocales: supportedAppLocales,
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       routerConfig: router,
+      builder: (context, child) => TooltipVisibility(
+        visible: false,
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }

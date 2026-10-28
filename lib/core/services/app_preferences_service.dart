@@ -6,6 +6,7 @@ import '../theme/app_universe.dart';
 /// onboarding vu, dernier univers affiché, réception des notifications push.
 class AppPreferencesService {
   static const String _keyHasSeenOnboarding = 'has_seen_onboarding';
+  static const String _keyHasSeenTutorial = 'has_seen_first_use_tutorial';
   static const String _keySelectedUniverse = 'selected_universe';
   static const String _keyPushEnabled = 'push_enabled';
   static const String _keyThemeMode = 'theme_mode';
@@ -23,6 +24,16 @@ class AppPreferencesService {
   /// Marque l'onboarding comme complété
   Future<void> setHasSeenOnboarding(bool value) async {
     await _prefs.setBool(_keyHasSeenOnboarding, value);
+  }
+
+  /// Vérifie si l'utilisateur a déjà vu le tutoriel guidé de première utilisation
+  bool hasSeenTutorial() {
+    return _prefs.getBool(_keyHasSeenTutorial) ?? false;
+  }
+
+  /// Marque le tutoriel guidé de première utilisation comme vu (ou le réinitialise)
+  Future<void> setHasSeenTutorial(bool value) async {
+    await _prefs.setBool(_keyHasSeenTutorial, value);
   }
 
   /// Récupère l'univers mémorisé

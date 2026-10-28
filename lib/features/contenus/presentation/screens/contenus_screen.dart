@@ -66,7 +66,6 @@ class _ContenusScreenState extends ConsumerState<ContenusScreen> {
           title: Text(label),
           actions: [
             IconButton(
-              tooltip: tr('Notifications'),
               onPressed: () => context.push(AppRoutes.notifications),
               icon: Badge(
                 isLabelVisible: unreadCount > 0,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/universe_provider.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../onboarding/presentation/widgets/first_use_tutorial_overlay.dart';
 import 'navigation_destinations.dart';
 
 /// Shell de navigation principal : contenu de l'onglet actif + [PsyAvocatNavigationBar].
@@ -38,21 +39,36 @@ class MainNavigationShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final universe = ref.watch(currentUniverseProvider);
+    final showTutorial = ref.watch(showTutorialOverlayProvider);
     final afficherBarre = _pagesAvecBarre.contains(
       GoRouterState.of(context).uri.path,
     );
 
-    return Scaffold(
-      body: navigationShell,
-      // La barre flotte au-dessus du contenu (capsule de la maquette).
-      extendBody: true,
-      bottomNavigationBar: afficherBarre
-          ? PsyAvocatNavigationBar(
-              destinations: navigationDestinationsFor(universe),
-              currentIndex: navigationShell.currentIndex,
-              onDestinationSelected: _onDestinationSelected,
-            )
-          : null,
+    return Stack(
+      children: [
+        Scaffold(
+          body: navigationShell,
+          // La barre flotte au-dessus du contenu (capsule de la maquette).
+          extendBody: true,
+          bottomNavigationBar: afficherBarre
+              ? PsyAvocatNavigationBar(
+                  destinations: navigationDestinationsFor(universe),
+                  currentIndex: navigationShell.currentIndex,
+                  onDestinationSelected: _onDestinationSelected,
+                )
+              : null,
+        ),
+        if (showTutorial)
+          Positioned.fill(
+            child: FirstUseTutorialOverlay(
+              onSelectTab: (tabIndex) {
+                if (tabIndex >= 0 && tabIndex < 5) {
+                  navigationShell.goBranch(tabIndex);
+                }
+              },
+            ),
+          ),
+      ],
     );
   }
 }
