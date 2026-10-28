@@ -208,7 +208,8 @@ class RendezVousCard extends StatelessWidget {
                       ),
                       if (item.lienVisio != null &&
                           item.lienVisio!.isNotEmpty &&
-                          !isAnnule)
+                          !isAnnule &&
+                          item.fin.isAfter(DateTime.now()))
                         InkWell(
                           onTap: () => _openVisio(item.lienVisio!),
                           borderRadius: BorderRadius.circular(12),
