@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/universe_provider.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../onboarding/presentation/visite_guidee_controller.dart';
+import '../../onboarding/presentation/widgets/visite_guidee.dart';
 import 'navigation_destinations.dart';
 
 /// Shell de navigation principal : contenu de l'onglet actif + [PsyAvocatNavigationBar].
@@ -38,21 +40,27 @@ class MainNavigationShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final universe = ref.watch(currentUniverseProvider);
-    final afficherBarre = _pagesAvecBarre.contains(
-      GoRouterState.of(context).uri.path,
-    );
+    final chemin = GoRouterState.of(context).uri.path;
+    final afficherBarre = _pagesAvecBarre.contains(chemin);
+    // Visite guidée : sur l'accueil seulement, une fois par compte.
+    final visite = ref.watch(visiteGuideeProvider) && chemin == AppRoutes.home;
 
-    return Scaffold(
-      body: navigationShell,
-      // La barre flotte au-dessus du contenu (capsule de la maquette).
-      extendBody: true,
-      bottomNavigationBar: afficherBarre
-          ? PsyAvocatNavigationBar(
-              destinations: navigationDestinationsFor(universe),
-              currentIndex: navigationShell.currentIndex,
-              onDestinationSelected: _onDestinationSelected,
-            )
-          : null,
+    return Stack(
+      children: [
+        Scaffold(
+          body: navigationShell,
+          // La barre flotte au-dessus du contenu (capsule de la maquette).
+          extendBody: true,
+          bottomNavigationBar: afficherBarre
+              ? PsyAvocatNavigationBar(
+                  destinations: navigationDestinationsFor(universe),
+                  currentIndex: navigationShell.currentIndex,
+                  onDestinationSelected: _onDestinationSelected,
+                )
+              : null,
+        ),
+        if (visite) const Positioned.fill(child: VisiteGuidee()),
+      ],
     );
   }
 }

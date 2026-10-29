@@ -1,5 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/errors/app_exception.dart';
+import '../../../../firebase_options.dart';
 import '../../../../core/l10n/app_strings.dart';
 
 /// Source de données concrète utilisant Firebase Authentication.
@@ -12,6 +15,74 @@ class FirebaseAuthDatasource {
 
   /// Utilisateur actuellement connecté
   User? get currentUser => _firebaseAuth.currentUser;
+
+  /// Nom du compte connecté tel que fourni par Google (connexion Google).
+  String? get displayName => _firebaseAuth.currentUser?.displayName;
+
+  /// Initialisation unique du module Google. Android : identifiants lus dans
+  /// google-services.json. iOS : identifiant client de firebase_options.dart
+  /// (GoogleService-Info.plist n'est pas embarqué dans le projet Xcode).
+  static Future<void>? _initialisationGoogle;
+
+  Future<void> _initialiserGoogle() async {
+    final ios = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    final enCours = _initialisationGoogle ??= GoogleSignIn.instance.initialize(
+      clientId: ios ? DefaultFirebaseOptions.ios.iosClientId : null,
+    );
+    try {
+      await enCours;
+    } catch (_) {
+      _initialisationGoogle = null;
+      rethrow;
+    }
+  }
+
+  /// Connexion avec Google : choix du compte Google de l'appareil, puis
+  /// connexion Firebase avec son jeton (le compte Firebase est créé à la
+  /// première connexion). Renvoie `null` si l'utilisateur a renoncé.
+  Future<UserCredential?> signInWithGoogle() async {
+    try {
+      await _initialiserGoogle();
+      final compte = await GoogleSignIn.instance.authenticate();
+      final jeton = compte.authentication.idToken;
+      if (jeton == null) {
+        throw AuthException(
+          tr("La connexion Google n'a pas abouti. Réessayez."),
+        );
+      }
+      return await _firebaseAuth.signInWithCredential(
+        GoogleAuthProvider.credential(idToken: jeton),
+      );
+    } on GoogleSignInException catch (e) {
+      switch (e.code) {
+        case GoogleSignInExceptionCode.canceled:
+        case GoogleSignInExceptionCode.interrupted:
+          return null;
+        case GoogleSignInExceptionCode.clientConfigurationError:
+        case GoogleSignInExceptionCode.providerConfigurationError:
+          throw AuthException(
+            tr(
+              "La connexion Google n'est pas encore configurée pour cette application.",
+            ),
+            code: 'google-configuration',
+          );
+        default:
+          throw AuthException(
+            tr("La connexion Google n'a pas abouti. Réessayez."),
+            code: 'google',
+          );
+      }
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapFirebaseError(e.code, e.message), code: e.code);
+    } on AuthException {
+      rethrow;
+    } catch (_) {
+      throw AuthException(
+        tr("La connexion Google n'a pas abouti. Réessayez."),
+        code: 'google',
+      );
+    }
+  }
 
   /// Flux réactif des changements d'état d'authentification
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
@@ -65,9 +136,17 @@ class FirebaseAuthDatasource {
     }
   }
 
-  /// Déconnexion
+  /// Déconnexion (Firebase, et Google pour proposer à nouveau le choix du
+  /// compte à la prochaine connexion Google).
   Future<void> signOut() async {
     await _firebaseAuth.signOut();
+    if (_initialisationGoogle != null) {
+      try {
+        await GoogleSignIn.instance.signOut();
+      } catch (_) {
+        // Sans incidence : la session Firebase est déjà fermée.
+      }
+    }
   }
 
   /// Réinitialisation de mot de passe
@@ -134,6 +213,10 @@ class FirebaseAuthDatasource {
         return tr('Par sécurité, reconnectez-vous puis réessayez.');
       case 'operation-not-allowed':
         return tr("Ce mode de connexion n'est pas disponible pour le moment.");
+      case 'account-exists-with-different-credential':
+        return tr(
+          'Un compte existe déjà avec cette adresse email : connectez-vous avec votre mot de passe.',
+        );
       default:
         // Jamais le message technique de Firebase.
         return tr(

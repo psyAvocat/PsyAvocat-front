@@ -9,6 +9,8 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/theme/app_palette.dart';
 import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/utils/visio.dart';
+import '../../../../core/widgets/app_alert.dart';
 import '../../../../core/widgets/app_back_button.dart';
 
 /// Catégorie d'affichage d'une notification, déduite de son type serveur
@@ -18,7 +20,9 @@ enum _Categorie { rendezVous, dossier, message, autre }
 _Categorie _categorieDe(NotificationItem n) {
   final type = n.type.toUpperCase();
   final ressource = n.ressourceType?.toUpperCase();
-  if (type.startsWith('RDV') || ressource == 'RENDEZ_VOUS') {
+  if (type.startsWith('RDV') ||
+      type.startsWith('RAPPEL') ||
+      ressource == 'RENDEZ_VOUS') {
     return _Categorie.rendezVous;
   }
   if (type.startsWith('DOSSIER') ||
@@ -143,7 +147,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         title: Text(tr('Notifications')),
         actions: [
           PopupMenuButton<String>(
-            tooltip: tr('Plus d’actions'),
+            tooltip: '',
             icon: const Icon(Icons.more_vert_rounded),
             onSelected: (action) {
               if (action == 'lire') _toutLire();
@@ -313,10 +317,25 @@ class _NotificationCard extends StatelessWidget {
     required this.onDelete,
   });
 
+  Future<void> _rejoindre(BuildContext context, String lien) async {
+    final ouvert = await rejoindreVisio(lien);
+    if (!ouvert && context.mounted) {
+      AppNotification.showError(
+        context,
+        tr('Impossible d’ouvrir le lien de visioconférence.'),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final (icon, iconColor) = switch (_categorieDe(notification)) {
-      _Categorie.rendezVous => (Icons.calendar_month_rounded, primaryColor),
+      _Categorie.rendezVous => (
+        notification.type == 'RAPPEL_VISIO'
+            ? Icons.videocam_rounded
+            : Icons.calendar_month_rounded,
+        primaryColor,
+      ),
       _Categorie.dossier => (Icons.folder_rounded, const Color(0xFFD97706)),
       _Categorie.message => (
         Icons.chat_bubble_rounded,
@@ -408,6 +427,43 @@ class _NotificationCard extends StatelessWidget {
                           height: 1.3,
                         ),
                       ),
+                      if (notification.lienVisio != null) ...[
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () =>
+                              _rejoindre(context, notification.lienVisio!),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F9D58),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.videocam_rounded,
+                                  size: 15,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  tr('Rejoindre la visioconférence'),
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 8),
                       Text(
                         _formatDate(notification.date),
@@ -421,7 +477,6 @@ class _NotificationCard extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: tr('Supprimer'),
                   visualDensity: VisualDensity.compact,
                   icon: Icon(
                     Icons.delete_outline_rounded,

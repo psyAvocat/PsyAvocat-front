@@ -3,9 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_universe.dart';
 
 /// Préférences LOCALES de l'appareil (jamais des données métier ni des autorisations) :
-/// onboarding vu, dernier univers affiché, réception des notifications push.
+/// onboarding vu, visite guidée vue (par compte), dernier univers affiché,
+/// réception des notifications push.
 class AppPreferencesService {
   static const String _keyHasSeenOnboarding = 'has_seen_onboarding';
+  static const String _prefixeVisiteGuidee = 'visite_guidee_vue_';
   static const String _keySelectedUniverse = 'selected_universe';
   static const String _keyPushEnabled = 'push_enabled';
   static const String _keyThemeMode = 'theme_mode';
@@ -24,6 +26,14 @@ class AppPreferencesService {
   Future<void> setHasSeenOnboarding(bool value) async {
     await _prefs.setBool(_keyHasSeenOnboarding, value);
   }
+
+  /// Visite guidée déjà vue avec ce [compte] sur cet appareil (copie locale du
+  /// « déjà vue » enregistré sur le compte).
+  bool visiteGuideeVue(String compte) =>
+      _prefs.getBool('$_prefixeVisiteGuidee$compte') ?? false;
+
+  Future<void> setVisiteGuideeVue(String compte) =>
+      _prefs.setBool('$_prefixeVisiteGuidee$compte', true);
 
   /// Récupère l'univers mémorisé
   AppUniverse? getSelectedUniverse() {

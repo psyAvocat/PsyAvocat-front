@@ -30,6 +30,33 @@ class AuthController extends Notifier<AsyncValue<void>> {
     });
   }
 
+  /// Connexion (ou première inscription) avec Google. Compte déjà inscrit :
+  /// accès direct ; premier passage : la session demande de compléter le
+  /// profil (téléphone). Fenêtre Google fermée : rien ne se passe.
+  Future<bool> signInWithGoogle() {
+    return _run(() async {
+      final connexion = await _authRepository.signInWithGoogle();
+      if (connexion == null) return;
+      await ref.read(sessionControllerProvider.notifier).resolve();
+    });
+  }
+
+  /// Compte connecté sans profil (première connexion Google, inscription
+  /// commencée sur un autre appareil) : le profil client est créé, puis la
+  /// session vérifie l'accès.
+  Future<bool> completerProfil({
+    required String prenom,
+    required String nom,
+    required String telephone,
+  }) {
+    return _run(() async {
+      await ref
+          .read(profilRepositoryProvider)
+          .createClientProfile(nom: nom, prenom: prenom, telephone: telephone);
+      await ref.read(sessionControllerProvider.notifier).resolve();
+    });
+  }
+
   /// Inscription : compte Firebase + profil client unique dans le backend.
   /// Le compte reste connecté : la session vérifie `GET /me`, puis le routeur
   /// ouvre le choix de l'univers. Aucune information n'est redemandée ensuite :

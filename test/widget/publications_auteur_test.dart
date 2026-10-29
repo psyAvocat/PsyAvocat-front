@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:psyavocat_front/core/realtime/realtime_service.dart';
 import 'package:psyavocat_front/core/theme/app_universe.dart';
 import 'package:psyavocat_front/core/theme/universe_provider.dart';
+import 'package:psyavocat_front/core/widgets/app_search_field.dart';
 import 'package:psyavocat_front/features/contenus/data/models/contenu_model.dart';
 import 'package:psyavocat_front/features/contenus/data/repositories/contenus_repository.dart';
 import 'package:psyavocat_front/features/contenus/presentation/screens/professionnel_publications_screen.dart';
@@ -66,7 +67,13 @@ void main() {
         tri: PublicationSort.recent,
       ));
 
-      await tester.enterText(find.byType(SearchBar), 'bail');
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(AppSearchField),
+          matching: find.byType(TextField),
+        ),
+        'bail',
+      );
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pumpAndSettle();
       expect(contenus.appels.last, (

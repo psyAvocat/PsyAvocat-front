@@ -28,12 +28,9 @@ class PsychologistHomeView extends StatelessWidget {
       ),
       children: [
         // La recherche ouvre l'écran de recherche des psychologues.
-        SearchBar(
+        AppSearchField(
           hintText: tr('Rechercher un psychologue, une spécialité…'),
-          leading: const Icon(Icons.search_rounded),
-          elevation: const WidgetStatePropertyAll(0),
           onTap: () => context.go(AppRoutes.professionnelsRecherche),
-          readOnly: true,
         ),
         AppSpacing.vGap20,
         const _WellbeingBanner(),

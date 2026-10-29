@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'image_media.dart';
 import '../theme/design_system.dart';
 import '../../core/l10n/app_strings.dart';
 
@@ -50,10 +51,10 @@ class AppAvatar extends StatelessWidget {
         ),
         clipBehavior: Clip.antiAlias,
         child: hasPhoto
-            ? Image.network(
-                photoUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => initials,
+            ? ImageMedia(
+                url: photoUrl,
+                largeurAffichee: size,
+                substitut: initials,
               )
             : initials,
       ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../../../../core/widgets/image_media.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/errors/user_message.dart';
 import '../../../../../core/widgets/app_button.dart';
@@ -199,7 +200,7 @@ class _StepAvocatsState extends ConsumerState<StepAvocats> {
               radius: 26,
               backgroundColor: widget.primaryColor.withValues(alpha: 0.1),
               backgroundImage: p.photoUrl != null
-                  ? NetworkImage(p.photoUrl!)
+                  ? imageMediaProvider(p.photoUrl!)
                   : null,
               child: p.photoUrl == null
                   ? Text(

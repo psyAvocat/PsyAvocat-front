@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/controllers/session_controller.dart';
 import '../../features/auth/presentation/screens/access_denied_screen.dart';
+import '../../features/auth/presentation/screens/completer_profil_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
@@ -94,6 +95,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       _entreeRoute(AppRoutes.accessDenied, (_) => const AccessDeniedScreen()),
       _entreeRoute(AppRoutes.verifyEmail, (_) => const VerifyEmailScreen()),
+      _entreeRoute(
+        AppRoutes.completerProfil,
+        (_) => const CompleterProfilScreen(),
+      ),
       _entreeRoute(
         AppRoutes.universeSelection,
         (_) => const SelectionUniversScreen(),

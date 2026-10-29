@@ -219,4 +219,47 @@ void main() {
       },
     );
   });
+
+  group('Profil à compléter (première connexion Google)', () {
+    test(
+      'connecté sans profil : écran « Compléter votre profil », depuis tout écran',
+      () {
+        for (final location in [
+          AppRoutes.splash,
+          AppRoutes.login,
+          AppRoutes.home,
+        ]) {
+          expect(
+            redirect(location, session: SessionStatus.profileToComplete),
+            AppRoutes.completerProfil,
+            reason: location,
+          );
+        }
+        expect(
+          redirect(
+            AppRoutes.completerProfil,
+            session: SessionStatus.profileToComplete,
+          ),
+          isNull,
+        );
+      },
+    );
+
+    test('profil en cours de création : l’écran reste affiché', () {
+      expect(
+        redirect(AppRoutes.completerProfil, session: SessionStatus.loading),
+        isNull,
+      );
+    });
+
+    test('déconnecté : jamais d’accès à l’écran du profil à compléter', () {
+      expect(
+        redirect(
+          AppRoutes.completerProfil,
+          session: SessionStatus.unauthenticated,
+        ),
+        AppRoutes.login,
+      );
+    });
+  });
 }

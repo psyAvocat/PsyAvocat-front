@@ -10,7 +10,16 @@ import 'top_arch_clipper.dart';
 class AppCurvedHeader extends StatelessWidget {
   final double height;
 
-  const AppCurvedHeader({super.key, this.height = 258});
+  /// Taille du logo, proportionnelle à la hauteur de l'en-tête.
+  final double proportionLogo;
+  final double taillePolice;
+
+  const AppCurvedHeader({
+    super.key,
+    this.height = 258,
+    this.proportionLogo = 0.45,
+    this.taillePolice = 30,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +36,8 @@ class AppCurvedHeader extends StatelessWidget {
             child: Align(
               alignment: const Alignment(-0.35, -0.2),
               child: PsyAvocatLogo(
-                size: height * 0.45,
-                fontSize: 30,
+                size: height * proportionLogo,
+                fontSize: taillePolice,
                 isWhite: true,
               ),
             ),

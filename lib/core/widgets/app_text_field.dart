@@ -118,6 +118,9 @@ class _AppTextFieldState extends State<AppTextField> {
           validator: widget.validator,
           onChanged: widget.onChanged,
           onFieldSubmitted: widget.onFieldSubmitted,
+          // Toucher ailleurs : champ neutre, clavier fermé (sur mobile, Flutter
+          // garde sinon le focus jusqu'à ce qu'un autre champ le prenne).
+          onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
           maxLines: _obscureText ? 1 : widget.maxLines,
           minLines: widget.minLines,
           inputFormatters: widget.inputFormatters,

@@ -90,7 +90,8 @@ class _PhotoCropScreenState extends State<PhotoCropScreen> {
     setState(() => _enCours = true);
     try {
       final boundary =
-          _cadreKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+          _cadreKey.currentContext!.findRenderObject()!
+              as RenderRepaintBoundary;
       final ui.Image image = await boundary.toImage(
         pixelRatio: PhotoCropScreen.taillePhoto / cote,
       );
@@ -124,7 +125,9 @@ class _PhotoCropScreenState extends State<PhotoCropScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Text(
-                    tr('Déplacez et zoomez la photo pour bien cadrer votre visage.'),
+                    tr(
+                      'Déplacez et zoomez la photo pour bien cadrer votre visage.',
+                    ),
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
@@ -135,7 +138,9 @@ class _PhotoCropScreenState extends State<PhotoCropScreen> {
                         ? Padding(
                             padding: const EdgeInsets.all(24),
                             child: Text(
-                              tr('Cette image ne peut pas être lue. Choisissez une autre photo.'),
+                              tr(
+                                'Cette image ne peut pas être lue. Choisissez une autre photo.',
+                              ),
                               textAlign: TextAlign.center,
                               style: const TextStyle(color: Colors.white),
                             ),
@@ -230,7 +235,10 @@ class _MasqueCercle extends CustomPainter {
       ..fillType = PathFillType.evenOdd
       ..addRect(cercle)
       ..addOval(cercle);
-    canvas.drawPath(masque, Paint()..color = Colors.black.withValues(alpha: 0.55));
+    canvas.drawPath(
+      masque,
+      Paint()..color = Colors.black.withValues(alpha: 0.55),
+    );
     canvas.drawOval(
       cercle.deflate(1),
       Paint()

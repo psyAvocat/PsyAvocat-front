@@ -87,6 +87,9 @@ class AppRoutes {
   /// Connexion, inscription et mot de passe oublié : toujours accessibles.
   static const authRoutes = {login, register, forgotPassword};
 
+  /// Profil à compléter (prénom, nom, téléphone) après une première connexion Google.
+  static const completerProfil = '/completer-profil';
+
   /// Écrans d'entrée et de session : quittés pour l'accueil une fois autorisé.
   static const entryRoutes = {
     splash,
@@ -94,5 +97,6 @@ class AppRoutes {
     ...authRoutes,
     accessDenied,
     verifyEmail,
+    completerProfil,
   };
 }

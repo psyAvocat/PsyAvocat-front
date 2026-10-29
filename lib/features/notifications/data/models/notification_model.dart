@@ -18,6 +18,9 @@ class NotificationItem {
   final String? ressourceType;
   final String? ressourceId;
 
+  /// Salle de visioconférence du rendez-vous concerné (rappels, confirmation).
+  final String? lienVisio;
+
   const NotificationItem({
     required this.id,
     required this.type,
@@ -29,6 +32,7 @@ class NotificationItem {
     this.univers,
     this.ressourceType,
     this.ressourceId,
+    this.lienVisio,
   });
 
   factory NotificationItem.fromJson(Map<String, dynamic> json) {
@@ -46,6 +50,7 @@ class NotificationItem {
       univers: json['univers'] as String?,
       ressourceType: json['ressourceType'] as String?,
       ressourceId: json['ressourceId'] as String?,
+      lienVisio: json['lienVisio'] as String?,
     );
   }
 
@@ -65,7 +70,7 @@ class NotificationItem {
     switch (ressourceType!.toUpperCase()) {
       case 'RENDEZ_VOUS':
       case 'RDV':
-        return AppRoutes.rendezVous;
+        return AppRoutes.rendezVousDetail(ressourceId!);
       case 'CONVERSATION':
       case 'MESSAGE':
         return AppRoutes.conversation(ressourceId!);

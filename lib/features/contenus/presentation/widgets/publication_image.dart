@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/design_system.dart';
+import '../../../../core/widgets/image_media.dart';
 
-/// Image d'illustration d'une publication (URL fournie par le backend, R2).
+/// Image d'illustration d'une publication (URL fournie par le backend, R2),
+/// gardée en cache sur l'appareil.
 ///
 /// Sans image (ou si elle ne se charge pas), on affiche un fond neutre avec
 /// une icône — jamais une photo de remplacement trompeuse.
@@ -37,10 +39,10 @@ class PublicationImage extends StatelessWidget {
         height: height,
         child: url == null || url.isEmpty
             ? placeholder
-            : Image.network(
-                url,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => placeholder,
+            : ImageMedia(
+                url: url,
+                largeurAffichee: width,
+                substitut: placeholder,
               ),
       ),
     );

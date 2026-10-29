@@ -52,6 +52,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '434795703982',
     projectId: 'psyavocat',
     storageBucket: 'psyavocat.firebasestorage.app',
+    iosClientId:
+        '434795703982-qa7s7hlue5qiil293lkd4vom9uv8b0dn.apps.googleusercontent.com',
     iosBundleId: 'com.example.psyavocatFront',
   );
   static const FirebaseOptions macos = FirebaseOptions(
@@ -60,6 +62,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '434795703982',
     projectId: 'psyavocat',
     storageBucket: 'psyavocat.firebasestorage.app',
+    iosClientId:
+        '434795703982-qa7s7hlue5qiil293lkd4vom9uv8b0dn.apps.googleusercontent.com',
     iosBundleId: 'com.example.psyavocatFront',
   );
 

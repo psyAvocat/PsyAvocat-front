@@ -10,6 +10,7 @@ import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../../../core/widgets/app_page_header.dart';
+import '../../../onboarding/presentation/visite_guidee_controller.dart';
 import '../../../selection_univers/presentation/widgets/universe_switch_dialog.dart';
 import '../widgets/profile_menu.dart';
 
@@ -212,6 +213,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             icon: Icons.receipt_long_outlined,
             label: tr('Mes paiements'),
             onTap: () => context.push(AppRoutes.paiements),
+          ),
+          ProfileMenuItem(
+            icon: Icons.explore_outlined,
+            label: tr('Revoir la visite guidée'),
+            onTap: () {
+              ref.read(visiteGuideeProvider.notifier).relancer();
+              context.go(AppRoutes.home);
+            },
           ),
         ],
       ),

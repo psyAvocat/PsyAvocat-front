@@ -2,6 +2,7 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 
+import '../cible_visite.dart';
 import 'nav_bar_painter.dart';
 import 'nav_destination.dart';
 import '../../../core/theme/app_palette.dart';
@@ -145,14 +146,18 @@ class _PsyAvocatNavigationBarState extends State<PsyAvocatNavigationBar>
                         children: [
                           for (var i = 0; i < widget.destinations.length; i++)
                             Expanded(
-                              child: _NavItem(
-                                destination: widget.destinations[i],
-                                selection: _selection(i),
-                                primary: primary,
-                                barHeight: _barHeight,
-                                bubbleSize: _bubbleSize,
-                                lift: _lift,
-                                onTap: () => widget.onDestinationSelected(i),
+                              // Repère de la visite guidée (« onglet-0 »…).
+                              child: CibleVisite(
+                                id: 'onglet-$i',
+                                child: _NavItem(
+                                  destination: widget.destinations[i],
+                                  selection: _selection(i),
+                                  primary: primary,
+                                  barHeight: _barHeight,
+                                  bubbleSize: _bubbleSize,
+                                  lift: _lift,
+                                  onTap: () => widget.onDestinationSelected(i),
+                                ),
                               ),
                             ),
                         ],

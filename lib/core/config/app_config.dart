@@ -28,7 +28,7 @@ class AppConfig {
     final ip = _ip.trim();
     if (ip.isNotEmpty) return ip;
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return '10.0.2.2';
+      return 'localhost';
     }
     return 'localhost';
   }
@@ -40,7 +40,7 @@ class AppConfig {
   static String get serverUrlSource {
     if (_ip.trim().isNotEmpty) return '--dart-define=ip';
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'défaut Android (10.0.2.2 = PC hôte, ÉMULATEUR uniquement)';
+      return 'défaut Android (localhost via USB : adb reverse tcp:8080 tcp:8080)';
     }
     return 'défaut (localhost)';
   }

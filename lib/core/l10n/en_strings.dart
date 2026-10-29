@@ -215,7 +215,6 @@ const Map<String, String> enStrings = {
   "Déjà un compte ?": "Already have an account?",
   "Déposez votre premier dossier juridique pour le soumettre aux avocats de votre choix.":
       "Submit your first legal case to send it to the lawyers of your choice.",
-  "Détail par besoin": "Details by need",
   "Elle a été retirée par son auteur.": "It was removed by its author.",
   "Email": "Email",
   "Email de confirmation renvoyé.": "Confirmation email resent.",
@@ -825,4 +824,40 @@ const Map<String, String> enStrings = {
   "Voir ses autres articles": "See their other articles",
   "Voir ses autres conseils": "See their other advice",
   "Modifiez votre recherche.": "Try a different search.",
+  "Bienvenue sur PsyAvocat": "Welcome to PsyAvocat",
+  "Une courte visite pour repérer l’essentiel : vos notifications, les contenus, les professionnels, vos rendez-vous et votre profil.":
+      "A short tour of the essentials: your notifications, content, professionals, appointments and profile.",
+  "Vos notifications": "Your notifications",
+  "Confirmations, nouveaux messages et rappels de rendez-vous. Pour une visio, le lien de la salle arrive ici 15 minutes avant.":
+      "Confirmations, new messages and appointment reminders. For a video call, the room link arrives here 15 minutes before.",
+  "Articles juridiques": "Legal articles",
+  "Des articles rédigés par des avocats vérifiés pour mieux comprendre vos droits.":
+      "Articles written by verified lawyers to help you understand your rights.",
+  "Des conseils rédigés par des psychologues vérifiés pour prendre soin de vous.":
+      "Advice written by verified psychologists to help you take care of yourself.",
+  "Consultez les profils vérifiés, soumettez votre dossier, puis réservez un créneau avec l’avocat qui l’accepte.":
+      "Browse verified profiles, submit your case, then book a slot with the lawyer who accepts it.",
+  "Consultez les profils vérifiés, leurs tarifs et leurs créneaux, puis réservez en quelques gestes.":
+      "Browse verified profiles, their rates and slots, then book in a few taps.",
+  "Vos rendez-vous": "Your appointments",
+  "Au cabinet ou en visio : l’heure, le lieu et, pour une visio, le bouton pour rejoindre la salle.":
+      "In person or by video: the time, the place and, for a video call, the button to join the room.",
+  "Votre profil": "Your profile",
+  "Messagerie, changement d’univers (Avocat ou Psychologue), paiements et paramètres. Cette visite peut être relancée depuis les paramètres.":
+      "Messages, switching between Lawyer and Psychologist, payments and settings. You can replay this tour from the settings.",
+  "{n} sur {total}": "{n} of {total}",
+  "Terminer": "Finish",
+  "Revoir la visite guidée": "Replay the guided tour",
+  "Continuer avec Google": "Continue with Google",
+  "ou": "or",
+  "Finalisez votre profil": "Complete your profile",
+  "Plus qu’une étape : vérifiez votre nom et indiquez votre numéro de téléphone, pour que les professionnels puissent vous joindre.":
+      "One last step: check your name and enter your phone number so professionals can reach you.",
+  "Utiliser un autre compte": "Use another account",
+  "La connexion Google n'est pas encore configurée pour cette application.":
+      "Google sign-in is not yet configured for this app.",
+  "La connexion Google n'a pas abouti. Réessayez.":
+      "Google sign-in did not complete. Please try again.",
+  "Un compte existe déjà avec cette adresse email : connectez-vous avec votre mot de passe.":
+      "An account already exists with this email address: sign in with your password.",
 };

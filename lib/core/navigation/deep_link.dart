@@ -44,8 +44,8 @@ class DeepLinkTarget {
     if (id == null || id.isEmpty) return AppRoutes.notifications;
     switch (ressourceType) {
       case 'RENDEZ_VOUS':
-        // Pas d'écran de détail : la liste des rendez-vous.
-        return AppRoutes.rendezVous;
+        // Détail du rendez-vous (et accès à la salle s'il est en visio).
+        return AppRoutes.rendezVousDetail(id);
       case 'CONVERSATION':
         return AppRoutes.conversation(id);
       case 'ARTICLE':

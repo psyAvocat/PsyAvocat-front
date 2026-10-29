@@ -35,7 +35,7 @@ class PaiementModel {
     this.typeProfessionnel,
   });
 
-  /// Univers du paiement (cloisonnement de l'affichage).
+  /// Univers du paiement (cloisonnement strict Avocat / Psychologue).
   AppUniverse? get universe {
     if (typeProfessionnel == 'AVOCAT') return AppUniverse.lawyer;
     if (typeProfessionnel == 'PSYCHOLOGUE') return AppUniverse.psychologist;
@@ -49,6 +49,23 @@ class PaiementModel {
   }
 
   bool get estAnnule => statut == 'ANNULE';
+
+  PaiementModel copyWith({String? typeProfessionnel}) {
+    return PaiementModel(
+      id: id,
+      montant: montant,
+      devise: devise,
+      datePaiement: datePaiement,
+      statut: statut,
+      simulation: simulation,
+      rendezVousId: rendezVousId,
+      rendezVousDate: rendezVousDate,
+      montantTotalRendezVous: montantTotalRendezVous,
+      professionnelNom: professionnelNom,
+      professionnelPrenom: professionnelPrenom,
+      typeProfessionnel: typeProfessionnel ?? this.typeProfessionnel,
+    );
+  }
 
   factory PaiementModel.fromJson(Map<String, dynamic> json) {
     return PaiementModel(

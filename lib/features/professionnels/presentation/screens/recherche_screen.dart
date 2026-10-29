@@ -78,25 +78,13 @@ class _RechercheScreenState extends ConsumerState<RechercheScreen> {
               AppSpacing.s16,
               AppSpacing.s8,
             ),
-            child: SearchBar(
+            child: AppSearchField(
               controller: _searchController,
-              autoFocus: true,
+              autofocus: true,
+              effacable: true,
               hintText: universe.isPsychologist
                   ? tr('Rechercher un psychologue…')
                   : tr('Rechercher un avocat…'),
-              leading: const Icon(Icons.search_rounded),
-              trailing: [
-                if (_recherche.isNotEmpty)
-                  IconButton(
-                    tooltip: tr('Effacer'),
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() => _recherche = '');
-                    },
-                  ),
-              ],
-              elevation: const WidgetStatePropertyAll(0),
               onChanged: (value) => setState(() => _recherche = value),
             ),
           ),

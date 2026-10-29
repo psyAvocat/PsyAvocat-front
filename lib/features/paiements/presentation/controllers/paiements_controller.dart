@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/realtime/realtime_service.dart';
 import '../../../../core/theme/universe_provider.dart';
+import '../../../rendez_vous/presentation/controllers/rendez_vous_controller.dart';
 import '../../data/models/paiement_model.dart';
 import '../../data/repositories/paiements_repository.dart';
 
@@ -28,12 +29,28 @@ class PaiementsNotifier extends AsyncNotifier<List<PaiementModel>> {
   }
 }
 
-/// Paiements de l'univers courant uniquement.
+/// Paiements strictement cloisonnés selon l'univers courant (Avocat vs Psychologue).
+/// Croise aussi avec la liste des rendez-vous pour garantir le bon `typeProfessionnel`
+/// même si le proxy Hibernate d'un ancien appel n'était pas déroulé.
 final paiementsUniversProvider = Provider<AsyncValue<List<PaiementModel>>>((
   ref,
 ) {
   final universe = ref.watch(currentUniverseProvider);
-  return ref
-      .watch(paiementsListProvider)
-      .whenData((list) => list.where((p) => p.universe == universe).toList());
+  final rdvs = ref.watch(rendezVousControllerProvider).value;
+
+  return ref.watch(paiementsListProvider).whenData((list) {
+    final corriges = list.map((p) {
+      if (rdvs != null && p.rendezVousId != null) {
+        final match = rdvs.where((r) => r.id == p.rendezVousId).firstOrNull;
+        if (match != null &&
+            match.typeProfessionnel != null &&
+            match.typeProfessionnel!.isNotEmpty) {
+          return p.copyWith(typeProfessionnel: match.typeProfessionnel);
+        }
+      }
+      return p;
+    }).toList();
+
+    return corriges.where((p) => p.universe == universe).toList();
+  });
 });

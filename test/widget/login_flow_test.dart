@@ -71,6 +71,16 @@ class _FakeAuthRepository extends Fake implements AuthRepository {
     return _FakeCredential();
   }
 
+  /// Connexion Google réussie (compte Google « Awa Traoré »).
+  @override
+  Future<UserCredential?> signInWithGoogle() async {
+    _set(_FakeUser());
+    return _FakeCredential();
+  }
+
+  @override
+  String? get displayName => 'Awa Traoré';
+
   @override
   Future<void> signOut() async => _set(null);
 }
@@ -190,6 +200,7 @@ Future<void> _login(WidgetTester tester) async {
 }
 
 Future<void> _register(WidgetTester tester) async {
+  await tester.ensureVisible(find.text("S'inscrire"));
   await tester.tap(find.text("S'inscrire"));
   await tester.pumpAndSettle();
   await tester.enterText(find.byType(TextFormField).at(0), 'Ramla');
@@ -307,7 +318,7 @@ void main() {
   );
 
   testWidgets(
-    'compte sans profil ni informations d’inscription : réinscription demandée',
+    'compte sans profil (inscription commencée ailleurs) : profil à compléter',
     (tester) async {
       final container = await _startApp(tester);
 
@@ -315,9 +326,37 @@ void main() {
       await _login(tester);
 
       expect(_profil.calls, 0);
-      expect(container.read(authRepositoryProvider).currentUser, isNull);
-      expect(find.byType(LoginScreen), findsOneWidget);
-      expect(find.textContaining('Inscrivez-vous à nouveau'), findsOneWidget);
+      expect(container.read(authRepositoryProvider).currentUser, isNotNull);
+      expect(_location(container), AppRoutes.completerProfil);
+
+      await tester.pump(const Duration(seconds: 10));
+    },
+  );
+
+  testWidgets(
+    'première connexion Google : nom repris de Google, téléphone demandé, puis accès',
+    (tester) async {
+      final container = await _startApp(tester);
+      _session.hasProfile = false;
+
+      await tester.ensureVisible(find.text('Continuer avec Google'));
+      await tester.tap(find.text('Continuer avec Google'));
+      await tester.pumpAndSettle();
+
+      expect(_location(container), AppRoutes.completerProfil);
+      expect(find.text('Awa'), findsOneWidget);
+      expect(find.text('Traoré'), findsOneWidget);
+
+      await tester.enterText(
+        find.byType(TextFormField).at(2),
+        '+223 76 12 34 56',
+      );
+      await tester.ensureVisible(find.text('Continuer'));
+      await tester.tap(find.text('Continuer'));
+      await tester.pumpAndSettle();
+
+      expect(_profil.calls, 1);
+      expect(_location(container), AppRoutes.universeSelection);
 
       await tester.pump(const Duration(seconds: 10));
     },

@@ -66,7 +66,6 @@ class _ContenusScreenState extends ConsumerState<ContenusScreen> {
           title: Text(label),
           actions: [
             IconButton(
-              tooltip: tr('Notifications'),
               onPressed: () => context.push(AppRoutes.notifications),
               icon: Badge(
                 isLabelVisible: unreadCount > 0,
@@ -97,12 +96,10 @@ class _ContenusScreenState extends ConsumerState<ContenusScreen> {
                 AppSpacing.s16,
                 AppSpacing.s8,
               ),
-              child: SearchBar(
+              child: AppSearchField(
                 hintText: universe.isLawyer
                     ? tr('Rechercher un article…')
                     : tr('Rechercher un conseil…'),
-                leading: const Icon(Icons.search_rounded),
-                elevation: const WidgetStatePropertyAll(0),
                 onChanged: _onSearchChanged,
               ),
             ),

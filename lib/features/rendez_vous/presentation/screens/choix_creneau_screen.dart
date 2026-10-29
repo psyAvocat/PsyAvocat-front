@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/image_media.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -274,7 +275,7 @@ class _EnTeteProfessionnel extends StatelessWidget {
           CircleAvatar(
             radius: 26,
             backgroundColor: primaryColor.withValues(alpha: 0.12),
-            backgroundImage: photo != null ? NetworkImage(photo) : null,
+            backgroundImage: photo != null ? imageMediaProvider(photo) : null,
             child: photo == null
                 ? Icon(
                     pro.summary.isAvocat

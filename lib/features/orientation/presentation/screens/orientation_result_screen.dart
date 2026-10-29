@@ -13,8 +13,8 @@ import '../widgets/plant_illustration.dart';
 
 /// Résultat d'orientation, tel que calculé par Spring Boot.
 ///
-/// Flutter n'interprète rien : il affiche la catégorie / spécialité retenue,
-/// le classement par besoin et les professionnels recommandés par le backend.
+/// Flutter n'interprète rien : il affiche la catégorie / spécialité retenue
+/// et les professionnels recommandés par le backend.
 class OrientationResultScreen extends ConsumerWidget {
   const OrientationResultScreen({super.key});
 
@@ -67,12 +67,6 @@ class _ResultContent extends ConsumerWidget {
       padding: AppSpacing.screenPadding,
       children: [
         _ResultHeader(result: result),
-        if (result.scoresParCategorie.isNotEmpty) ...[
-          AppSpacing.vGap32,
-          AppSectionHeader(title: tr('Détail par besoin')),
-          AppSpacing.vGap12,
-          _CategoryScores(scores: result.scoresParCategorie),
-        ],
         AppSpacing.vGap32,
         AppSectionHeader(title: tr('Professionnels recommandés')),
         AppSpacing.vGap12,
@@ -166,45 +160,6 @@ class _ResultHeader extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Classement des catégories de besoin, tel que renvoyé par le backend.
-class _CategoryScores extends StatelessWidget {
-  final List<CategorieScoreModel> scores;
-
-  const _CategoryScores({required this.scores});
-
-  @override
-  Widget build(BuildContext context) {
-    // La barre est proportionnelle au meilleur score (affichage uniquement).
-    final maxScore = scores
-        .map((s) => s.score)
-        .fold<int>(0, (a, b) => a > b ? a : b);
-
-    return Card(
-      child: Padding(
-        padding: AppSpacing.cardPaddingCompact,
-        child: Column(
-          children: [
-            for (final score in scores)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(score.nom, style: AppTypography.texteMedium),
-                    AppSpacing.vGap8,
-                    LinearProgressIndicator(
-                      value: maxScore == 0 ? 0 : score.score / maxScore,
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
     );
   }
 }

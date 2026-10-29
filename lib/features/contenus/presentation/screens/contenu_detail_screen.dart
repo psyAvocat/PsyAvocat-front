@@ -10,6 +10,7 @@ import '../../../../core/theme/design_system.dart';
 import '../../../../core/theme/universe_provider.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/widgets/image_media.dart';
 import '../../data/models/contenu_model.dart';
 import '../controllers/contenus_controller.dart';
 import '../../../../core/l10n/app_strings.dart';
@@ -361,11 +362,7 @@ class _Illustration extends StatelessWidget {
         if (url == null || url.isEmpty)
           sansImage
         else
-          Image.network(
-            url,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => sansImage,
-          ),
+          ImageMedia(url: url, substitut: sansImage),
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(

@@ -8,6 +8,7 @@ import '../../../../core/theme/universe_provider.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_state_views.dart';
+import '../../../../core/widgets/image_media.dart';
 import '../../../../shared/enums/slot_status.dart';
 import '../../../dossiers/presentation/controllers/create_dossier_wizard_controller.dart';
 import '../../../dossiers/presentation/controllers/dossiers_controller.dart';
@@ -136,7 +137,7 @@ class _ProfessionnelDetailScreenState
               leading: const AppBackButton(color: Colors.white),
               actions: [
                 PopupMenuButton<String>(
-                  tooltip: tr('Plus d’actions'),
+                  tooltip: '',
                   icon: const Icon(Icons.more_vert_rounded),
                   onSelected: (action) {
                     if (action == 'signaler') {
@@ -159,14 +160,10 @@ class _ProfessionnelDetailScreenState
                 pro: pro,
                 hauteurDepliee: _hauteurPhoto,
                 fond: FlexibleSpaceBar(
-                  background: photo != null
-                      ? Image.network(
-                          photo,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) =>
-                              _PhotoParDefaut(pro: pro, color: primaryColor),
-                        )
-                      : _PhotoParDefaut(pro: pro, color: primaryColor),
+                  background: ImageMedia(
+                    url: photo,
+                    substitut: _PhotoParDefaut(pro: pro, color: primaryColor),
+                  ),
                 ),
               ),
             ),

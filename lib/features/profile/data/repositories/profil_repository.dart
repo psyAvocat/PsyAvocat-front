@@ -33,6 +33,9 @@ abstract class ProfilRepository {
   });
 
   Future<ProfilModel> deletePhoto();
+
+  /// Visite guidée terminée ou passée : elle n'est plus proposée à ce compte.
+  Future<void> marquerVisiteGuideeVue();
 }
 
 class ApiProfilRepository implements ProfilRepository {
@@ -92,6 +95,11 @@ class ApiProfilRepository implements ProfilRepository {
   Future<ProfilModel> deletePhoto() async {
     final response = await _client.delete('/profil/photo');
     return ProfilModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> marquerVisiteGuideeVue() async {
+    await _client.post('/profil/visite-guidee');
   }
 }
 

@@ -24,6 +24,7 @@ export 'app_checkbox_tile.dart';
 export 'app_inline_link.dart';
 export 'app_highlighted_title.dart';
 export 'app_avatar.dart';
+export 'app_search_field.dart';
 export 'app_section_header.dart';
 export 'app_async_view.dart';
 export 'psyavocat_logo.dart';

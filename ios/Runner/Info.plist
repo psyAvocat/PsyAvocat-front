@@ -4,7 +4,7 @@
 <dict>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<!-- Développement : serveur Spring Boot local joint en HTTP (--dart-define=ip=...). -->
+		<!-- Développement : serveur Spring Boot local joint en HTTP (option dart-define « ip »). -->
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
@@ -77,10 +77,23 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
 		<string>remote-notification</string>
+	</array>
+	<!-- Connexion Google : retour vers l'application après le choix du compte (REVERSED_CLIENT_ID). -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.434795703982-qa7s7hlue5qiil293lkd4vom9uv8b0dn</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

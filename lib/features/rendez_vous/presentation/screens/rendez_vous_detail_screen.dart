@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/errors/user_message.dart';
 import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/theme/universe_provider.dart';
+import '../../../../core/utils/visio.dart';
 import '../../../../core/widgets/app_alert.dart';
 import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_state_views.dart';
 import '../../../../shared/enums/appointment_status.dart';
+import '../../../paiements/presentation/widgets/recu_paiement_sheet.dart';
+import '../../../profile/presentation/controllers/profil_controller.dart';
 import '../../data/models/rendez_vous_model.dart';
 import '../controllers/rendez_vous_controller.dart';
 import '../widgets/annuler_rendez_vous_dialog.dart';
 import '../widgets/recap_rendez_vous.dart';
 
 /// Détail d'un rendez-vous, en page plein écran (au-dessus de la barre de
-/// navigation) : récapitulatif, paiement, accès au dossier ou au profil,
-/// visioconférence et annulation.
+/// navigation) : récapitulatif, paiement, visioconférence et dossier.
+/// L'annulation est proposée dans le menu « ⋮ » de la barre du haut.
 class RendezVousDetailScreen extends ConsumerStatefulWidget {
   final String rendezVousId;
 
@@ -72,16 +74,39 @@ class _RendezVousDetailScreenState
   }
 
   Future<void> _rejoindreVisio(String lien) async {
-    final uri = Uri.tryParse(lien);
-    final ouvert =
-        uri != null &&
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final profil = ref.read(currentProfilProvider).value;
+    final nom = profil == null ? null : '${profil.prenom} ${profil.nom}';
+    final ouvert = await rejoindreVisio(lien, nom: nom);
     if (!ouvert && mounted) {
       AppNotification.showError(
         context,
         tr('Impossible d’ouvrir le lien de visioconférence.'),
       );
     }
+  }
+
+  void _afficherRecuAcompte(RendezVous rdv) {
+    final total = rdv.montantTotal ?? 0;
+    final acompte = rdv.montantAcompte ?? (total * 0.2);
+    showRecuPaiementSheet(
+      context,
+      RecuPaiementData(
+        referenceId: rdv.id,
+        professionnelNom: rdv.professionnelDisplayName,
+        typeProfessionnel: rdv.typeProfessionnel,
+        dateRendezVous: rdv.dateHeure,
+        datePaiement: rdv.dateHeure,
+        montantAcompte: acompte,
+        montantTotal: total,
+        estAnnule:
+            rdv.statut == AppointmentStatus.annule ||
+            rdv.statutPaiement?.toUpperCase() == 'ANNULE',
+        simulation: true,
+        modeConsultation: rdv.mode == 'VISIO'
+            ? tr('Visioconférence')
+            : tr('En cabinet'),
+      ),
+    );
   }
 
   @override
@@ -96,6 +121,29 @@ class _RendezVousDetailScreenState
         elevation: 0,
         leading: const AppBackButton(),
         title: Text(tr('Détail du rendez-vous')),
+        actions: [
+          // Annulation : discrète, dans le menu, tant que c'est possible.
+          if (rdv != null && rdv.canBeChangedAt(DateTime.now()))
+            PopupMenuButton<String>(
+              tooltip: tr('Plus d’actions'),
+              enabled: !_annulation,
+              icon: const Icon(Icons.more_vert_rounded),
+              onSelected: (_) => _annuler(rdv),
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: 'annuler',
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.event_busy_outlined,
+                      color: AppColors.danger,
+                    ),
+                    title: Text(tr('Annuler ce rendez-vous')),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
       body: rdv != null
           ? _contenu(context, rdv)
@@ -118,7 +166,6 @@ class _RendezVousDetailScreenState
   Widget _contenu(BuildContext context, RendezVous rdv) {
     final scheme = Theme.of(context).colorScheme;
     final maintenant = DateTime.now();
-    final modifiable = rdv.canBeChangedAt(maintenant);
     final lienVisio = rdv.lienVisio;
     final afficherVisio =
         lienVisio != null &&
@@ -179,6 +226,14 @@ class _RendezVousDetailScreenState
               _ => null,
             },
           ),
+          const SizedBox(height: 10),
+          AppButton(
+            text: tr('Voir le reçu officiel d’acompte (20 %)'),
+            icon: Icons.receipt_long_rounded,
+            isOutlined: true,
+            color: scheme.primary,
+            onPressed: () => _afficherRecuAcompte(rdv),
+          ),
         ],
         const SizedBox(height: 20),
         if (afficherVisio) ...[
@@ -201,24 +256,6 @@ class _RendezVousDetailScreenState
           ),
           const SizedBox(height: 10),
         ],
-        if (rdv.professionnelId.isNotEmpty) ...[
-          AppButton(
-            text: tr('Voir le profil du professionnel'),
-            icon: Icons.person_outline_rounded,
-            isOutlined: true,
-            color: scheme.primary,
-            onPressed: () =>
-                context.push(AppRoutes.professionnel(rdv.professionnelId)),
-          ),
-          const SizedBox(height: 10),
-        ],
-        if (modifiable)
-          AppButton.outline(
-            text: tr('Annuler ce rendez-vous'),
-            color: AppColors.danger,
-            isLoading: _annulation,
-            onPressed: _annulation ? null : () => _annuler(rdv),
-          ),
       ],
     );
   }
@@ -233,6 +270,7 @@ class _Bloc extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -245,11 +283,7 @@ class _Bloc extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                icone,
-                size: 18,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              Icon(icone, size: 18, color: primary),
               const SizedBox(width: 8),
               Text(
                 titre,

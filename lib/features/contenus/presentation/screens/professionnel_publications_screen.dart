@@ -12,6 +12,7 @@ import '../controllers/contenus_controller.dart';
 import '../widgets/publication_cards.dart';
 import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/widgets/app_back_button.dart';
+import '../../../../core/widgets/app_search_field.dart';
 
 /// Articles (avocat) ou conseils (psychologue) publiés par un professionnel,
 /// ouverts depuis sa fiche (« Voir les articles ») ou depuis la fin d'une
@@ -110,12 +111,10 @@ class _ProfessionnelPublicationsScreenState
                 AppSpacing.s16,
                 AppSpacing.s8,
               ),
-              child: SearchBar(
+              child: AppSearchField(
                 hintText: universe.isLawyer
                     ? tr('Rechercher un article…')
                     : tr('Rechercher un conseil…'),
-                leading: const Icon(Icons.search_rounded),
-                elevation: const WidgetStatePropertyAll(0),
                 onChanged: _onSearchChanged,
               ),
             ),

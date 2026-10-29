@@ -14,6 +14,9 @@ class ProfilModel {
   /// URL d'affichage temporaire (bucket privé) générée par le backend.
   final String? photoUrl;
 
+  /// Visite guidée de l'application déjà vue avec ce compte (tous appareils).
+  final bool visiteGuideeVue;
+
   const ProfilModel({
     required this.id,
     required this.nom,
@@ -23,6 +26,7 @@ class ProfilModel {
     this.telephone,
     this.dateInscription,
     this.photoUrl,
+    this.visiteGuideeVue = false,
   });
 
   factory ProfilModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +41,7 @@ class ProfilModel {
         json['dateInscription'] as String? ?? '',
       ),
       photoUrl: json['photoUrl'] as String?,
+      visiteGuideeVue: json['visiteGuideeVue'] == true,
     );
   }
 

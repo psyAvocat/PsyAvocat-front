@@ -82,10 +82,14 @@ class MessagesNotifier extends AsyncNotifier<List<Message>> {
 
   final String conversationId;
 
-  /// Messages ajoutés localement (envoyés ou reçus en temps réel), avec l'instant
-  /// de l'ajout : une relecture partie avant cet instant ne les connaît pas
+  /// Numéro d'ordre croissant des relectures et des ajouts locaux (plutôt que
+  /// l'heure, trop grossière sur certains appareils pour départager deux instants).
+  int _sequence = 0;
+
+  /// Messages ajoutés localement (envoyés ou reçus en temps réel), avec leur
+  /// numéro d'ordre : une relecture partie avant leur ajout ne les connaît pas
   /// encore et ne doit pas les faire disparaître.
-  final _ajoutsLocaux = <String, DateTime>{};
+  final _ajoutsLocaux = <String, int>{};
 
   @override
   Future<List<Message>> build() async {
@@ -93,15 +97,13 @@ class MessagesNotifier extends AsyncNotifier<List<Message>> {
       RealtimeEventType.message,
       RealtimeEventType.reconnecte,
     }, _surEvenement);
-    final debut = DateTime.now();
+    final lecture = ++_sequence;
     final serveur = await ref
         .read(messagerieRepositoryProvider)
         .getMessages(conversationId);
     final connus = {for (final m in serveur) m.id};
     final ajoutesPendantLaLecture = (state.value ?? const <Message>[]).where(
-      (m) =>
-          !connus.contains(m.id) &&
-          (_ajoutsLocaux[m.id]?.isAfter(debut) ?? false),
+      (m) => !connus.contains(m.id) && (_ajoutsLocaux[m.id] ?? 0) > lecture,
     );
     _ajoutsLocaux.removeWhere((id, _) => connus.contains(id));
     ref.invalidate(conversationsProvider);
@@ -129,7 +131,7 @@ class MessagesNotifier extends AsyncNotifier<List<Message>> {
 
   /// Message confirmé par le serveur : affiché une seule fois.
   void ajouter(Message message) {
-    _ajoutsLocaux[message.id] = DateTime.now();
+    _ajoutsLocaux[message.id] = ++_sequence;
     final actuels = state.value;
     if (actuels != null) {
       state = AsyncData(filDeMessages([...actuels, message]));

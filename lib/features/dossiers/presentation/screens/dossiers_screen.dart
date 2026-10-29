@@ -199,6 +199,9 @@ class _DossiersScreenState extends ConsumerState<DossiersScreen> {
                         height: 38,
                         child: TextField(
                           onChanged: (v) => setState(() => _recherche = v),
+                          // Toucher ailleurs : champ neutre, clavier fermé.
+                          onTapOutside: (_) =>
+                              FocusManager.instance.primaryFocus?.unfocus(),
                           style: AppTypography.texte.copyWith(fontSize: 13),
                           decoration: InputDecoration(
                             hintText: tr('Rechercher un dossier...'),

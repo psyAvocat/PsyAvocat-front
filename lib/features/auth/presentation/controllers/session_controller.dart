@@ -33,6 +33,10 @@ enum SessionStatus {
   /// Client dont l'adresse email n'est pas encore confirmée.
   emailNotVerified,
 
+  /// Connecté sans profil PsyAvocat (première connexion Google, inscription
+  /// commencée sur un autre appareil) : prénom, nom et téléphone à compléter.
+  profileToComplete,
+
   /// Accès refusé (professionnel, administrateur ou compte désactivé) ; déconnecté.
   denied,
 
@@ -155,21 +159,22 @@ class SessionController extends Notifier<SessionState> {
     return ref.read(currentUserProvider.future);
   }
 
-  /// Compte Firebase sans profil métier : l'inscription a été interrompue
-  /// (serveur injoignable au moment de créer le profil). Le profil est créé
-  /// avec les informations saisies à l'inscription, gardées sur l'appareil :
-  /// rien n'est redemandé. Renvoie `true` si le profil a été créé.
+  /// Compte Firebase sans profil métier. Inscription interrompue sur cet
+  /// appareil (serveur injoignable au moment de créer le profil) : le profil
+  /// est créé avec les informations saisies, gardées sur l'appareil, sans rien
+  /// redemander. Renvoie `true` si le profil a été créé.
   ///
-  /// Sans ces informations (inscription commencée sur un autre appareil) ou si
-  /// le serveur les refuse, l'utilisateur est déconnecté et invité à se
-  /// réinscrire avec la même adresse : l'inscription reprend alors ce compte.
-  /// Une erreur réseau remonte à [_resolve] (état `error`, nouvel essai possible).
+  /// Sans ces informations (première connexion Google, inscription commencée
+  /// sur un autre appareil) : l'écran « Compléter votre profil » les demande.
+  /// Si le serveur refuse les informations gardées, l'utilisateur est
+  /// déconnecté et invité à se réinscrire. Une erreur réseau remonte à
+  /// [_resolve] (état `error`, nouvel essai possible).
   Future<bool> _completeRegistration() async {
     final uid = ref.read(authRepositoryProvider).currentUser!.uid;
     final store = ref.read(pendingRegistrationStoreProvider);
     final pending = store.read(uid);
     if (pending == null) {
-      await _signOutWithMessage(incompleteRegistrationMessage);
+      state = const SessionState(SessionStatus.profileToComplete);
       return false;
     }
     try {

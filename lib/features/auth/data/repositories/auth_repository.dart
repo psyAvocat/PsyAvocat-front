@@ -9,6 +9,9 @@ class AuthRepository {
 
   User? get currentUser => _datasource.currentUser;
 
+  /// Nom fourni par Google (pré-remplissage du profil après une connexion Google).
+  String? get displayName => _datasource.displayName;
+
   Stream<User?> get authStateChanges => _datasource.authStateChanges;
 
   Future<String?> getIdToken([bool forceRefresh = false]) =>
@@ -25,6 +28,9 @@ class AuthRepository {
     required String password,
   }) =>
       _datasource.signUpWithEmailAndPassword(email: email, password: password);
+
+  /// Connexion avec Google ; `null` si l'utilisateur a renoncé.
+  Future<UserCredential?> signInWithGoogle() => _datasource.signInWithGoogle();
 
   Future<void> signOut() => _datasource.signOut();
 

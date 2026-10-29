@@ -57,7 +57,6 @@ class _ProfessionnelsListScreenState
         title: Text(label),
         actions: [
           IconButton(
-            tooltip: tr('Notifications'),
             onPressed: () => context.push(AppRoutes.notifications),
             icon: Badge(
               isLabelVisible: unreadCount > 0,
@@ -76,12 +75,10 @@ class _ProfessionnelsListScreenState
               AppSpacing.s16,
               AppSpacing.s8,
             ),
-            child: SearchBar(
+            child: AppSearchField(
               hintText: universe.isPsychologist
                   ? tr('Rechercher un psychologue…')
                   : tr('Rechercher un avocat…'),
-              leading: const Icon(Icons.search_rounded),
-              elevation: const WidgetStatePropertyAll(0),
               onChanged: (value) => setState(() => _query = value),
             ),
           ),

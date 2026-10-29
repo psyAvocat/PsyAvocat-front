@@ -15,6 +15,7 @@ import 'app_routes.dart';
 /// | non connecté, 1re ouverture                 | onboarding                           |
 /// | non connecté                                | connexion (inscription accessible)   |
 /// | refusé                                      | accès refusé                         |
+/// | connecté sans profil (1re connexion Google) | profil à compléter                   |
 /// | connecté, univers non choisi                | choix de l'univers                   |
 /// | connecté, univers choisi                    | écran demandé (accueil par défaut)   |
 ///
@@ -43,13 +44,19 @@ String? resolveRedirect({
     case SessionStatus.loading:
     case SessionStatus.error:
       // Vérification en cours ou échouée après une connexion : l'écran courant
-      // (connexion, inscription) reste affiché et montre l'état ou l'erreur.
-      if (AppRoutes.authRoutes.contains(location)) return null;
+      // (connexion, inscription, profil à compléter) reste affiché et montre
+      // l'état ou l'erreur.
+      if (AppRoutes.authRoutes.contains(location) ||
+          location == AppRoutes.completerProfil) {
+        return null;
+      }
       return location == AppRoutes.splash ? null : AppRoutes.login;
     case SessionStatus.denied:
       return _stayOn(AppRoutes.accessDenied, location);
     case SessionStatus.emailNotVerified:
       return _stayOn(AppRoutes.verifyEmail, location);
+    case SessionStatus.profileToComplete:
+      return _stayOn(AppRoutes.completerProfil, location);
     case SessionStatus.unauthenticated:
       return _unauthenticated(location, hasSeenOnboarding);
     case SessionStatus.authorized:
