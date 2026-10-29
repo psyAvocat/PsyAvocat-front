@@ -88,6 +88,8 @@ class PsyAvocatApp extends ConsumerWidget {
       supportedLocales: supportedAppLocales,
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       routerConfig: router,
+      // Retour Android : accueil avant de quitter l'application (app_back_button.dart).
+      onNavigationNotification: garderLaMainSurLeRetour,
     );
   }
 }

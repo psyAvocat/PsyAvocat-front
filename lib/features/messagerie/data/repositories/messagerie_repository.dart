@@ -18,11 +18,25 @@ abstract class MessagerieRepository {
     required String contenu,
   });
 
+  /// Discussion à ouvrir avec un professionnel (bouton « Écrire ») : l'existante,
+  /// ou un brouillon (`id` vide) qui n'existe qu'à l'écran. Rien n'est créé :
+  /// la discussion naît avec le premier message ([contacter]).
+  Future<Conversation> ouvrirAvec(String destinataireId);
+
   /// Contacte un professionnel : réutilise la conversation existante si elle existe.
   Future<Conversation> contacter({
     required String professionnelId,
     required String message,
   });
+
+  /// Supprime l'un de ses messages, pour les deux participants.
+  Future<void> supprimerMessage({
+    required String conversationId,
+    required String messageId,
+  });
+
+  /// Supprime la discussion de sa messagerie (le professionnel la conserve).
+  Future<void> supprimerConversation(String conversationId);
 }
 
 class ApiMessagerieRepository implements MessagerieRepository {
@@ -72,6 +86,12 @@ class ApiMessagerieRepository implements MessagerieRepository {
   }
 
   @override
+  Future<Conversation> ouvrirAvec(String destinataireId) async {
+    final response = await _client.get('/conversations/avec/$destinataireId');
+    return Conversation.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
   Future<Conversation> contacter({
     required String professionnelId,
     required String message,
@@ -81,6 +101,19 @@ class ApiMessagerieRepository implements MessagerieRepository {
       data: {'destinataireId': professionnelId, 'premierMessage': message},
     );
     return Conversation.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> supprimerMessage({
+    required String conversationId,
+    required String messageId,
+  }) async {
+    await _client.delete('/conversations/$conversationId/messages/$messageId');
+  }
+
+  @override
+  Future<void> supprimerConversation(String conversationId) async {
+    await _client.delete('/conversations/$conversationId');
   }
 }
 

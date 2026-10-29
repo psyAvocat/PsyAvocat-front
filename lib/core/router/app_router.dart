@@ -201,10 +201,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '${AppRoutes.messagerie}/:id',
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>? ?? {};
+          // Informations d'attente seulement : l'écran relit le correspondant
+          // depuis la conversation (même affichage depuis une notification).
           return ConversationDetailScreen(
             conversationId: state.pathParameters['id']!,
-            participantName: extra['name'] as String? ?? 'Discussion',
-            participantRole: extra['role'] as String? ?? 'AVOCAT',
+            participantName: extra['name'] as String?,
+            participantRole: extra['role'] as String?,
+            participantPhotoUrl: extra['photoUrl'] as String?,
+          );
+        },
+      ),
+      GoRoute(
+        path: '${AppRoutes.messagerie}/nouvelle/:destinataireId',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          return ConversationDetailScreen(
+            destinataireId: state.pathParameters['destinataireId']!,
+            participantName: extra['name'] as String?,
+            participantRole: extra['role'] as String?,
             participantPhotoUrl: extra['photoUrl'] as String?,
           );
         },

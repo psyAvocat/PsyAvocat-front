@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/app_avatar.dart';
 import '../../data/models/messagerie_model.dart';
 import '../../../../core/theme/app_palette.dart';
+import '../../../../core/l10n/app_strings.dart';
 
 /// Bulle de message : à droite et à la couleur de l'univers pour le client,
 /// à gauche, en gris et précédée de la photo pour le professionnel.
@@ -14,6 +15,9 @@ class MessageBubble extends StatelessWidget {
   /// Utilisateur connecté : ses messages sont affichés à droite.
   final String? currentUserId;
 
+  /// Appui long sur l'un de ses messages : proposer de le supprimer.
+  final VoidCallback? onSupprimer;
+
   const MessageBubble({
     super.key,
     required this.message,
@@ -21,6 +25,7 @@ class MessageBubble extends StatelessWidget {
     required this.participantName,
     this.participantPhotoUrl,
     this.currentUserId,
+    this.onSupprimer,
   });
 
   @override
@@ -63,7 +68,17 @@ class MessageBubble extends StatelessWidget {
             ),
             const SizedBox(width: 6),
           ],
-          Flexible(child: bulle),
+          Flexible(
+            child: isMe && onSupprimer != null
+                ? Semantics(
+                    hint: tr('Appui long pour supprimer'),
+                    child: GestureDetector(
+                      onLongPress: onSupprimer,
+                      child: bulle,
+                    ),
+                  )
+                : bulle,
+          ),
         ],
       ),
     );

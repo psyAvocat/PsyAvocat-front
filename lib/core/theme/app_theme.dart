@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_palette.dart';
@@ -243,6 +244,20 @@ class AppTheme {
   // ===========================================================================
 
   /// Générateur de thème : univers (couleurs) × luminosité (clair / sombre).
+  /// Transitions des pages. Android : pas de retour « prédictif » page par page
+  /// (transition par défaut de Flutter). Au début d'un geste de retour, toutes
+  /// les pages « au premier plan » de leur navigateur le prennent en charge, y
+  /// compris celles des onglets cachés (un navigateur par onglet) ; leur
+  /// animation, en pause hors écran, ne se termine jamais et Flutter reste en
+  /// « geste en cours » : tous les appuis sont ignorés (application figée).
+  /// Le geste de retour reste disponible et dépile normalement la page visible.
+  static const pageTransitions = PageTransitionsTheme(
+    builders: {
+      TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+    },
+  );
+
   static ThemeData buildTheme(
     AppUniverse universe, {
     Brightness brightness = Brightness.light,
@@ -258,6 +273,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
+      pageTransitionsTheme: pageTransitions,
       colorScheme: scheme,
       primaryColor: scheme.primary,
       scaffoldBackgroundColor: scheme.surfaceContainerLow,

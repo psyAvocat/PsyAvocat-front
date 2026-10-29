@@ -420,6 +420,14 @@ const Map<String, String> enStrings = {
   "Pièces jointes ({n})": "Attachments ({n})",
   "Pièces non enregistrées": "Documents not saved",
   "Plus d’actions": "More actions",
+  "Supprimer ce message ?": "Delete this message?",
+  "Le message sera supprimé pour vous et pour votre correspondant.":
+      "The message will be deleted for you and for the other person.",
+  "Supprimer cette discussion ?": "Delete this conversation?",
+  "Elle disparaîtra de votre messagerie. Le professionnel la conserve ; si l’un de vous écrit à nouveau, elle réapparaîtra avec les nouveaux messages.":
+      "It will disappear from your messages. The professional keeps it; if either of you writes again, it will reappear with the new messages.",
+  "Supprimer la discussion": "Delete conversation",
+  "Appui long pour supprimer": "Long press to delete",
   "Plus tard": "Later",
   "Ouvrir les réglages": "Open settings",
   "Notifications désactivées sur le téléphone":
@@ -806,4 +814,15 @@ const Map<String, String> enStrings = {
   "Voir le profil du professionnel": "View the professional’s profile",
   "Lieu": "Location",
   "Paiement": "Payment",
+  "Ajuster la photo": "Adjust the photo",
+  "Valider": "Confirm",
+  "Déplacez et zoomez la photo pour bien cadrer votre visage.":
+      "Move and zoom the photo to frame your face.",
+  "Cette image ne peut pas être lue. Choisissez une autre photo.":
+      "This image cannot be read. Please choose another photo.",
+  "Article": "Article",
+  "Discussion": "Conversation",
+  "Voir ses autres articles": "See their other articles",
+  "Voir ses autres conseils": "See their other advice",
+  "Modifiez votre recherche.": "Try a different search.",
 };

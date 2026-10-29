@@ -13,7 +13,8 @@ import '../../data/repositories/rendez_vous_repository.dart';
 class RendezVousController extends AsyncNotifier<List<RendezVous>> {
   @override
   Future<List<RendezVous>> build() async {
-    // Mode invité : aucun rendez-vous, aucun appel protégé. Rechargé à la connexion.
+    // Sans session autorisée (déconnexion…) : aucun rendez-vous, aucun appel
+    // protégé. Rechargé à la connexion.
     if (ref.watch(signedInAccountProvider) == null) return const [];
     listenRealtime(ref, {RealtimeEventType.notification}, (event) {
       if (event.payload['ressourceType'] == 'RENDEZ_VOUS') reload();

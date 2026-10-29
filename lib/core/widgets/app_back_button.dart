@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../l10n/app_strings.dart';
@@ -12,6 +13,24 @@ void retourOuAccueil(BuildContext context) {
   } else {
     context.go(AppRoutes.home);
   }
+}
+
+/// Retour Android : l'application garde toujours la main sur le bouton et le
+/// geste de retour (à passer à `MaterialApp.onNavigationNotification`).
+///
+/// Par défaut, dès qu'aucune page n'est à dépiler, Flutter laisse Android
+/// traiter le retour (retour « prédictif », Android 14+) : l'application se
+/// ferme depuis n'importe quel onglet ou fiche ouverte par notification, sans
+/// passer par l'accueil. Ici, le routeur décide toujours (voir
+/// [destinationRetourSysteme]) : page précédente, sinon accueil, et seulement
+/// depuis l'accueil, sortie de l'application (comme WhatsApp).
+bool garderLaMainSurLeRetour(NavigationNotification notification) {
+  final etat = WidgetsBinding.instance.lifecycleState;
+  // Moteur pas encore prêt : rien à signaler (comme le comportement par défaut).
+  if (etat != null && etat != AppLifecycleState.detached) {
+    SystemNavigator.setFrameworkHandlesBack(true);
+  }
+  return true;
 }
 
 /// Bouton retour Android sur la dernière page de la pile : destination à ouvrir,

@@ -60,6 +60,10 @@ class AppRoutes {
   /// Discussion de la messagerie.
   static String conversation(String id) => '$messagerie/$id';
 
+  /// Brouillon de discussion avec un professionnel : créée au premier message.
+  static String nouvelleConversation(String destinataireId) =>
+      '$messagerie/nouvelle/$destinataireId';
+
   /// Fiche d'un professionnel.
   static String professionnel(String id) => '$professionnels/$id';
 

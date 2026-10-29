@@ -21,6 +21,7 @@ import '../controllers/professionnels_controller.dart';
 import '../widgets/availability_picker.dart';
 import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/theme/design_system.dart';
+import '../../../../core/widgets/app_avatar.dart';
 import '../../../../core/widgets/app_back_button.dart';
 
 /// Fiche détaillée d'un professionnel : uniquement des données réelles du backend.
@@ -128,7 +129,7 @@ class _ProfessionnelDetailScreenState
         body: NestedScrollView(
           headerSliverBuilder: (context, _) => [
             SliverAppBar(
-              expandedHeight: 240,
+              expandedHeight: _hauteurPhoto,
               pinned: true,
               backgroundColor: primaryColor,
               foregroundColor: Colors.white,
@@ -154,15 +155,19 @@ class _ProfessionnelDetailScreenState
                   ],
                 ),
               ],
-              flexibleSpace: FlexibleSpaceBar(
-                background: photo != null
-                    ? Image.network(
-                        photo,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) =>
-                            _PhotoParDefaut(pro: pro, color: primaryColor),
-                      )
-                    : _PhotoParDefaut(pro: pro, color: primaryColor),
+              flexibleSpace: _EnTeteFiche(
+                pro: pro,
+                hauteurDepliee: _hauteurPhoto,
+                fond: FlexibleSpaceBar(
+                  background: photo != null
+                      ? Image.network(
+                          photo,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) =>
+                              _PhotoParDefaut(pro: pro, color: primaryColor),
+                        )
+                      : _PhotoParDefaut(pro: pro, color: primaryColor),
+                ),
               ),
             ),
             SliverToBoxAdapter(
@@ -343,23 +348,19 @@ class _ProfessionnelDetailScreenState
     );
   }
 
-  /// Premier message : la conversation est créée (ou réutilisée) par le backend.
+  /// Ouvre directement la discussion avec le professionnel : l'existante, sinon
+  /// un brouillon qui ne sera créé qu'à l'envoi du premier message (rien ne
+  /// reste si le client repart sans écrire).
   Future<void> _ecrire(BuildContext context, ProfessionnelDetail pro) async {
-    // Le dialogue possède son champ : il est libéré à la fin de l'animation
-    // de fermeture, jamais pendant (sinon « TextEditingController was used
-    // after being disposed »).
-    final message = await showDialog<String>(
-      context: context,
-      builder: (_) => _EcrireDialog(nom: pro.summary.displayName),
-    );
-    if (message == null || message.isEmpty || !context.mounted) return;
     try {
       final conversation = await ref
           .read(messagerieRepositoryProvider)
-          .contacter(professionnelId: pro.id, message: message);
+          .ouvrirAvec(pro.id);
       if (!context.mounted) return;
       context.push(
-        AppRoutes.conversation(conversation.id),
+        conversation.id.isEmpty
+            ? AppRoutes.nouvelleConversation(pro.id)
+            : AppRoutes.conversation(conversation.id),
         extra: {
           'name': pro.summary.displayName,
           'role': pro.summary.type,
@@ -375,6 +376,79 @@ class _ProfessionnelDetailScreenState
         ),
       );
     }
+  }
+}
+
+/// Hauteur de la photo en tête de fiche.
+const _hauteurPhoto = 240.0;
+
+/// En-tête de la fiche : la photo, puis, une fois la photo repliée en faisant
+/// défiler, la miniature et le nom du professionnel dans la barre du haut
+/// (au lieu d'un bandeau de couleur vide).
+class _EnTeteFiche extends StatelessWidget {
+  final ProfessionnelDetail pro;
+  final double hauteurDepliee;
+  final Widget fond;
+
+  const _EnTeteFiche({
+    required this.pro,
+    required this.hauteurDepliee,
+    required this.fond,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final haut = MediaQuery.paddingOf(context).top;
+    final hauteurRepliee = kToolbarHeight + haut;
+    return LayoutBuilder(
+      builder: (context, contraintes) {
+        // 1 : photo entièrement visible ; 0 : barre repliée.
+        final deplie =
+            ((contraintes.maxHeight - hauteurRepliee) /
+                    (hauteurDepliee + haut - hauteurRepliee))
+                .clamp(0.0, 1.0);
+        // Le nom apparaît progressivement sur le dernier quart du repli.
+        final opacite = ((0.25 - deplie) / 0.25).clamp(0.0, 1.0);
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            fond,
+            Positioned(
+              left: 56,
+              right: 56,
+              top: haut,
+              height: kToolbarHeight,
+              child: IgnorePointer(
+                child: Opacity(
+                  opacity: opacite,
+                  child: Row(
+                    children: [
+                      AppAvatar(
+                        name: pro.summary.displayName,
+                        photoUrl: pro.summary.photoUrl,
+                        size: 34,
+                      ),
+                      AppSpacing.hGap12,
+                      Expanded(
+                        child: Text(
+                          pro.summary.displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.texteSemiBold.copyWith(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -1165,52 +1239,6 @@ class _InfoDossierSheet extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Saisie du premier message envoyé à un professionnel.
-class _EcrireDialog extends StatefulWidget {
-  final String nom;
-
-  const _EcrireDialog({required this.nom});
-
-  @override
-  State<_EcrireDialog> createState() => _EcrireDialogState();
-}
-
-class _EcrireDialogState extends State<_EcrireDialog> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(tr('Écrire à {nom}', {'nom': widget.nom})),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        maxLines: 4,
-        maxLength: 1000,
-        decoration: InputDecoration(hintText: tr('Votre message')),
-      ),
-      actions: [
-        AppButton.ghost(
-          text: tr('Annuler'),
-          onPressed: () => Navigator.pop(context),
-        ),
-        AppButton(
-          text: tr('Envoyer'),
-          isFullWidth: false,
-          size: AppButtonSize.compact,
-          onPressed: () => Navigator.pop(context, _controller.text.trim()),
-        ),
-      ],
     );
   }
 }

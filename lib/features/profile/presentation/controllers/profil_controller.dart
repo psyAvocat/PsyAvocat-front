@@ -14,7 +14,8 @@ final currentProfilProvider =
 class ProfilNotifier extends AsyncNotifier<ProfilModel?> {
   @override
   Future<ProfilModel?> build() async {
-    // Mode invité : pas de profil. Rechargé à chaque connexion ou changement de compte.
+    // Sans session autorisée (déconnexion…) : pas de profil. Rechargé à chaque
+    // connexion ou changement de compte.
     if (ref.watch(signedInAccountProvider) == null) return null;
     return ref.read(profilRepositoryProvider).getCurrentProfile();
   }

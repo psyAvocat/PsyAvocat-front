@@ -34,7 +34,11 @@ GoRouter _routeur(String depart) => GoRouter(
 void main() {
   group('Retour Android sur la dernière page', () {
     test('accueil et écrans d’entrée : comportement normal (sortie)', () {
-      for (final chemin in [AppRoutes.home, AppRoutes.login, AppRoutes.splash]) {
+      for (final chemin in [
+        AppRoutes.home,
+        AppRoutes.login,
+        AppRoutes.splash,
+      ]) {
         expect(
           destinationRetourSysteme(chemin: chemin, peutRevenir: false),
           isNull,
@@ -52,7 +56,10 @@ void main() {
         AppRoutes.home,
       );
       expect(
-        destinationRetourSysteme(chemin: AppRoutes.rendezVous, peutRevenir: false),
+        destinationRetourSysteme(
+          chemin: AppRoutes.rendezVous,
+          peutRevenir: false,
+        ),
         AppRoutes.home,
       );
     });
@@ -69,20 +76,21 @@ void main() {
   });
 
   group('AppBackButton', () {
-    testWidgets('fiche ouverte directement (notification) : retour à l’accueil', (
-      tester,
-    ) async {
-      final routeur = _routeur(AppRoutes.professionnel('p1'));
-      await tester.pumpWidget(MaterialApp.router(routerConfig: routeur));
-      await tester.pumpAndSettle();
-      expect(find.text('FICHE'), findsOneWidget);
+    testWidgets(
+      'fiche ouverte directement (notification) : retour à l’accueil',
+      (tester) async {
+        final routeur = _routeur(AppRoutes.professionnel('p1'));
+        await tester.pumpWidget(MaterialApp.router(routerConfig: routeur));
+        await tester.pumpAndSettle();
+        expect(find.text('FICHE'), findsOneWidget);
 
-      await tester.tap(find.byType(AppBackButton));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byType(AppBackButton));
+        await tester.pumpAndSettle();
 
-      expect(tester.takeException(), isNull);
-      expect(find.text('ACCUEIL'), findsOneWidget);
-    });
+        expect(tester.takeException(), isNull);
+        expect(find.text('ACCUEIL'), findsOneWidget);
+      },
+    );
 
     testWidgets('fiche ouverte depuis la liste : retour à la liste', (
       tester,

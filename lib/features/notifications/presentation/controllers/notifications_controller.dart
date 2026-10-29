@@ -11,7 +11,7 @@ import '../../data/repositories/notifications_repository.dart';
 class NotificationsController extends AsyncNotifier<List<NotificationItem>> {
   @override
   Future<List<NotificationItem>> build() async {
-    // Mode invité : aucune notification, aucun appel protégé.
+    // Sans session autorisée (déconnexion…) : aucune notification, aucun appel protégé.
     if (ref.watch(signedInAccountProvider) == null) return const [];
     listenRealtime(ref, {RealtimeEventType.notification}, (_) => _reload());
     return ref.read(notificationsRepositoryProvider).getNotifications();

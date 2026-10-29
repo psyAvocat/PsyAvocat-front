@@ -157,7 +157,7 @@ final lastOrientationResultProvider =
 final mesResultatsProvider = FutureProvider<List<ResultatOrientationModel>>((
   ref,
 ) async {
-  // Mode invité : le questionnaire reste accessible, mais aucun historique n'est conservé.
+  // Sans session autorisée (déconnexion…) : aucun appel protégé.
   if (ref.watch(signedInAccountProvider) == null) return const [];
   final results = await ref
       .read(orientationRepositoryProvider)

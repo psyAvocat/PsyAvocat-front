@@ -39,17 +39,29 @@ final publicationsProvider = FutureProvider.autoDispose
           );
     });
 
-/// Publications d'un professionnel (bouton « Voir les articles » de sa fiche),
-/// dans le type de l'univers courant.
+/// Critères de la page des publications d'un professionnel.
+typedef PublicationsAuteurQuery = ({
+  String auteurId,
+  String? q,
+  PublicationSort tri,
+});
+
+/// Publications d'un professionnel (sa fiche, ou la fin d'une lecture), dans
+/// le type de l'univers courant ; recherche et tri sont traités par l'API.
 final professionnelPublicationsProvider = FutureProvider.autoDispose
-    .family<List<Publication>, String>((ref, auteurId) {
+    .family<List<Publication>, PublicationsAuteurQuery>((ref, query) {
       final universe = ref.watch(currentUniverseProvider);
       listenRealtime(ref, {
         RealtimeEventType.contenuMisAJour,
       }, (_) => ref.invalidateSelf());
       return ref
           .read(contenusRepositoryProvider)
-          .rechercher(type: publicationTypeFor(universe), auteurId: auteurId);
+          .rechercher(
+            type: publicationTypeFor(universe),
+            auteurId: query.auteurId,
+            q: query.q,
+            tri: query.tri,
+          );
     });
 
 /// Publications populaires affichées sur l'accueil.
@@ -67,10 +79,20 @@ final popularPublicationsProvider =
 
 /// Détail d'une publication ; s'il est retiré pendant la lecture, l'écran
 /// bascule sur « Cette ressource n'est plus disponible. ».
+///
+/// Une première lecture compte pour la popularité : les listes (dont
+/// « Articles / Conseils populaires » de l'accueil) sont relues pour suivre
+/// le nouveau classement sans attendre une actualisation manuelle.
 final publicationDetailProvider = FutureProvider.autoDispose
-    .family<Publication, String>((ref, id) {
+    .family<Publication, String>((ref, id) async {
       listenRealtime(ref, {RealtimeEventType.contenuMisAJour}, (event) {
         if (event.payload['id']?.toString() == id) ref.invalidateSelf();
       });
-      return ref.read(contenusRepositoryProvider).getPublication(id);
+      final publication = await ref
+          .read(contenusRepositoryProvider)
+          .getPublication(id);
+      ref
+        ..invalidate(publicationsProvider)
+        ..invalidate(professionnelPublicationsProvider);
+      return publication;
     });
