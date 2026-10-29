@@ -16,6 +16,7 @@ import '../../../professionnels/presentation/widgets/availability_picker.dart';
 import '../../data/models/reservation_contexte.dart';
 import '../../../../core/theme/app_palette.dart';
 import '../../../../core/l10n/app_strings.dart';
+import '../../../../core/widgets/app_back_button.dart';
 
 /// Étape 1 du tunnel : choix d'un créneau réellement libre et du mode de consultation.
 ///
@@ -72,17 +73,8 @@ class _ChoixCreneauScreenState extends ConsumerState<ChoixCreneauScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(
-          tr('Choisir un créneau'),
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            color: context.palette.textStrong,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.pop(),
-        ),
+        leading: const AppBackButton(),
+        title: Text(tr('Choisir un créneau')),
       ),
       body: contexte == null
           ? AppErrorStateView(

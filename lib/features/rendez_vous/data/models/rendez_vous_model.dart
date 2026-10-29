@@ -31,6 +31,11 @@ class RendezVous {
   final String? professionnelPhotoUrl;
   final String? professionnelSpecialite;
 
+  /// Rendez-vous avocat : dossier juridique concerné (soumission acceptée).
+  final String? soumissionId;
+  final String? dossierId;
+  final String? dossierTitre;
+
   const RendezVous({
     required this.id,
     required this.dateHeure,
@@ -52,6 +57,9 @@ class RendezVous {
     this.disponibiliteId,
     this.professionnelPhotoUrl,
     this.professionnelSpecialite,
+    this.soumissionId,
+    this.dossierId,
+    this.dossierTitre,
   });
 
   factory RendezVous.fromJson(Map<String, dynamic> json) {
@@ -76,6 +84,9 @@ class RendezVous {
       typeProfessionnel: json['typeProfessionnel'] as String? ?? '',
       professionnelPhotoUrl: json['professionnelPhotoUrl'] as String?,
       professionnelSpecialite: json['professionnelSpecialite'] as String?,
+      soumissionId: json['soumissionId'] as String?,
+      dossierId: json['dossierId'] as String?,
+      dossierTitre: json['dossierTitre'] as String?,
     );
   }
 

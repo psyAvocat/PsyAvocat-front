@@ -140,7 +140,11 @@ class _AppointmentContent extends StatelessWidget {
 
     return Card(
       child: InkWell(
-        onTap: () => context.go(AppRoutes.rendezVous),
+        // Détail du prochain rendez-vous, directement.
+        onTap: () => context.push(
+          AppRoutes.rendezVousDetail(appointment.id),
+          extra: appointment,
+        ),
         child: Padding(
           padding: AppSpacing.cardPaddingCompact,
           child: Row(

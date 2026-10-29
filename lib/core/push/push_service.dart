@@ -10,6 +10,22 @@ import '../services/app_preferences_service.dart';
 import '../services/firebase_messaging_service.dart';
 import '../widgets/app_alert.dart';
 import 'device_repository.dart';
+import 'notifications_systeme.dart';
+
+/// Résultat de l'activation des notifications depuis les Paramètres.
+enum ActivationNotifications {
+  /// Appareil enregistré : les notifications arrivent, application ouverte ou fermée.
+  active,
+
+  /// Désactivées à la demande de l'utilisateur.
+  desactivee,
+
+  /// Le téléphone refuse les notifications à l'application : à autoriser dans ses réglages.
+  refuseeParLeTelephone,
+
+  /// Plateforme sans notifications push (ex. bureau).
+  nonPriseEnCharge,
+}
 
 /// Notifications push du compte sur cet appareil.
 ///
@@ -22,6 +38,7 @@ class PushService {
   final FirebaseMessagingService _messaging;
   final DeviceRepository _devices;
   final AppPreferencesService _preferences;
+  final NotificationsSysteme _systeme;
   final void Function(DeepLinkTarget target) _openTarget;
 
   final List<StreamSubscription<Object?>> _subscriptions = [];
@@ -33,9 +50,11 @@ class PushService {
     required DeviceRepository devices,
     required AppPreferencesService preferences,
     required void Function(DeepLinkTarget target) openTarget,
+    NotificationsSysteme systeme = const NotificationsSysteme(),
   }) : _messaging = messaging,
        _devices = devices,
        _preferences = preferences,
+       _systeme = systeme,
        _openTarget = openTarget;
 
   /// Plateforme attendue par le backend ; null si non prise en charge.
@@ -60,15 +79,36 @@ class PushService {
     if (_preferences.isPushEnabled()) await _register();
   }
 
+  /// État réel pour les Paramètres : activé dans l'application ET autorisé par le téléphone.
+  Future<bool> estActif() async {
+    if (!isSupported || !_preferences.isPushEnabled()) return false;
+    return _systeme.sontAutorisees();
+  }
+
   /// Active ou désactive la réception sur cet appareil (Paramètres).
-  Future<void> setEnabled(bool enabled) async {
-    await _preferences.setPushEnabled(enabled);
-    if (!isSupported) return;
-    if (enabled) {
-      await _register();
-    } else {
-      await unregister();
+  ///
+  /// À l'activation, l'autorisation du téléphone est demandée ; si elle est refusée
+  /// (ou désactivée dans les réglages), l'option reste désactivée et l'écran invite
+  /// à l'autoriser dans les réglages du téléphone.
+  Future<ActivationNotifications> setEnabled(bool enabled) async {
+    if (!isSupported) {
+      await _preferences.setPushEnabled(enabled);
+      return ActivationNotifications.nonPriseEnCharge;
     }
+    if (!enabled) {
+      await _preferences.setPushEnabled(false);
+      await unregister();
+      return ActivationNotifications.desactivee;
+    }
+    final autorise = await _demanderAutorisation();
+    if (!autorise) {
+      await _preferences.setPushEnabled(false);
+      return ActivationNotifications.refuseeParLeTelephone;
+    }
+    await _preferences.setPushEnabled(true);
+    _listenOnce();
+    await _enregistrerJeton();
+    return ActivationNotifications.active;
   }
 
   /// Retire l'appareil du compte (avant déconnexion ou sur désactivation).
@@ -84,13 +124,28 @@ class PushService {
   }
 
   Future<void> _register() async {
+    if (await _demanderAutorisation()) await _enregistrerJeton();
+  }
+
+  /// Demande (ou relit) l'autorisation : permission Firebase (Android 13+, iOS)
+  /// puis réglages de l'application dans le téléphone (canal non désactivé…).
+  Future<bool> _demanderAutorisation() async {
     try {
       final settings = await _messaging.requestPermission();
       final status = settings.authorizationStatus;
       if (status != AuthorizationStatus.authorized &&
           status != AuthorizationStatus.provisional) {
-        return;
+        return false;
       }
+      return _systeme.sontAutorisees();
+    } catch (_) {
+      debugPrint('Push: autorisation des notifications impossible à obtenir.');
+      return false;
+    }
+  }
+
+  Future<void> _enregistrerJeton() async {
+    try {
       final token = await _messaging.getToken();
       if (token != null) await _sendToken(token);
     } catch (_) {
@@ -164,6 +219,7 @@ final pushServiceProvider = Provider<PushService>((ref) {
     messaging: ref.watch(firebaseMessagingServiceProvider),
     devices: ref.watch(deviceRepositoryProvider),
     preferences: ref.watch(appPreferencesServiceProvider),
+    systeme: ref.watch(notificationsSystemeProvider),
     openTarget: (target) =>
         ref.read(pendingDeepLinkProvider.notifier).push(target),
   );

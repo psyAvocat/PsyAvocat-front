@@ -5,22 +5,22 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/user_message.dart';
 import '../../../../core/router/app_routes.dart';
-import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_state_views.dart';
 import '../../data/models/rendez_vous_model.dart';
 import '../../data/models/reservation_contexte.dart';
 import '../controllers/rendez_vous_controller.dart';
+import '../widgets/recap_rendez_vous.dart';
 import '../../../../core/theme/app_palette.dart';
 import '../../../../core/l10n/app_strings.dart';
+import '../../../../core/widgets/app_back_button.dart';
 
 /// Étape 2 du tunnel : récapitulatif, paiement SIMULÉ de l'acompte (V1) et confirmation.
 ///
-/// Aucune passerelle de paiement n'est intégrée : l'étape de paiement est
-/// présentée explicitement comme une simulation, aucune donnée bancaire n'est
-/// demandée ni stockée. Le rendez-vous n'est affiché comme confirmé qu'après la
-/// réponse du backend (créneau revérifié sous verrou, montant et acompte calculés
-/// côté serveur).
+/// Aucune passerelle de paiement n'est intégrée : aucune donnée bancaire n'est
+/// demandée ni stockée, et l'utilisateur coche explicitement qu'il s'agit d'une
+/// simulation. Le rendez-vous n'est affiché comme confirmé qu'après la réponse
+/// du backend (créneau revérifié sous verrou, montant et acompte calculés côté serveur).
 class RendezVousConfirmationScreen extends ConsumerStatefulWidget {
   final ReservationRecap? recap;
 
@@ -65,6 +65,15 @@ class _RendezVousConfirmationScreenState
     }
   }
 
+  /// « Avocat · Droit pénal » : métier et première spécialité.
+  String _sousTitre(ReservationRecap recap) {
+    final s = recap.professionnel.summary;
+    return [
+      s.isAvocat ? tr('Avocat') : tr('Psychologue'),
+      if (s.specialites.isNotEmpty) s.specialites.first,
+    ].join(' · ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
@@ -72,7 +81,7 @@ class _RendezVousConfirmationScreenState
 
     if (recap == null) {
       return Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(leading: const AppBackButton()),
         body: AppErrorStateView(
           title: tr('Réservation indisponible'),
           message: tr(
@@ -90,19 +99,22 @@ class _RendezVousConfirmationScreenState
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          automaticallyImplyLeading: confirme == null && !_enCours,
+          // Pas de retour pendant le paiement ni après la confirmation.
+          automaticallyImplyLeading: false,
+          leading: confirme == null && !_enCours ? const AppBackButton() : null,
           title: Text(
             confirme == null
                 ? tr('Confirmer le rendez-vous')
                 : tr('Rendez-vous confirmé'),
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: context.palette.textStrong,
-            ),
           ),
         ),
         body: confirme != null
-            ? _Succes(rdv: confirme, recap: recap, primaryColor: primaryColor)
+            ? _Succes(
+                rdv: confirme,
+                recap: recap,
+                sousTitre: _sousTitre(recap),
+                primaryColor: primaryColor,
+              )
             : _buildRecapitulatif(context, recap, primaryColor),
       ),
     );
@@ -118,68 +130,28 @@ class _RendezVousConfirmationScreenState
       children: [
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             children: [
-              _Carte(
-                children: [
-                  _Ligne(
-                    icone: Icons.person_outline_rounded,
-                    libelle: tr('Professionnel'),
-                    valeur: pro.summary.displayName,
-                  ),
-                  if (recap.contexte.viaDossier)
-                    _Ligne(
-                      icone: Icons.folder_outlined,
-                      libelle: tr('Dossier'),
-                      valeur: recap.contexte.dossierTitre ?? '',
-                    ),
-                  _Ligne(
-                    icone: Icons.calendar_today_rounded,
-                    libelle: tr('Date'),
-                    valeur: Formatters.formatJourLong(recap.creneau.debut),
-                  ),
-                  _Ligne(
-                    icone: Icons.schedule_rounded,
-                    libelle: tr('Heure'),
-                    valeur:
-                        '${Formatters.formatHeure(recap.creneau.debut)} – ${Formatters.formatHeure(recap.creneau.fin)}',
-                  ),
-                  _Ligne(
-                    icone: recap.mode == 'VISIO'
-                        ? Icons.videocam_outlined
-                        : Icons.location_on_outlined,
-                    libelle: tr('Mode'),
-                    valeur: recap.mode == 'VISIO'
-                        ? tr('En visioconférence')
-                        : '${tr('Au cabinet')}${(pro.adresse?.isNotEmpty ?? false) ? ' — ${pro.adresse}' : ''}',
-                  ),
-                ],
+              RecapRendezVousCard(
+                professionnelNom: pro.summary.displayName,
+                photoUrl: pro.summary.photoUrl,
+                sousTitre: _sousTitre(recap),
+                debut: recap.creneau.debut,
+                fin: recap.creneau.fin,
+                mode: recap.mode,
+                adresse: pro.adresse,
+                dossierTitre: recap.contexte.viaDossier
+                    ? recap.contexte.dossierTitre
+                    : null,
               ),
-              const SizedBox(height: 16),
-              _Carte(
-                children: [
-                  _Ligne(
-                    icone: Icons.receipt_long_outlined,
-                    libelle: recap.contexte.libelleMontant,
-                    valeur: Formatters.formatFcfa(recap.montantTotal),
-                  ),
-                  _Ligne(
-                    icone: Icons.account_balance_wallet_outlined,
-                    libelle: tr('Acompte à régler (20 %)'),
-                    valeur: Formatters.formatFcfa(recap.acompteEstime),
-                    accent: primaryColor,
-                  ),
-                  _Ligne(
-                    icone: Icons.info_outline_rounded,
-                    libelle: tr('Reste à régler au professionnel'),
-                    valeur: Formatters.formatFcfa(
-                      recap.montantTotal - recap.acompteEstime,
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 14),
+              RecapMontantsCard(
+                total: recap.montantTotal,
+                libelleTotal: recap.contexte.libelleMontant,
+                acompte: recap.acompteEstime,
+                libelleAcompte: tr('Acompte à régler (20 %)'),
               ),
-              const SizedBox(height: 16),
-              _AvertissementSimulation(primaryColor: primaryColor),
+              const SizedBox(height: 8),
               CheckboxListTile(
                 value: _simulationAcceptee,
                 onChanged: _enCours
@@ -192,7 +164,7 @@ class _RendezVousConfirmationScreenState
                   tr(
                     'Je comprends que ce paiement est une simulation et qu’aucune somme ne sera débitée.',
                   ),
-                  style: TextStyle(fontSize: 13),
+                  style: TextStyle(fontSize: 13, color: context.palette.text),
                 ),
               ),
               if (_erreur != null) ...[
@@ -227,175 +199,131 @@ class _RendezVousConfirmationScreenState
   }
 }
 
-/// Mention explicite : V1 sans prestataire de paiement.
-class _AvertissementSimulation extends StatelessWidget {
-  final Color primaryColor;
-  const _AvertissementSimulation({required this.primaryColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF7ED),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFED7AA)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.science_outlined, color: Color(0xFFC2410C)),
-          SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              tr(
-                'Paiement simulé : aucune transaction réelle n’est effectuée et aucune '
-                'donnée bancaire n’est demandée. Le paiement en ligne sera disponible ultérieurement.',
-              ),
-              style: TextStyle(
-                fontSize: 13,
-                color: Color(0xFF7C2D12),
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _Succes extends StatelessWidget {
   final RendezVous rdv;
   final ReservationRecap recap;
+  final String sousTitre;
   final Color primaryColor;
 
   const _Succes({
     required this.rdv,
     required this.recap,
+    required this.sousTitre,
     required this.primaryColor,
   });
 
   @override
   Widget build(BuildContext context) {
     // Valeurs faisant foi : celles renvoyées par le backend.
-    final acompte = rdv.montantAcompte;
     final total = rdv.montantTotal ?? recap.montantTotal;
-    return ListView(
-      padding: const EdgeInsets.all(24),
+    return Column(
       children: [
-        Icon(Icons.check_circle_rounded, color: primaryColor, size: 72),
-        const SizedBox(height: 16),
-        Text(
-          tr('Votre rendez-vous est confirmé'),
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          tr('{pro} — {date} à {heure}', {
-            'pro': recap.professionnel.summary.displayName,
-            'date': Formatters.formatJourLong(rdv.dateHeure),
-            'heure': Formatters.formatHeure(rdv.dateHeure),
-          }),
-          textAlign: TextAlign.center,
-          style: TextStyle(color: context.palette.text),
-        ),
-        const SizedBox(height: 24),
-        _Carte(
-          children: [
-            _Ligne(
-              icone: Icons.receipt_long_outlined,
-              libelle: tr('Montant total'),
-              valeur: Formatters.formatFcfa(total),
-            ),
-            if (acompte != null)
-              _Ligne(
-                icone: Icons.science_outlined,
-                libelle: tr('Acompte (paiement simulé)'),
-                valeur: Formatters.formatFcfa(acompte),
-                accent: primaryColor,
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+            children: [
+              Center(
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.6, end: 1),
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOutBack,
+                  builder: (context, echelle, child) =>
+                      Transform.scale(scale: echelle, child: child),
+                  child: Container(
+                    width: 104,
+                    height: 104,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Container(
+                      width: 68,
+                      height: 68,
+                      decoration: BoxDecoration(
+                        color: primaryColor,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.event_available_rounded,
+                        size: 36,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-          ],
+              const SizedBox(height: 18),
+              Text(
+                tr('Votre rendez-vous est confirmé'),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: context.palette.textStrong,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                tr(
+                  '{pro} a été prévenu. Un rappel vous sera envoyé avant le rendez-vous.',
+                  {'pro': recap.professionnel.summary.displayName},
+                ),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: context.palette.text,
+                ),
+              ),
+              const SizedBox(height: 22),
+              RecapRendezVousCard(
+                professionnelNom: recap.professionnel.summary.displayName,
+                photoUrl:
+                    rdv.professionnelPhotoUrl ??
+                    recap.professionnel.summary.photoUrl,
+                sousTitre: sousTitre,
+                debut: rdv.dateHeure,
+                fin: rdv.fin,
+                mode: rdv.mode ?? recap.mode,
+                adresse: rdv.adresseCabinet ?? recap.professionnel.adresse,
+                dossierTitre: rdv.dossierTitre ?? recap.contexte.dossierTitre,
+              ),
+              const SizedBox(height: 14),
+              RecapMontantsCard(
+                total: total,
+                libelleTotal: tr('Montant total'),
+                acompte: rdv.montantAcompte,
+                libelleAcompte: tr('Acompte réglé (20 %)'),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 28),
-        AppButton(
-          text: tr('Voir mes rendez-vous'),
-          color: primaryColor,
-          onPressed: () => context.go(AppRoutes.rendezVous),
-        ),
-        const SizedBox(height: 12),
-        AppButton(
-          text: tr('Retour à l’accueil'),
-          isOutlined: true,
-          color: primaryColor,
-          onPressed: () => context.go(AppRoutes.home),
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+          color: context.palette.page,
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                AppButton(
+                  text: tr('Voir mes rendez-vous'),
+                  icon: Icons.event_note_rounded,
+                  color: primaryColor,
+                  onPressed: () => context.go(AppRoutes.rendezVous),
+                ),
+                const SizedBox(height: 10),
+                AppButton(
+                  text: tr('Terminé'),
+                  isOutlined: true,
+                  color: primaryColor,
+                  onPressed: () => context.go(AppRoutes.home),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
-    );
-  }
-}
-
-class _Carte extends StatelessWidget {
-  final List<Widget> children;
-  const _Carte({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: context.palette.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.palette.border),
-      ),
-      child: Column(children: children),
-    );
-  }
-}
-
-class _Ligne extends StatelessWidget {
-  final IconData icone;
-  final String libelle;
-  final String valeur;
-  final Color? accent;
-
-  const _Ligne({
-    required this.icone,
-    required this.libelle,
-    required this.valeur,
-    this.accent,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icone, size: 20, color: context.palette.textMuted),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              libelle,
-              style: TextStyle(fontSize: 14, color: context.palette.text),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
-              valeur,
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: accent ?? context.palette.textStrong,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

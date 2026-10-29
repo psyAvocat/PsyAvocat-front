@@ -4,9 +4,11 @@ import '../controllers/conversations_providers.dart';
 import '../widgets/conversation_card.dart';
 import '../widgets/messagerie_empty_state.dart';
 import '../widgets/messagerie_error_state.dart';
-import 'conversation_detail_screen.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/l10n/app_strings.dart';
 import '../../../../core/theme/design_system.dart';
+import '../../../../core/widgets/app_back_button.dart';
 
 /// Écran Messagerie — liste des conversations avec les professionnels.
 /// Connecté à GET /api/conversations via ApiMessagerieRepository.
@@ -23,22 +25,8 @@ class MessagerieScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: false,
-        title: Text(
-          tr('Messages'),
-          style: AppTypography.titreMoyen.copyWith(
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-            color: context.palette.textStrong,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search_rounded, color: primaryColor),
-            onPressed: () {},
-            tooltip: tr('Rechercher'),
-          ),
-        ],
+        leading: const AppBackButton(),
+        title: Text(tr('Messages')),
       ),
       body: SafeArea(
         child: conversationsAsync.when(
@@ -57,24 +45,22 @@ class MessagerieScreen extends ConsumerWidget {
                 itemCount: conversations.length,
                 itemBuilder: (context, index) {
                   final conversation = conversations[index];
+                  final correspondant = conversation.correspondantId;
                   return ConversationCard(
                     conversation: conversation,
                     primaryColor: primaryColor,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ConversationDetailScreen(
-                            conversationId: conversation.id,
-                            participantName:
-                                conversation.correspondantDisplayName,
-                            participantRole: conversation.correspondantType,
-                            participantPhotoUrl:
-                                conversation.correspondantPhotoUrl,
-                          ),
-                        ),
-                      );
-                    },
+                    enLigne:
+                        correspondant != null &&
+                        (ref.watch(presenceProvider)[correspondant] ?? false),
+                    // Même route qu'une notification : un seul écran de discussion.
+                    onTap: () => context.push(
+                      AppRoutes.conversation(conversation.id),
+                      extra: {
+                        'name': conversation.correspondantDisplayName,
+                        'role': conversation.correspondantType,
+                        'photoUrl': conversation.correspondantPhotoUrl,
+                      },
+                    ),
                   );
                 },
               ),

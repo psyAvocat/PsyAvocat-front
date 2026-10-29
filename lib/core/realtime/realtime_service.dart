@@ -27,6 +27,14 @@ class RealtimeEventType {
 
   /// Le planning d'un professionnel a changé (ajout / suppression de créneaux).
   static const creneauxMisAJour = 'CRENEAUX_MIS_A_JOUR';
+
+  /// Un correspondant passe en ligne / hors ligne : `{utilisateurId, enLigne}`.
+  static const presence = 'PRESENCE';
+
+  /// Événement local (pas envoyé par le serveur) : la connexion vient d'être
+  /// rétablie après une coupure. Les événements manqués ne sont pas rejoués :
+  /// les écrans concernés relisent l'API.
+  static const reconnecte = 'RECONNECTE';
 }
 
 /// Événement reçu du serveur : `{ "type": ..., "payload": {...} }`.
@@ -72,6 +80,9 @@ class RealtimeService {
   int _attempts = 0;
   bool _wanted = false;
 
+  /// Une connexion a déjà abouti pendant cette session : la suivante est une reconnexion.
+  bool _dejaConnecte = false;
+
   RealtimeService({
     required Future<String?> Function() tokenProvider,
     WebSocketChannel Function(Uri uri)? connect,
@@ -94,6 +105,7 @@ class RealtimeService {
     if (_wanted) return;
     _wanted = true;
     _attempts = 0;
+    _dejaConnecte = false;
     _open();
   }
 
@@ -129,6 +141,10 @@ class RealtimeService {
         onError: (_) => _onDisconnected(),
         cancelOnError: true,
       );
+      if (_dejaConnecte) {
+        _events.add(const RealtimeEvent(RealtimeEventType.reconnecte));
+      }
+      _dejaConnecte = true;
     } catch (error) {
       // Jamais affiché à l'utilisateur : on retente simplement plus tard.
       debugPrint('Realtime: connexion indisponible.');

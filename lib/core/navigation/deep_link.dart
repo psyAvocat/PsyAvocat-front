@@ -13,13 +13,22 @@ class DeepLinkTarget {
   final String? ressourceType;
   final String? ressourceId;
 
-  const DeepLinkTarget({this.universe, this.ressourceType, this.ressourceId});
+  /// Type de notification (ex. DOSSIER_ACCEPTE) : affine l'écran ouvert.
+  final String? type;
+
+  const DeepLinkTarget({
+    this.universe,
+    this.ressourceType,
+    this.ressourceId,
+    this.type,
+  });
 
   factory DeepLinkTarget.fromData(Map<String, dynamic> data) {
     return DeepLinkTarget(
       universe: universeFromApi(data['univers'] as String?),
       ressourceType: data['ressourceType'] as String?,
       ressourceId: data['ressourceId'] as String?,
+      type: data['type'] as String?,
     );
   }
 
@@ -46,6 +55,10 @@ class DeepLinkTarget {
       case 'PROFESSIONNEL':
         return AppRoutes.professionnel(id);
       case 'DOSSIER':
+        // Dossier accepté : l'avocat, ses honoraires et la prise de rendez-vous.
+        return type == 'DOSSIER_ACCEPTE'
+            ? AppRoutes.dossierPriseEnCharge(id)
+            : AppRoutes.dossier(id);
       case 'SOUMISSION':
         // Dossiers juridiques (univers Avocat) : la liste affiche le suivi des réponses.
         return AppRoutes.dossiers;

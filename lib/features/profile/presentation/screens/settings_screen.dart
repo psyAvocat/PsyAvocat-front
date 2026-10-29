@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/app_strings.dart';
+import '../../../../core/push/notifications_systeme.dart';
 import '../../../../core/push/push_service.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/services/app_preferences_service.dart';
@@ -21,18 +22,83 @@ class SettingsScreen extends ConsumerStatefulWidget {
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen>
+    with WidgetsBindingObserver {
   late bool _notifications = ref
       .read(appPreferencesServiceProvider)
       .isPushEnabled();
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _rafraichirNotifications();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Retour dans l'application (ex. depuis les réglages du téléphone) : état relu.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _rafraichirNotifications();
+  }
+
+  /// L'interrupteur reflète l'état réel : activé ici ET autorisé par le téléphone.
+  Future<void> _rafraichirNotifications() async {
+    final actif = await ref.read(pushServiceProvider).estActif();
+    if (mounted && actif != _notifications) {
+      setState(() => _notifications = actif);
+    }
+  }
+
   Future<void> _basculerNotifications(bool active) async {
     setState(() => _notifications = active);
-    try {
-      await ref.read(pushServiceProvider).setEnabled(active);
-    } catch (_) {
-      // Push indisponible sur cette plateforme : seule la préférence est gardée.
-      await ref.read(appPreferencesServiceProvider).setPushEnabled(active);
+    final resultat = await ref.read(pushServiceProvider).setEnabled(active);
+    if (!mounted) return;
+    switch (resultat) {
+      case ActivationNotifications.active:
+        setState(() => _notifications = true);
+      case ActivationNotifications.desactivee:
+        setState(() => _notifications = false);
+      case ActivationNotifications.nonPriseEnCharge:
+        break;
+      case ActivationNotifications.refuseeParLeTelephone:
+        setState(() => _notifications = false);
+        await _proposerReglagesTelephone();
+    }
+  }
+
+  /// Notifications bloquées par le téléphone : seul l'utilisateur peut les autoriser.
+  Future<void> _proposerReglagesTelephone() async {
+    final ouvrir = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr('Notifications désactivées sur le téléphone')),
+        content: Text(
+          tr(
+            'Pour recevoir vos rappels de rendez-vous et vos messages, même '
+            'lorsque l’application est fermée, autorisez les notifications de '
+            'PsyAvocat dans les réglages du téléphone.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(tr('Plus tard')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(tr('Ouvrir les réglages')),
+          ),
+        ],
+      ),
+    );
+    if (ouvrir == true) {
+      await ref.read(notificationsSystemeProvider).ouvrirReglages();
     }
   }
 

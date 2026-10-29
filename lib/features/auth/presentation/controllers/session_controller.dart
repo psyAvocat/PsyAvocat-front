@@ -285,10 +285,11 @@ class SessionController extends Notifier<SessionState> {
 final sessionControllerProvider =
     NotifierProvider<SessionController, SessionState>(SessionController.new);
 
-/// Compte connecté et autorisé, ou `null` en mode invité.
+/// Compte connecté et autorisé, ou `null` sans session autorisée (déconnexion,
+/// vérification du compte en cours). L'application n'a pas de mode invité.
 ///
 /// Les données personnelles (rendez-vous, notifications, profil…) le surveillent :
-/// elles restent vides en mode invité — aucun appel protégé n'est envoyé — et
+/// elles restent vides sans session — aucun appel protégé n'est envoyé — et
 /// se rechargent à chaque connexion, déconnexion ou changement de compte.
 final signedInAccountProvider = Provider<String?>((ref) {
   final session = ref.watch(sessionControllerProvider);

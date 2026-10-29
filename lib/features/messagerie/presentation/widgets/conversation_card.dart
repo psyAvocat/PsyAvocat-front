@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/models/messagerie_model.dart';
-import '../../../../core/widgets/app_avatar.dart';
+import 'avatar_presence.dart';
 import '../../../../core/theme/app_palette.dart';
 import '../../../../core/l10n/app_strings.dart';
 
@@ -9,11 +9,15 @@ class ConversationCard extends StatelessWidget {
   final Color primaryColor;
   final VoidCallback onTap;
 
+  /// Le correspondant est connecté : pastille verte sur sa photo.
+  final bool enLigne;
+
   const ConversationCard({
     super.key,
     required this.conversation,
     required this.primaryColor,
     required this.onTap,
+    this.enLigne = false,
   });
 
   @override
@@ -46,10 +50,11 @@ class ConversationCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                AppAvatar(
+                AvatarPresence(
                   name: conversation.correspondantDisplayName,
                   photoUrl: conversation.correspondantPhotoUrl,
                   size: 52,
+                  enLigne: enLigne,
                 ),
                 const SizedBox(width: 14),
                 Expanded(

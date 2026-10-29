@@ -17,10 +17,10 @@ class WizardStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final steps = [
-      isAvocat ? 'Avocats' : 'Psychologues',
-      'Informations',
+      isAvocat ? tr('Avocats') : tr('Psychologues'),
+      tr('Informations'),
       tr('Pièces jointes'),
-      'Validation',
+      tr('Validation'),
     ];
 
     return Container(

@@ -74,6 +74,10 @@ class NotificationItem {
       case 'CONTENU':
         return AppRoutes.contenu(ressourceId!);
       case 'DOSSIER':
+        // « Dossier accepté » : directement l'avocat et la prise de rendez-vous.
+        return type.toUpperCase() == 'DOSSIER_ACCEPTE'
+            ? AppRoutes.dossierPriseEnCharge(ressourceId!)
+            : AppRoutes.dossier(ressourceId!);
       case 'SOUMISSION':
         return AppRoutes.dossiers;
       default:

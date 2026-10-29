@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_palette.dart';
@@ -243,6 +244,20 @@ class AppTheme {
   // ===========================================================================
 
   /// Générateur de thème : univers (couleurs) × luminosité (clair / sombre).
+  /// Transitions des pages. Android : pas de retour « prédictif » page par page
+  /// (transition par défaut de Flutter). Au début d'un geste de retour, toutes
+  /// les pages « au premier plan » de leur navigateur le prennent en charge, y
+  /// compris celles des onglets cachés (un navigateur par onglet) ; leur
+  /// animation, en pause hors écran, ne se termine jamais et Flutter reste en
+  /// « geste en cours » : tous les appuis sont ignorés (application figée).
+  /// Le geste de retour reste disponible et dépile normalement la page visible.
+  static const pageTransitions = PageTransitionsTheme(
+    builders: {
+      TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+    },
+  );
+
   static ThemeData buildTheme(
     AppUniverse universe, {
     Brightness brightness = Brightness.light,
@@ -258,16 +273,17 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
+      pageTransitionsTheme: pageTransitions,
       colorScheme: scheme,
       primaryColor: scheme.primary,
       scaffoldBackgroundColor: scheme.surfaceContainerLow,
       extensions: [
         AppUniverseColors.fromUniverse(universe, brightness: brightness),
-        brightness == Brightness.dark ? AppPalette.dark : AppPalette.light,
+        AppPalette.forUniverse(universe, brightness),
       ],
       textTheme: textTheme,
 
-      // ---- Barre d'application : blanche, titre centré, fine séparation ------
+      // ---- Barre d'application : titre de page commun, aligné à gauche -------
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 1.5,
@@ -275,6 +291,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.black.withValues(alpha: 0.08),
         foregroundColor: scheme.onSurface,
+        // Titres centrés sur toutes les pages (même rendu partout).
         centerTitle: true,
         toolbarHeight: 60,
         iconTheme: IconThemeData(color: scheme.onSurface, size: 22),
@@ -283,11 +300,14 @@ class AppTheme {
             color: scheme.outlineVariant.withValues(alpha: 0.5),
           ),
         ),
-        titleTextStyle: AppTypography.petitTitre.copyWith(
+        titleTextStyle: AppTypography.titrePage.copyWith(
           color: scheme.onSurface,
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
         ),
+      ),
+      // Boutons retour automatiques : même icône que AppBackButton.
+      actionIconTheme: ActionIconThemeData(
+        backButtonIconBuilder: (_) =>
+            const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
       ),
 
       // ---- Boutons : forme pilule, hauteur tactile confortable -------------

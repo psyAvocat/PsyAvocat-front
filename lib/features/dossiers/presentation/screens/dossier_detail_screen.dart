@@ -21,9 +21,9 @@ import '../../../../core/l10n/app_strings.dart';
 /// « Mon dossier » — maquette Figma « Consultation du dossier » : résumé,
 /// avocats destinataires et leurs réponses, pièces jointes, suivi chronologique.
 ///
-/// « Accepter » n'apparaît que pour un avocat qui a accepté le dossier et
-/// proposé ses honoraires : le client le retient en prenant rendez-vous, ce
-/// qui confie le dossier à cet avocat (les autres soumissions deviennent caduques).
+/// Dès qu'un avocat accepte (honoraires proposés), le dossier lui est confié
+/// (les autres soumissions deviennent caduques) : un encart mène à l'écran de
+/// prise en charge et à la prise de rendez-vous avec cet avocat.
 class DossierDetailScreen extends ConsumerWidget {
   final String dossierId;
 
@@ -53,6 +53,13 @@ class DossierDetailScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
             children: [
               _Resume(dossier: dossier),
+              if (dossier.soumissionRetenue != null) ...[
+                AppSpacing.vGap12,
+                _EncartPriseEnCharge(
+                  dossier: dossier,
+                  soumission: dossier.soumissionRetenue!,
+                ),
+              ],
               AppSpacing.vGap16,
               _SectionTitre(
                 titre: tr('Avocats destinataires'),
@@ -197,9 +204,9 @@ class _AvocatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final peutAccepter =
-        !dossier.estPrisEnCharge &&
-        soumission.statut == 'ACCEPTEE' &&
+    // Avocat ayant accepté (ou déjà retenu) : rendez-vous possible pour ce dossier.
+    final peutReserver =
+        soumission.estAcceptee &&
         soumission.tarifPropose != null &&
         soumission.avocatId.isNotEmpty;
     final motif = soumission.reponse?.trim() ?? '';
@@ -238,7 +245,7 @@ class _AvocatCard extends StatelessWidget {
                     ).copyWith(fontStyle: FontStyle.italic),
                   ),
                 ],
-                if (peutAccepter) ...[
+                if (peutReserver) ...[
                   AppSpacing.vGap8,
                   FilledButton(
                     onPressed: () => context.push(
@@ -263,11 +270,107 @@ class _AvocatCard extends StatelessWidget {
                         fontSize: 12,
                       ),
                     ),
-                    child: Text(tr('Accepter')),
+                    child: Text(tr('Prendre rendez-vous')),
                   ),
                 ],
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Encart « Pris en charge par Me … » : honoraires, détails et rendez-vous.
+class _EncartPriseEnCharge extends StatelessWidget {
+  final DossierModel dossier;
+  final SoumissionModel soumission;
+
+  const _EncartPriseEnCharge({required this.dossier, required this.soumission});
+
+  @override
+  Widget build(BuildContext context) {
+    final honoraires = soumission.tarifPropose;
+    final primary = context.colors.primary;
+    return DossierCardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              DossierIconBadge(icon: Icons.verified_outlined, size: 34),
+              AppSpacing.hGap12,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr('Pris en charge par {avocat}', {
+                        'avocat': soumission.displayName,
+                      }),
+                      style: AppTypography.texteSemiBold.copyWith(
+                        fontSize: 14,
+                        color: primary,
+                      ),
+                    ),
+                    if (honoraires != null) ...[
+                      AppSpacing.vGap4,
+                      Text(
+                        tr('Honoraires proposés : {montant}', {
+                          'montant': Formatters.formatFcfa(honoraires),
+                        }),
+                        style: DossierText.secondaire(context),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          AppSpacing.vGap12,
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => context.push(
+                    AppRoutes.dossierPriseEnCharge(dossier.id),
+                    extra: true,
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: primary,
+                    side: BorderSide(color: primary.withValues(alpha: 0.5)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(tr('Voir les détails')),
+                ),
+              ),
+              AppSpacing.hGap8,
+              Expanded(
+                child: FilledButton(
+                  onPressed: honoraires == null || soumission.avocatId.isEmpty
+                      ? null
+                      : () => context.push(
+                          AppRoutes.choixCreneau(soumission.avocatId),
+                          extra: ReservationContexte.avocat(
+                            professionnelId: soumission.avocatId,
+                            soumissionId: soumission.id,
+                            dossierTitre: dossier.titre,
+                            montantDossier: honoraires,
+                          ),
+                        ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(tr('Prendre rendez-vous')),
+                ),
+              ),
+            ],
           ),
         ],
       ),

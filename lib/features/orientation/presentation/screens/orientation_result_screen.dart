@@ -9,6 +9,7 @@ import '../../data/models/questionnaire_model.dart';
 import '../controllers/orientation_controller.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/l10n/app_strings.dart';
+import '../widgets/plant_illustration.dart';
 
 /// Résultat d'orientation, tel que calculé par Spring Boot.
 ///
@@ -43,7 +44,12 @@ class OrientationResultScreen extends ConsumerWidget {
               actionText: tr('Faire le questionnaire'),
               onAction: () => context.go(AppRoutes.orientation),
             )
-          : _ResultContent(result: result),
+          : Stack(
+              children: [
+                const Positioned.fill(child: AmbientParticles()),
+                _ResultContent(result: result),
+              ],
+            ),
     );
   }
 }
@@ -60,14 +66,7 @@ class _ResultContent extends ConsumerWidget {
     return ListView(
       padding: AppSpacing.screenPadding,
       children: [
-        _MainResultCard(result: result),
-        AppSpacing.vGap16,
-        AppAlertBanner(
-          message: tr(
-            'Ce résultat est une orientation, pas un diagnostic. '
-            'Seul un professionnel peut évaluer votre situation.',
-          ),
-        ),
+        _ResultHeader(result: result),
         if (result.scoresParCategorie.isNotEmpty) ...[
           AppSpacing.vGap32,
           AppSectionHeader(title: tr('Détail par besoin')),
@@ -119,55 +118,54 @@ class _ResultContent extends ConsumerWidget {
   }
 }
 
-/// Carte principale : la catégorie / spécialité retenue par le backend.
-class _MainResultCard extends StatelessWidget {
+/// En-tête du résultat : illustration, puis la catégorie / spécialité
+/// retenue par le backend, sans carte.
+class _ResultHeader extends StatelessWidget {
   final ResultatOrientationModel result;
 
-  const _MainResultCard({required this.result});
+  const _ResultHeader({required this.result});
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Card(
-      color: scheme.primaryContainer,
-      shape: const RoundedRectangleBorder(borderRadius: AppRadii.r20),
-      child: Padding(
-        padding: AppSpacing.cardPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.explore_outlined,
-              color: scheme.primary,
-              size: AppIcons.sizeLg,
-            ),
-            AppSpacing.vGap12,
-            Text(
-              tr('Nous vous orientons vers'),
-              style: AppTypography.texteSecondaire.copyWith(
-                color: scheme.onPrimaryContainer,
-              ),
-            ),
-            AppSpacing.vGap4,
-            Text(
-              result.mainLabel ?? tr('Un accompagnement adapté'),
-              style: AppTypography.titreMoyen.copyWith(
-                color: scheme.onPrimaryContainer,
-              ),
-            ),
-            if (result.mainDescription != null) ...[
-              AppSpacing.vGap8,
-              Text(
-                result.mainDescription!,
-                style: AppTypography.texte.copyWith(
-                  color: scheme.onPrimaryContainer,
-                ),
-              ),
-            ],
-          ],
+    return Column(
+      children: [
+        const PlantIllustration(size: 170),
+        AppSpacing.vGap16,
+        Text(
+          tr('Nous vous orientons vers'),
+          textAlign: TextAlign.center,
+          style: AppTypography.texteSecondaire.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
         ),
-      ),
+        AppSpacing.vGap4,
+        Text(
+          result.mainLabel ?? tr('Un accompagnement adapté'),
+          textAlign: TextAlign.center,
+          style: AppTypography.titreMoyen.copyWith(color: scheme.primary),
+        ),
+        if (result.mainDescription != null) ...[
+          AppSpacing.vGap8,
+          Text(
+            result.mainDescription!,
+            textAlign: TextAlign.center,
+            style: AppTypography.texte.copyWith(
+              color: scheme.onSurfaceVariant,
+              height: 1.5,
+            ),
+          ),
+        ],
+        AppSpacing.vGap12,
+        Text(
+          tr('Une orientation, pas un diagnostic.'),
+          textAlign: TextAlign.center,
+          style: AppTypography.miniTexte.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 }

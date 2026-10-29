@@ -30,6 +30,18 @@ class Message {
   }
 }
 
+/// Fil d'une conversation : chaque message une seule fois (par identifiant),
+/// du plus ancien au plus récent. Un même message peut arriver par plusieurs
+/// chemins (réponse à l'envoi, temps réel, relecture) sans jamais être doublé.
+List<Message> filDeMessages(Iterable<Message> messages) {
+  final parId = <String, Message>{for (final m in messages) m.id: m};
+  final epoque = DateTime.fromMillisecondsSinceEpoch(0);
+  return parId.values.toList()..sort((a, b) {
+    final dates = (a.dateEnvoi ?? epoque).compareTo(b.dateEnvoi ?? epoque);
+    return dates != 0 ? dates : a.id.compareTo(b.id);
+  });
+}
+
 /// Conversation avec un professionnel (ConversationResponseDTO).
 class Conversation {
   final String id;
@@ -43,6 +55,9 @@ class Conversation {
   final Message? dernierMessage;
   final int messagesNonLus;
 
+  /// Le correspondant est connecté (web ou mobile) au moment de la lecture.
+  final bool correspondantEnLigne;
+
   const Conversation({
     required this.id,
     required this.correspondantNom,
@@ -52,6 +67,7 @@ class Conversation {
     this.correspondantType,
     this.correspondantPhotoUrl,
     this.dernierMessage,
+    this.correspondantEnLigne = false,
   });
 
   factory Conversation.fromJson(Map<String, dynamic> json) {
@@ -67,6 +83,7 @@ class Conversation {
           ? Message.fromJson(dernier)
           : null,
       messagesNonLus: (json['messagesNonLus'] as num?)?.toInt() ?? 0,
+      correspondantEnLigne: json['correspondantEnLigne'] == true,
     );
   }
 

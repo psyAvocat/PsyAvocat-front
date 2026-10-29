@@ -14,6 +14,9 @@ abstract class NotificationsRepository {
   Future<void> markAllAsRead();
 
   Future<void> deleteNotification(String id);
+
+  /// Supprime toutes les notifications déjà lues.
+  Future<void> deleteRead();
 }
 
 class ApiNotificationsRepository implements NotificationsRepository {
@@ -45,6 +48,9 @@ class ApiNotificationsRepository implements NotificationsRepository {
   @override
   Future<void> deleteNotification(String id) =>
       _client.delete('/notifications/$id');
+
+  @override
+  Future<void> deleteRead() => _client.delete('/notifications/lues');
 }
 
 final notificationsRepositoryProvider = Provider<NotificationsRepository>((

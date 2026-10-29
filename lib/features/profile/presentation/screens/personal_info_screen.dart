@@ -14,6 +14,7 @@ import '../../../../core/widgets/app_state_views.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../data/models/profil_model.dart';
 import '../controllers/profil_controller.dart';
+import 'photo_crop_screen.dart';
 import '../../../../core/l10n/app_strings.dart';
 
 /// « Informations personnelles » : identité du compte, photo modifiable,
@@ -46,11 +47,19 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
       }
       return;
     }
-    if (image == null) return;
+    if (image == null || !mounted) return;
+    // Recadrage avant envoi : la photo est ajustée dans le cercle de l'avatar.
+    final originale = await image.readAsBytes();
+    if (!mounted) return;
+    final recadree = await PhotoCropScreen.ouvrir(context, originale);
+    if (recadree == null || !mounted) return;
+    final nom = identical(recadree, originale)
+        ? image.name
+        : '${image.name.replaceAll(RegExp(r'\.[^.]+$'), '')}.png';
     setState(() => _envoiPhoto = true);
     final error = await ref
         .read(currentProfilProvider.notifier)
-        .updatePhoto(bytes: await image.readAsBytes(), fileName: image.name);
+        .updatePhoto(bytes: recadree, fileName: nom);
     if (!mounted) return;
     setState(() => _envoiPhoto = false);
     if (error != null) {

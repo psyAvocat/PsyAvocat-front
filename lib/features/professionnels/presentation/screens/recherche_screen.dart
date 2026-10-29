@@ -2,14 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/design_system.dart';
+import '../../../../core/theme/universe_provider.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../../../../shared/models/specialite.dart';
+import '../../../../core/widgets/app_page_header.dart';
+import '../../../referentiels/presentation/widgets/specialite_filter_chips.dart';
 import '../../data/models/professionnel_summary.dart';
 import '../controllers/professionnels_controller.dart';
 import '../widgets/professionnel_card.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/l10n/app_strings.dart';
 
+/// Recherche de professionnels (ouverte depuis la barre de recherche de
+/// l'accueil). Même présentation que la liste des professionnels : barre de
+/// recherche arrondie, puces de spécialités, cartes séparées par un trait.
+/// La recherche, le filtre et le tri sont faits par le serveur.
 class RechercheScreen extends ConsumerStatefulWidget {
   const RechercheScreen({super.key});
 
@@ -18,10 +24,10 @@ class RechercheScreen extends ConsumerStatefulWidget {
 }
 
 class _RechercheScreenState extends ConsumerState<RechercheScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  String? _selectedSpecialiteId;
-  ProfessionnelSort _selectedSort = ProfessionnelSort.pertinence;
-  String _searchQuery = '';
+  final _searchController = TextEditingController();
+  String? _specialiteId;
+  ProfessionnelSort _tri = ProfessionnelSort.pertinence;
+  String _recherche = '';
 
   @override
   void dispose() {
@@ -29,133 +35,98 @@ class _RechercheScreenState extends ConsumerState<RechercheScreen> {
     super.dispose();
   }
 
-  void _onSearchChanged(String value) {
-    setState(() {
-      _searchQuery = value;
-    });
-  }
+  String _libelleTri(ProfessionnelSort tri) => switch (tri) {
+    ProfessionnelSort.pertinence => tr('Pertinence'),
+    ProfessionnelSort.nom => tr('Nom (A-Z)'),
+    ProfessionnelSort.note => tr('Mieux notés'),
+  };
 
   @override
   Widget build(BuildContext context) {
+    final universe = ref.watch(currentUniverseProvider);
     final query = (
-      q: _searchQuery.isEmpty ? null : _searchQuery,
-      specialiteId: _selectedSpecialiteId,
-      tri: _selectedSort,
+      q: _recherche.trim().isEmpty ? null : _recherche.trim(),
+      specialiteId: _specialiteId,
+      tri: _tri,
     );
-    final professionnelsAsync = ref.watch(professionnelsProvider(query));
-    final specialitesAsync = ref.watch(specialitesProvider);
+    final professionnels = ref.watch(professionnelsProvider(query));
 
     return Scaffold(
-      appBar: AppBar(
-        title: TextField(
-          controller: _searchController,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: tr('Rechercher un professionnel...'),
-            border: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            enabledBorder: InputBorder.none,
-          ),
-          onChanged: _onSearchChanged,
+      appBar: AppPageHeader(
+        title: tr('Rechercher'),
+        trailing: PopupMenuButton<ProfessionnelSort>(
+          tooltip: tr('Trier'),
+          icon: const Icon(Icons.sort_rounded),
+          initialValue: _tri,
+          onSelected: (tri) => setState(() => _tri = tri),
+          itemBuilder: (context) => [
+            for (final tri in ProfessionnelSort.values)
+              CheckedPopupMenuItem(
+                value: tri,
+                checked: tri == _tri,
+                child: Text(_libelleTri(tri)),
+              ),
+          ],
         ),
-        actions: [
-          if (_searchQuery.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                _searchController.clear();
-                _onSearchChanged('');
-              },
-            ),
-        ],
       ),
       body: Column(
         children: [
-          _buildFilters(specialitesAsync),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.s16,
+              AppSpacing.s8,
+              AppSpacing.s16,
+              AppSpacing.s8,
+            ),
+            child: SearchBar(
+              controller: _searchController,
+              autoFocus: true,
+              hintText: universe.isPsychologist
+                  ? tr('Rechercher un psychologue…')
+                  : tr('Rechercher un avocat…'),
+              leading: const Icon(Icons.search_rounded),
+              trailing: [
+                if (_recherche.isNotEmpty)
+                  IconButton(
+                    tooltip: tr('Effacer'),
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _recherche = '');
+                    },
+                  ),
+              ],
+              elevation: const WidgetStatePropertyAll(0),
+              onChanged: (value) => setState(() => _recherche = value),
+            ),
+          ),
+          SpecialiteFilterChips(
+            selectedId: _specialiteId,
+            onSelected: (specialite) =>
+                setState(() => _specialiteId = specialite?.id),
+          ),
           Expanded(
             child: AppAsyncView<List<ProfessionnelSummary>>(
-              value: professionnelsAsync,
+              value: professionnels,
               isEmpty: (list) => list.isEmpty,
               emptyTitle: tr('Aucun résultat'),
-              emptyMessage: tr(
-                'Aucun professionnel ne correspond à votre recherche.',
-              ),
-              emptyIcon: Icons.search_off,
+              emptyMessage: tr('Modifiez votre recherche ou la spécialité.'),
+              emptyIcon: Icons.search_off_rounded,
               onRetry: () => ref.invalidate(professionnelsProvider(query)),
               builder: (list) => ListView.separated(
-                padding: AppSpacing.screenPadding,
-                itemCount: list.length,
-                separatorBuilder: (_, _) => AppSpacing.vGap12,
-                itemBuilder: (context, index) {
-                  final pro = list[index];
-                  return ProfessionnelCard(
-                    professionnel: pro,
-                    onTap: () => context.push(AppRoutes.professionnel(pro.id)),
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilters(AsyncValue<List<Specialite>> specialitesAsync) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.s16,
-        vertical: AppSpacing.s8,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: specialitesAsync.when(
-              data: (specialites) => DropdownButtonHideUnderline(
-                child: DropdownButton<String?>(
-                  isExpanded: true,
-                  hint: Text(tr('Spécialité')),
-                  value: _selectedSpecialiteId,
-                  items: [
-                    DropdownMenuItem(
-                      value: null,
-                      child: Text(tr('Toutes spécialités')),
-                    ),
-                    ...specialites.map(
-                      (s) => DropdownMenuItem(value: s.id, child: Text(s.nom)),
-                    ),
-                  ],
-                  onChanged: (val) =>
-                      setState(() => _selectedSpecialiteId = val),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.s16,
+                  AppSpacing.s8,
+                  AppSpacing.s16,
+                  AppSpacing.s32,
                 ),
-              ),
-              loading: () => const LinearProgressIndicator(),
-              error: (_, __) => Text(tr('Erreur')),
-            ),
-          ),
-          AppSpacing.hGap16,
-          Expanded(
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<ProfessionnelSort>(
-                isExpanded: true,
-                value: _selectedSort,
-                items: [
-                  DropdownMenuItem(
-                    value: ProfessionnelSort.pertinence,
-                    child: Text(tr('Pertinence')),
-                  ),
-                  DropdownMenuItem(
-                    value: ProfessionnelSort.nom,
-                    child: Text(tr('Nom (A-Z)')),
-                  ),
-                  DropdownMenuItem(
-                    value: ProfessionnelSort.note,
-                    child: Text(tr('Note (Décroissant)')),
-                  ),
-                ],
-                onChanged: (val) {
-                  if (val != null) setState(() => _selectedSort = val);
-                },
+                itemCount: list.length,
+                separatorBuilder: (_, _) => const Divider(),
+                itemBuilder: (context, index) => ProfessionnelCard(
+                  professionnel: list[index],
+                  onTap: () =>
+                      context.push(AppRoutes.professionnel(list[index].id)),
+                ),
               ),
             ),
           ),
